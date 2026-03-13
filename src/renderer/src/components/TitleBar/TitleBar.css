@@ -1,29 +1,48 @@
 .titlebar {
-  height: 36px;
+  height: 37px;
   display: flex;
   align-items: center;
-  justify-content: center;
   position: relative;
   flex-shrink: 0;
-  -webkit-app-region: drag;
   user-select: none;
+  background-color: var(--editor-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.titlebar.mac {
+  justify-content: center;
+}
+
+.titlebar.windows {
+  justify-content: flex-start;
+  padding-left: 4px;
 }
 
 .titlebar__drag {
   position: absolute;
   inset: 0;
   -webkit-app-region: drag;
+  z-index: 0;
 }
 
-.titlebar__title {
-  font-size: 13px;
-  font-weight: 500;
-  opacity: 0.85;
+.titlebar__title-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
   pointer-events: none;
   z-index: 1;
 }
 
+.titlebar__title {
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  opacity: 0.85;
+  color: var(--text-primary);
+}
+
 .titlebar__edited {
   opacity: 0.55;
-  font-weight: 400;
+  font-style: italic;
 }

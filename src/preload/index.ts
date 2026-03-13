@@ -35,8 +35,12 @@ const api = {
       const handler = (_: Electron.IpcRendererEvent, ...args: unknown[]): void => cb(...args)
       ipcRenderer.on(channel, handler)
       return () => ipcRenderer.removeListener(channel, handler)
-    }
-  }
+    },
+    popup: (menuId: string, x: number, y: number) => ipcRenderer.send('menu:popup', menuId, x, y),
+    trigger: (channel: string, ...args: unknown[]) => ipcRenderer.send('menu:trigger', channel, ...args),
+    role: (role: string) => ipcRenderer.send('menu:role', role)
+  },
+  platform: process.platform
 }
 
 contextBridge.exposeInMainWorld('api', api)

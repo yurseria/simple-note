@@ -1,9 +1,10 @@
-import { app, BrowserWindow, shell, ipcMain, screen } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, screen, nativeTheme } from 'electron'
 app.name = 'Note'
 import { join } from 'path'
 import { registerIpcHandlers } from './ipc'
 import { buildMenu } from './menu'
 import { logger } from './logger'
+import { store } from './store'
 
 // ── Chromium 플래그 (app.whenReady() 이전에 설정) ──────────────────────────
 // GPU sandbox만 해제 — GPU 프로세스는 유지해 macOS 폰트 렌더링(CJK 포함)이 정상 경로를 사용하게 함
@@ -41,13 +42,19 @@ process.on('SIGTERM', () => {
   logger.warn('SIGTERM received — likely macOS IMK watchdog; suppressing exit')
 })
 
-function createWindow(): BrowserWindow {
+export function createWindow(): BrowserWindow {
   const winWidth = 900
   const winHeight = 680
   const cursorPoint = screen.getCursorScreenPoint()
   const { workArea } = screen.getDisplayNearestPoint(cursorPoint)
   const x = Math.round(workArea.x + (workArea.width - winWidth) / 2)
   const y = Math.round(workArea.y + (workArea.height - winHeight) / 2)
+
+  const isDark = store.get('editor.theme') === 'dark'
+  nativeTheme.themeSource = isDark ? 'dark' : 'light'
+  
+  const bgColor = isDark ? '#282c34' : '#fafafa'
+  const symbolColor = isDark ? '#abb2bf' : '#282c34'
 
   const win = new BrowserWindow({
     width: winWidth,
@@ -56,9 +63,18 @@ function createWindow(): BrowserWindow {
     y,
     minWidth: 300,
     minHeight: 200,
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 },
-    backgroundColor: '#282c34',
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
+    ...(process.platform === 'win32' && {
+      titleBarOverlay: {
+        color: bgColor,
+        symbolColor: symbolColor,
+        height: 36
+      }
+    }),
+    ...(process.platform === 'darwin' && {
+      trafficLightPosition: { x: 16, y: 16 }
+    }),
+    backgroundColor: bgColor,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

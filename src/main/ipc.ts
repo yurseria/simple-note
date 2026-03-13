@@ -1,4 +1,4 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron'
+import { ipcMain, dialog, BrowserWindow, nativeTheme } from 'electron'
 import { readFileWithEncoding, writeFileWithEncoding } from './fileManager'
 import { store } from './store'
 import { logger } from './logger'
@@ -72,6 +72,23 @@ export function registerIpcHandlers(): void {
   ) => {
     store.set(key, value)
     logger.info('settings:set', { key })
+    
+    if (key === 'editor') {
+      const editorSettings = value as Settings['editor']
+      const isDark = editorSettings.theme === 'dark'
+      nativeTheme.themeSource = isDark ? 'dark' : 'light'
+      
+      const bgColor = isDark ? '#282c34' : '#fafafa'
+      const symbolColor = isDark ? '#abb2bf' : '#282c34'
+      
+      BrowserWindow.getAllWindows().forEach((win) => {
+        if (process.platform === 'win32') {
+          win.setTitleBarOverlay({ color: bgColor, symbolColor })
+        }
+        win.setBackgroundColor(bgColor)
+      })
+    }
+
     BrowserWindow.getAllWindows().forEach((win) => {
       win.webContents.send('settings:changed', key, value)
     })
@@ -87,5 +104,39 @@ export function registerIpcHandlers(): void {
       cancelId: 2
     })
     return result.response // 0: save, 1: don't save, 2: cancel
+  })
+
+  ipcMain.on('menu:trigger', (e, channel: string, ...args: unknown[]) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (win) {
+      win.webContents.send(channel, ...args)
+    }
+  })
+
+  ipcMain.on('menu:role', (e, role: string) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return
+    if (role === 'togglefullscreen') {
+      win.setFullScreen(!win.isFullScreen())
+    } else if (role === 'toggleDevTools') {
+      win.webContents.toggleDevTools()
+    } else if (role === 'quit') {
+      import('electron').then(({ app }) => app.quit())
+    } else if (role === 'about') {
+      import('electron').then(({ app, dialog }) => {
+        dialog.showMessageBox(win, {
+          type: 'info',
+          title: '정보',
+          message: app.name,
+          detail: `버전: ${app.getVersion()}\nElectron: ${process.versions.electron}\nNode.js: ${process.versions.node}\nV8: ${process.versions.v8}\nOS: ${process.type} ${process.arch}`,
+          buttons: ['확인']
+        })
+      })
+    } else {
+      // Execute common roles like undo, redo, cut, copy, paste, selectAll
+      if (typeof win.webContents[role] === 'function') {
+        win.webContents[role]()
+      }
+    }
   })
 }
