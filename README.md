@@ -10,12 +10,18 @@
 [![npm](https://img.shields.io/badge/npm-v10.x-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
----
 
-![TextEditor](assets/text_editor.png)
-![MarkdownEditor](assets/markdown_editor.png)
+<table>
+  <tr>
+    <td><img src="assets/text_editor.png" width="500"/></td>
+    <td><img src="assets/markdown_editor.png" width="500"/></td>
+  </tr>
+  <tr>
+    <td align="center">텍스트 에디터</td>
+    <td align="center">마크다운 에디터/뷰어</td>
+  </tr>
+</table>
 
----
 
 ## 기능
 
