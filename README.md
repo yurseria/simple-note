@@ -1,10 +1,11 @@
 # Simple Note
 
-집중해서 글을 쓰기 위한 macOS 전용 플레인 텍스트 에디터.
+집중해서 글을 쓰기 위한 깔끔하고 직관적인 텍스트 에디터.
 
-[brunophilipe/Noto](https://github.com/brunophilipe/Noto)의 철학을 Electron으로 재구현했습니다.
+[brunophilipe/Noto](https://github.com/brunophilipe/Noto)의 철학을 바탕으로 개발되었습니다.
 
 [![macOS](https://img.shields.io/badge/macOS-13+-000000?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
+[![Windows](https://img.shields.io/badge/Windows-10+-0078D6?style=for-the-badge&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSI+CjxnIGlkPSJzdXJmYWNlMSI+CjxwYXRoIHN0eWxlPSIgc3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87ZmlsbDpyZ2IoMTAwJSwxMDAlLDEwMCUpO2ZpbGwtb3BhY2l0eToxOyIgZD0iTSAwIDAgTCAxMS4zNzg5MDYgMCBMIDExLjM3ODkwNiAxMS4zNzEwOTQgTCAwIDExLjM3MTA5NCBaIE0gMTIuNjIxMDk0IDAgTCAyNCAwIEwgMjQgMTEuMzcxMDk0IEwgMTIuNjIxMDk0IDExLjM3MTA5NCBaIE0gMCAxMi42MjEwOTQgTCAxMS4zNzg5MDYgMTIuNjIxMDk0IEwgMTEuMzc4OTA2IDI0IEwgMCAyNCBaIE0gMTIuNjIxMDk0IDEyLjYyMTA5NCBMIDI0IDEyLjYyMTA5NCBMIDI0IDI0IEwgMTIuNjIxMDk0IDI0ICIvPgo8L2c+Cjwvc3ZnPgo=&logoColor=white)](https://www.microsoft.com/windows/)
 [![Node.js](https://img.shields.io/badge/Node.js-v20.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-v10.x-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
@@ -18,39 +19,26 @@
 
 ## 기능
 
-### 편집기
-- 플레인 텍스트 / 마크다운 편집
-- `⌘D` — 다음 일치 항목을 선택 영역에 추가
-- `⌘⇧L` — 현재 선택과 일치하는 모든 항목 선택
-- `⌥⌘↑` / `⌥⌘↓` — 위/아래 줄에 커서 추가 (멀티커서)
-- `⇧⌥Drag` — 컬럼(박스) 선택
-- `⌘L` — 특정 줄로 이동 (Jump to Line)
-- 실행 취소 / 다시 실행, 찾기 / 바꾸기 (CodeMirror 기본 제공)
-- 새 줄에서 이전 들여쓰기 유지
-- 탭 크기 설정 (스페이스 / 탭 전환, 2 · 4 · 8 선택)
-- IME(한글 / CJK) 안정성 — spellcheck · autocorrect 비활성화
+### 텍스트 및 마크다운 편집
+- **강력한 편집 기능:** 다중 커서, 일괄 선택, 블록 선택 등 효율적인 텍스트 편집 기능을 제공합니다.
+- **편리한 탐색:** 찾기/바꾸기 및 특정 줄로 바로 이동하는 기능을 지원합니다.
+- **맞춤형 설정:** 들여쓰기 유지, 탭/스페이스 전환 및 크기 설정을 자유롭게 할 수 있습니다.
+- **다국어 지원:** 한글 등 CJK 입력 시 발생할 수 있는 오류를 방지하여 안정적인 타이핑 경험을 제공합니다.
 
-### 파일
-- `⌘N` — 새 탭, `⌘O` — 열기, `⌘S` — 저장, `⌘⇧S` — 다른 이름으로 저장
-- 자동 인코딩 감지 (`chardet` + `iconv-lite`)
-- `.md` / `.markdown` 파일 자동 마크다운 모드 전환
+### 파일 관리
+- **다중 탭 지원:** 여러 파일을 동시에 열어놓고 탭으로 드래그 앤 드롭하여 순서를 변경하거나 편리하게 작업할 수 있습니다.
+- **자동 감지 기능:** 문서를 열 때 자동으로 텍스트 인코딩을 감지하여 글자 깨짐을 방지하고, 마크다운 파일의 경우 자동으로 편집 모드를 전환합니다.
 
-### 마크다운
-- 문법 강조 (헤딩, 굵게/기울임, 코드, 링크, 인용구 등)
-- `⌘⌥P` — 미리보기 / 편집 분할 화면 토글
-- 분할 화면 구분선 드래그로 비율 조절 (20 % ~ 80 %)
-- `marked` + `marked-highlight` + `highlight.js` 기반 렌더링 (코드 블록 구문 강조 포함)
-- `DOMPurify`로 XSS 방지
+### 마크다운 최적화
+- **실시간 문법 강조:** 제목, 굵게/기울임, 코드, 링크 등 마크다운 요소들이 시각적으로 구분되어 작성에 집중할 수 있습니다.
+- **분할 화면 미리보기:** 작성 중인 마크다운 문서를 실시간으로 확인하며 편집할 수 있으며, 구분선을 드래그해 미리보기 창의 비율을 자유롭게 조절할 수 있습니다.
+- **안전하고 정확한 렌더링:** 코드 블록의 구문 강조를 완벽하게 지원하며, 보안 위협(XSS)으로부터 안전하게 문서를 표시합니다.
 
-### UI
-- 다크 / 라이트 테마 (`보기 > 테마`)
-- 폰트 크기 조절 — `⌘+` / `⌘-` / `⌘0`
-- HUD 정보 바 (글자 수 · 단어 수 · 줄 수 · 인코딩 · 언어 모드, none / hud / status 전환)
-- 언어 모드 인포바 클릭 또는 `보기 > 언어` 메뉴로 전환
-- 줄 번호 표시 / 숨기기 (`⌘⇧L`)
-- 탭 기반 멀티 파일 편집, 드래그로 탭 순서 변경
-- `titleBarStyle: hiddenInset` — macOS 네이티브 트래픽 라이트 유지
-- `⌘,` — 환경설정 (폰트, 탭, 인포바 등)
+### 사용자 친화적 UI
+- **다크/라이트 테마:** 작업 환경과 취향에 맞게 에디터 테마를 손쉽게 변경할 수 있습니다.
+- **문서 정보 표시:** 현재 문서의 글자 수, 단어 수, 줄 수 및 언어 모드 등 유용한 정보를 하단 바에서 한눈에 확인 가능합니다.
+- **유연한 화면 설정:** 화면 확대/축소, 폰트 크기 조절 등을 사용자 편의에 맞게 조정할 수 있습니다.
+- **OS 네이티브 경험:** 각 운영체제(macOS, Windows) 고유의 깔끔한 디자인을 적용하여 이질감 없는 매끄러운 사용성을 제공합니다.
 
 ---
 
@@ -58,7 +46,7 @@
 
 | 항목 | 버전 |
 |---|---|
-| macOS | 13 Ventura 이상 |
+| 운영체제 | macOS 13 Ventura 이상 또는 Windows 10 이상 |
 | Node.js | v20.x |
 | npm | v10.x |
 
@@ -80,7 +68,7 @@ npm run dev
 # 프로덕션 빌드
 npm run build
 
-# .dmg 패키지 생성
+# OS용 패키지 생성
 npm run package
 ```
 
@@ -110,12 +98,12 @@ src/
 ├── main/           # Electron 메인 프로세스
 │   ├── index.ts    # BrowserWindow 생성
 │   ├── ipc.ts      # IPC 핸들러 (파일, 설정, 다이얼로그)
-│   ├── menu.ts     # 네이티브 macOS 메뉴
+│   ├── menu.ts     # OS 네이티브 메뉴
 │   ├── fileManager.ts  # 파일 읽기/쓰기 + 인코딩
-│   ├── store.ts    # electron-store 설정 스키마
+│   ├── store.ts    # 설정 스키마
 │   └── logger.ts   # 로거
 ├── preload/
-│   └── index.ts    # contextBridge API 노출
+│   └── index.ts    # API 노출
 ├── types/
 │   ├── settings.ts # 설정 타입
 │   └── tab.ts      # 탭 타입
@@ -124,8 +112,8 @@ src/
     ├── components/
     │   ├── TitleBar/
     │   ├── TabBar/
-    │   ├── Editor/             # CodeMirror 6 래퍼 + 확장
-    │   │   ├── extensions.ts   # 키맵, 테마, 멀티커서 등
+    │   ├── Editor/             # 에디터 코어 + 확장
+    │   │   ├── extensions.ts
     │   │   └── markdownPreview/
     │   └── InfoBar/
     ├── store/
