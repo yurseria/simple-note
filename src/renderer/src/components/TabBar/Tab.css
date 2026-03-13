@@ -1,0 +1,83 @@
+.tab {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 27px;
+  padding: 0 6px 0 11px;
+  border-radius: 5px 5px 0 0;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  max-width: 220px;
+  transition: background 0.15s;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.tab:hover {
+  background: var(--tab-hover-bg);
+}
+
+.tab--active {
+  background: var(--tab-active-bg);
+  color: var(--text-primary);
+}
+
+.tab__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab__dirty {
+  color: var(--accent-color);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tab__close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.tab:hover .tab__close,
+.tab--active .tab__close {
+  opacity: 1;
+}
+
+.tab__close:hover {
+  background: var(--close-btn-hover);
+  color: var(--text-primary);
+}
+
+.tab__rename-input {
+  flex: 1;
+  min-width: 40px;
+  max-width: 140px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--accent-color);
+  border-radius: 3px;
+  background: var(--editor-bg);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}

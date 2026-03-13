@@ -1,0 +1,72 @@
+.infobar {
+  font-size: 13px;
+  user-select: none;
+  color: var(--text-muted);
+}
+
+/* HUD 모드 */
+.infobar--hud {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 21px;
+  border-radius: 999px;
+  background: var(--hud-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  white-space: nowrap;
+  pointer-events: auto;
+  z-index: 10;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Status 모드 */
+.infobar--status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: 32px;
+  background: var(--gutter-bg);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.infobar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infobar__sep {
+  opacity: 0.4;
+}
+
+.infobar__lang {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.infobar--hud .infobar__lang:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.infobar--status .infobar__lang {
+  color: var(--text-muted);
+}
+
+.infobar--status .infobar__lang:hover {
+  background: var(--tab-hover-bg);
+  color: var(--text-primary);
+}

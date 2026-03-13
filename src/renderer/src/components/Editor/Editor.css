@@ -1,0 +1,98 @@
+.editor {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor .cm-editor {
+  height: 100%;
+  outline: none;
+}
+
+.editor .cm-scroller {
+  overflow: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+.editor .cm-content {
+  /* 상하 패딩만 CSS로 — 좌우는 cm-line에서 처리 */
+  padding: 10px 0;
+  font-variant-ligatures: common-ligatures;
+  font-feature-settings: "calt" 1, "liga" 1;
+}
+
+.editor .cm-gutters {
+  border-right: 1px solid var(--border-color);
+  padding: 0;
+  min-width: 30px;
+}
+
+/* 줄 번호 우측 정렬 */
+.editor .cm-lineNumbers .cm-gutterElement {
+  padding: 1.3px;
+  text-align: right;
+  padding-right: 0px;
+  padding-left: 6px;
+}
+
+/* 짙은 회색 계열 gutter 배경 */
+[data-theme='dark'] .editor .cm-gutters {
+  background: #1c1f26;
+}
+[data-theme='light'] .editor .cm-gutters {
+  background: #e2e5eb;
+}
+
+.editor .cm-activeLineGutter {
+  font-weight: 700;
+  background: transparent !important;
+}
+
+[data-theme='dark'] .editor .cm-activeLineGutter {
+  color: #fff;
+}
+[data-theme='light'] .editor .cm-activeLineGutter {
+  color: #1a1d24;
+}
+
+/* 스크롤바 track 배경 = 에디터 배경 */
+.editor .cm-scroller::-webkit-scrollbar-track,
+.editor .cm-scroller::-webkit-scrollbar-corner {
+  background: var(--editor-bg);
+}
+.editor .cm-scroller::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.editor .cm-cursor {
+  border-left-width: 2px;
+}
+
+/* 다중 커서: 보조 커서는 1px 얇게 (VSCode 스타일) */
+.editor .cm-cursor-secondary {
+  border-left-width: 1px;
+  opacity: 0.85;
+}
+
+/* drawSelection: 선택 영역 배경 (dark 기본) */
+[data-theme='dark'] .editor .cm-selectionBackground,
+[data-theme='dark'] .editor.cm-focused .cm-selectionBackground {
+  background: rgba(97, 175, 239, 0.28) !important;
+}
+[data-theme='light'] .editor .cm-selectionBackground,
+[data-theme='light'] .editor.cm-focused .cm-selectionBackground {
+  background: rgba(64, 120, 242, 0.22) !important;
+}
+
+/* highlightSelectionMatches: 같은 문자 자동 하이라이트 */
+[data-theme='dark'] .editor .cm-selectionMatch {
+  background: rgba(97, 175, 239, 0.18);
+  outline: 1px solid rgba(97, 175, 239, 0.4);
+  border-radius: 2px;
+}
+[data-theme='light'] .editor .cm-selectionMatch {
+  background: rgba(64, 120, 242, 0.12);
+  outline: 1px solid rgba(64, 120, 242, 0.35);
+  border-radius: 2px;
+}
