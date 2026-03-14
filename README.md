@@ -99,7 +99,7 @@ Windows 환경에서 `npm run package` 실행 시 `winCodeSign` 관련 심볼릭
 | 마크다운 | marked + marked-highlight + highlight.js + DOMPurify |
 | 설정 저장 | electron-store 8 |
 | 인코딩 | chardet + iconv-lite |
-| 빌드 | electron-vite 2 + electron-builder 26 |
+| 빌드 | vite 8 + electron-vite 5 + electron-builder 26 |
 
 ---
 
