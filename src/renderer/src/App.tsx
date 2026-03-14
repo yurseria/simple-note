@@ -4,7 +4,7 @@ import { TabBar } from './components/TabBar/TabBar'
 import { Editor } from './components/Editor/Editor'
 import { MarkdownPreview } from './components/Editor/markdownPreview/MarkdownPreview'
 import { InfoBar } from './components/InfoBar/InfoBar'
-import { useTabStore } from './store/tabStore'
+import { useTabStore, inferLanguage } from './store/tabStore'
 import { useSettingsStore } from './store/settingsStore'
 import { useFile } from './hooks/useFile'
 import { useMenuEvents } from './hooks/useMenuEvents'
@@ -77,7 +77,15 @@ export function App(): JSX.Element {
 
   function handleLanguageToggle() {
     if (!tab) return
-    const next: LanguageMode = tab.language === 'markdown' ? 'plaintext' : 'markdown'
+    const originalLanguage = inferLanguage(tab.filePath)
+    
+    let next: LanguageMode
+    if (originalLanguage === 'plaintext' || originalLanguage === 'markdown') {
+      next = tab.language === 'markdown' ? 'plaintext' : 'markdown'
+    } else {
+      next = tab.language === originalLanguage ? 'plaintext' : originalLanguage
+    }
+    
     setLanguage(tab.id, next, true)
   }
 

@@ -30,7 +30,7 @@ import {
   SearchCursor
 } from '@codemirror/search'
 import type { Command } from '@codemirror/view'
-import { indentUnit, syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
+import { indentUnit, syntaxHighlighting, defaultHighlightStyle, LanguageDescription } from '@codemirror/language'
 import type { LanguageMode } from '../../../../types/tab'
 import type { Settings } from '../../../../types/settings'
 
@@ -54,6 +54,14 @@ export function buildLanguageExt(language: LanguageMode): Extension {
   return language === 'markdown'
     ? markdown({ base: markdownLanguage, codeLanguages: languages })
     : []
+}
+
+export async function loadLanguageExtension(language: string): Promise<Extension | null> {
+  const desc = LanguageDescription.matchLanguageName(languages, language, true)
+  if (desc) {
+    return await desc.load()
+  }
+  return null
 }
 
 export function buildLineNumbersExt(show: boolean): Extension {

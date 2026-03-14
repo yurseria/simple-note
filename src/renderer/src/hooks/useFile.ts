@@ -1,4 +1,4 @@
-import { useTabStore } from '../store/tabStore'
+import { useTabStore, inferLanguage } from '../store/tabStore'
 
 export function useFile() {
   const { tabs, activeTab, addTab, markSaved, closeTab } = useTabStore()
@@ -15,6 +15,8 @@ export function useFile() {
       return
     }
 
+    const detectedLanguage = inferLanguage(result.filePath)
+
     // 현재 탭이 빈 새 탭이면 재사용
     const current = activeTab()
     if (current && !current.filePath && !current.isDirty && current.content === '') {
@@ -22,7 +24,7 @@ export function useFile() {
       useTabStore.setState((s) => ({
         tabs: s.tabs.map((t) =>
           t.id === current.id
-            ? { ...t, content: result.content, encoding: result.encoding, language: result.language }
+            ? { ...t, content: result.content, encoding: result.encoding, language: detectedLanguage }
             : t
         )
       }))
@@ -34,7 +36,7 @@ export function useFile() {
       fileName,
       content: result.content,
       encoding: result.encoding,
-      language: result.language,
+      language: detectedLanguage,
       isDirty: false
     })
   }

@@ -9,6 +9,7 @@ import {
   buildLineNumbersExt,
   buildTabExt,
   buildThemeExt,
+  loadLanguageExtension,
   type EditorCompartments
 } from './extensions'
 import type { LanguageMode } from '../../../../types/tab'
@@ -55,6 +56,15 @@ export function Editor({ tabId, content, language, settings, onChange }: Props):
     const state = EditorState.create({ doc: content, extensions })
     const view = new EditorView({ state, parent: containerRef.current })
     viewRef.current = view
+    
+    // 동적 언어 로딩 (마크다운은 빌드시 기본 포함됨)
+    if (language !== 'markdown' && language !== 'plaintext') {
+      loadLanguageExtension(language).then(ext => {
+        if (ext && viewRef.current === view) {
+          view.dispatch({ effects: compartments.language.reconfigure(ext) })
+        }
+      }).catch(console.error)
+    }
 
     if (import.meta.env.DEV) {
       ;(window as unknown as Record<string, unknown>).__cmView = view

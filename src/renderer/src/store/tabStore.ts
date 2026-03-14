@@ -3,10 +3,19 @@ import { persist } from 'zustand/middleware'
 import { nanoid } from '../utils/nanoid'
 import type { TabState, LanguageMode } from '../../../types/tab'
 
-function inferLanguage(filePath: string | null): LanguageMode {
+import { LanguageDescription } from '@codemirror/language'
+import { languages } from '@codemirror/language-data'
+
+export function inferLanguage(filePath: string | null): LanguageMode {
   if (!filePath) return 'plaintext'
-  const ext = filePath.split('.').pop()?.toLowerCase()
-  return ext === 'md' || ext === 'markdown' ? 'markdown' : 'plaintext'
+  const fileName = filePath.split('/').pop() || ''
+  const desc = LanguageDescription.matchFilename(languages, fileName)
+  if (desc) return desc.name
+  
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  if (ext === 'md' || ext === 'markdown') return 'markdown'
+  if (ext === 'txt') return 'plaintext'
+  return 'plaintext'
 }
 
 function nextUntitledName(tabs: TabState[]): string {

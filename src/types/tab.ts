@@ -1,4 +1,4 @@
-export type LanguageMode = 'plaintext' | 'markdown'
+export type LanguageMode = string
 
 export interface TabState {
   id: string
