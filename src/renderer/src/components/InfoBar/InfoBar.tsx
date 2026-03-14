@@ -20,9 +20,12 @@ function computeStats(content: string, countWhitespaces: boolean) {
 }
 
 function LanguageBadge({ language, onClick }: { language: LanguageMode; onClick: () => void }) {
+  const displayName = language === 'plaintext' ? 'Plain Text' : 
+                      language === 'markdown' ? 'Markdown' : 
+                      language;
   return (
     <button className="infobar__lang" onClick={onClick} title="클릭해서 언어 전환">
-      {language === 'markdown' ? 'Markdown' : 'Plain Text'}
+      {displayName}
     </button>
   )
 }

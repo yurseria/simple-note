@@ -5,6 +5,30 @@
   -webkit-app-region: no-drag;
 }
 
+.custom-menu__hamburger-container {
+  display: none;
+  position: relative;
+  align-items: center;
+}
+
+.custom-menu__desktop-items {
+  display: flex;
+  height: 100%;
+}
+
+@media (max-width: 600px) {
+  .custom-menu__hamburger-container {
+    display: flex;
+  }
+  .custom-menu__desktop-items {
+    display: none;
+  }
+  .custom-menu__hamburger-container .custom-menu__submenu {
+    top: 100%;
+    left: 12px;
+  }
+}
+
 .custom-menu__top-item-container {
   position: relative;
   display: flex;
@@ -22,6 +46,13 @@
   cursor: default;
   height: 28px;
   user-select: none;
+  outline: none;
+}
+
+.custom-menu__hamburger {
+  padding: 0 6px;
+  display: flex;
+  justify-content: center;
 }
 
 .custom-menu__top-item:hover,
@@ -52,9 +83,11 @@
   color: var(--text-primary);
   cursor: default;
   user-select: none;
+  outline: none;
 }
 
-.custom-menu__item:hover {
+.custom-menu__item:hover,
+.custom-menu__item.focused {
   background-color: var(--accent-color);
   color: #ffffff;
 }

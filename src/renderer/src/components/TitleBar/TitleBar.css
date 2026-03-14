@@ -33,6 +33,8 @@
   align-items: center;
   pointer-events: none;
   z-index: 1;
+  max-width: 40%;
+  overflow: hidden;
 }
 
 .titlebar__title {
@@ -40,9 +42,26 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   opacity: 0.85;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
 }
 
 .titlebar__edited {
   opacity: 0.55;
   font-style: italic;
+  white-space: pre;
+}
+
+@media (max-width: 600px) {
+  .titlebar__edited {
+    display: none;
+  }
+}
+
+@media (max-width: 450px) {
+  .titlebar__title-container {
+    display: none;
+  }
 }
