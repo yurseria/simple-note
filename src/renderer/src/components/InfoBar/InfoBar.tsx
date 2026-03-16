@@ -15,8 +15,12 @@ interface Props {
 function computeStats(content: string, countWhitespaces: boolean) {
   const chars = countWhitespaces ? content.length : content.replace(/\s/g, '').length
   const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length
-  const lines = content === '' ? 1 : content.split('\n').length
+  const lines = content === '' ? 0 : content.split('\n').length
   return { chars, words, lines }
+}
+
+function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count.toLocaleString()} ${count === 1 ? singular : pluralForm}`
 }
 
 function LanguageBadge({ language, onClick }: { language: LanguageMode; onClick: () => void }) {
@@ -38,7 +42,7 @@ export function InfoBar({ content, encoding, mode, language, countWhitespaces, o
 
   if (mode === 'none') return null
 
-  const stats = `${chars.toLocaleString()} Characters · ${words.toLocaleString()} Words · ${lines.toLocaleString()} Lines`
+  const stats = `${plural(chars, 'Character', 'Characters')} · ${plural(words, 'Word', 'Words')} · ${plural(lines, 'Line', 'Lines')}`
 
   if (mode === 'hud') {
     return (
