@@ -91,7 +91,9 @@ export function buildMenu(): void {
           ]
         },
         { type: 'separator' },
-        { label: '전체 화면 전환', role: 'togglefullscreen' }
+        ...(!isMac ? [
+          { label: '전체 화면 전환', role: 'togglefullscreen' as const }
+        ] as Electron.MenuItemConstructorOptions[] : [])
       ]
     },
     {
