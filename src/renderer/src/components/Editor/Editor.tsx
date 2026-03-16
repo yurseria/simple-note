@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EditorView } from '@codemirror/view'
 import { EditorState, Transaction } from '@codemirror/state'
 import { oneDark } from '@codemirror/theme-one-dark'
@@ -12,6 +12,7 @@ import {
   loadLanguageExtension,
   type EditorCompartments
 } from './extensions'
+import { FindReplace } from './FindReplace/FindReplace'
 import type { LanguageMode } from '../../../../types/tab'
 import type { Settings } from '../../../../types/settings'
 import './Editor.css'
@@ -33,6 +34,11 @@ export function Editor({ tabId, content, language, settings, onChange }: Props):
   onChangeRef.current = onChange
   // 마지막으로 에디터가 스스로 보고한 content — 외부 sync 스킵 판별용
   const lastEditorContentRef = useRef(content)
+
+  // FindReplace 패널 상태
+  const [cmView, setCmView] = useState<EditorView | null>(null)
+  const [findOpen, setFindOpen] = useState(false)
+  const [findMode, setFindMode] = useState<'find' | 'replace'>('find')
 
   // 탭 또는 언어 변경 시 에디터 재생성
   useEffect(() => {
@@ -56,6 +62,7 @@ export function Editor({ tabId, content, language, settings, onChange }: Props):
     const state = EditorState.create({ doc: content, extensions })
     const view = new EditorView({ state, parent: containerRef.current })
     viewRef.current = view
+    setCmView(view)
     
     // 동적 언어 로딩 (마크다운은 빌드시 기본 포함됨)
     if (language !== 'markdown' && language !== 'plaintext') {
@@ -74,6 +81,8 @@ export function Editor({ tabId, content, language, settings, onChange }: Props):
       view.destroy()
       viewRef.current = null
       compartmentsRef.current = null
+      setCmView(null)
+      setFindOpen(false)
     }
     // content는 의도적으로 제외 — 탭/언어 변경 시만 재생성
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,6 +137,18 @@ export function Editor({ tabId, content, language, settings, onChange }: Props):
     })
   }, [settings.fontFamily, settings.fontSize, settings.lineNumbersFontSize])
 
+  // 찾기 / 바꾸기 패널 열기 이벤트 수신
+  useEffect(() => {
+    const openFind = () => { setFindMode('find'); setFindOpen(true) }
+    const openReplace = () => { setFindMode('replace'); setFindOpen(true) }
+    window.addEventListener('editor:openFind', openFind)
+    window.addEventListener('editor:openReplace', openReplace)
+    return () => {
+      window.removeEventListener('editor:openFind', openFind)
+      window.removeEventListener('editor:openReplace', openReplace)
+    }
+  }, [])
+
   // 줄로 이동 이벤트 수신
   useEffect(() => {
     function handleGotoLine(e: Event) {
@@ -149,5 +170,18 @@ export function Editor({ tabId, content, language, settings, onChange }: Props):
     return () => window.removeEventListener('editor:gotoLine', handleGotoLine)
   }, [])
 
-  return <div className="editor" ref={containerRef} />
+  return (
+    <div className="editor" ref={containerRef}>
+      {findOpen && cmView && (
+        <FindReplace
+          view={cmView}
+          initialMode={findMode}
+          onClose={() => {
+            setFindOpen(false)
+            cmView.focus()
+          }}
+        />
+      )}
+    </div>
+  )
 }

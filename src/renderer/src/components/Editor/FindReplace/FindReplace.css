@@ -1,0 +1,290 @@
+/* ── Find/Replace 패널 ─────────────────────────────────── */
+/* 에디터 우상단에 absolute 오버레이로 표시 (VSCode 스타일) */
+.fr {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  z-index: 50;
+  min-width: 420px;
+  max-width: 560px;
+  background: var(--fr-bg);
+  border: 1px solid var(--fr-border);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 20px var(--fr-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 5px 6px 6px;
+}
+
+/* ── 테마 변수 ── */
+[data-theme='dark'] .fr,
+:root .fr {
+  --fr-bg: #2c313a;
+  --fr-border: #3e4451;
+  --fr-shadow: rgba(0, 0, 0, 0.45);
+  --fr-input-bg: #1e2127;
+  --fr-input-border: #3e4451;
+  --fr-input-focus: #61afef;
+  --fr-input-error: #e06c75;
+  --fr-input-no-match: #e06c75;
+  --fr-text: #abb2bf;
+  --fr-text-muted: #5c6370;
+  --fr-btn-hover: rgba(255, 255, 255, 0.08);
+  --fr-btn-active-bg: rgba(97, 175, 239, 0.2);
+  --fr-btn-active-border: rgba(97, 175, 239, 0.5);
+  --fr-btn-active-color: #61afef;
+  --fr-replace-btn-bg: rgba(255, 255, 255, 0.06);
+  --fr-replace-btn-hover: rgba(255, 255, 255, 0.12);
+  --fr-match-count: #5c6370;
+}
+
+[data-theme='light'] .fr {
+  --fr-bg: #f3f3f3;
+  --fr-border: #dde1e8;
+  --fr-shadow: rgba(0, 0, 0, 0.18);
+  --fr-input-bg: #ffffff;
+  --fr-input-border: #c8cdd6;
+  --fr-input-focus: #4078f2;
+  --fr-input-error: #d73a49;
+  --fr-input-no-match: #d73a49;
+  --fr-text: #282c34;
+  --fr-text-muted: #9da5b4;
+  --fr-btn-hover: rgba(0, 0, 0, 0.06);
+  --fr-btn-active-bg: rgba(64, 120, 242, 0.12);
+  --fr-btn-active-border: rgba(64, 120, 242, 0.4);
+  --fr-btn-active-color: #4078f2;
+  --fr-replace-btn-bg: rgba(0, 0, 0, 0.05);
+  --fr-replace-btn-hover: rgba(0, 0, 0, 0.1);
+  --fr-match-count: #9da5b4;
+}
+
+/* ── 행 레이아웃 ── */
+.fr__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+}
+
+.fr__row--replace {
+  margin-top: 3px;
+}
+
+/* ── 토글 버튼 (›) ── */
+.fr__toggle {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fr-text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+  transform: rotate(0deg);
+  line-height: 1;
+  padding: 0;
+}
+
+.fr__toggle:hover {
+  color: var(--fr-text);
+  background: var(--fr-btn-hover);
+}
+
+.fr__toggle--open {
+  transform: rotate(90deg);
+}
+
+/* ── 인풋 래퍼 ── */
+.fr__input-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  background: var(--fr-input-bg);
+  border: 1px solid var(--fr-input-border);
+  border-radius: 4px;
+  height: 26px;
+  padding: 0 6px;
+  transition: border-color 0.12s;
+  gap: 4px;
+}
+
+.fr__input-wrap:focus-within {
+  border-color: var(--fr-input-focus);
+}
+
+.fr__input-wrap--error {
+  border-color: var(--fr-input-error) !important;
+}
+
+.fr__input-wrap--no-match .fr__input {
+  color: var(--fr-input-no-match);
+}
+
+.fr__input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--fr-text);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 0;
+}
+
+.fr__input::placeholder {
+  color: var(--fr-text-muted);
+}
+
+/* ── 매치 카운트 ── */
+.fr__match-count {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--fr-match-count);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── 옵션 버튼 그룹 (Aa / ab / .*) ── */
+.fr__opts {
+  display: flex;
+  gap: 1px;
+}
+
+.fr__opt-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--fr-text-muted);
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+
+.fr__opt-btn:hover {
+  color: var(--fr-text);
+  background: var(--fr-btn-hover);
+}
+
+.fr__opt-btn--active {
+  color: var(--fr-btn-active-color);
+  background: var(--fr-btn-active-bg);
+  border-color: var(--fr-btn-active-border);
+}
+
+.fr__whole-word {
+  text-decoration: underline;
+}
+
+/* ── 네비게이션 버튼 (↑ ↓ ☰) ── */
+.fr__nav {
+  display: flex;
+  gap: 1px;
+}
+
+.fr__nav-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--fr-text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+
+.fr__nav-btn:hover:not(:disabled) {
+  color: var(--fr-text);
+  background: var(--fr-btn-hover);
+}
+
+.fr__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ── 닫기 버튼 ── */
+.fr__close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--fr-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+
+.fr__close:hover {
+  color: var(--fr-text);
+  background: var(--fr-btn-hover);
+}
+
+/* ── Replace row 전용 ── */
+.fr__replace-indent {
+  flex-shrink: 0;
+  width: 18px;
+}
+
+.fr__replace-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fr__replace-btn {
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 4px;
+  border: 1px solid var(--fr-input-border);
+  background: var(--fr-replace-btn-bg);
+  color: var(--fr-text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+
+.fr__replace-btn:hover:not(:disabled) {
+  background: var(--fr-replace-btn-hover);
+}
+
+.fr__replace-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── CM6 기본 검색 패널 비활성화 ── */
+.cm-panel.cm-search {
+  display: none !important;
+}

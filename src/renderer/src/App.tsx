@@ -45,7 +45,9 @@ export function App(): JSX.Element {
       if (t) maybeCloseTab(t.id)
     },
     onGotoLine: () => setGotoLineVisible(true),
-    onToggleMarkdownPreview: handleTogglePreview
+    onToggleMarkdownPreview: handleTogglePreview,
+    onFind: () => window.dispatchEvent(new CustomEvent('editor:openFind')),
+    onReplace: () => window.dispatchEvent(new CustomEvent('editor:openReplace'))
   })
 
   function handleDividerMouseDown(e: React.MouseEvent) {

@@ -53,7 +53,10 @@ export function buildMenu(): void {
         { label: '다음 일치 항목 선택 추가  (Cmd/Ctrl+D)', click: sendToRenderer('menu:selectNextOccurrence') },
         { label: '모든 일치 항목 선택  (Cmd/Ctrl+Shift+L)', click: sendToRenderer('menu:selectAllOccurrences') },
         { type: 'separator' },
-        { label: '전체 선택', accelerator: 'CmdOrCtrl+A', role: 'selectAll' }
+        { label: '전체 선택', accelerator: 'CmdOrCtrl+A', role: 'selectAll' },
+        { type: 'separator' },
+        { label: '찾기...', accelerator: 'CmdOrCtrl+F', click: sendToRenderer('menu:find') },
+        { label: '바꾸기...', accelerator: 'CmdOrCtrl+H', click: sendToRenderer('menu:replace') }
       ]
     },
     {

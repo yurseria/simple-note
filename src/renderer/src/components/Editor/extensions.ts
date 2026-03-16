@@ -25,10 +25,18 @@ import {
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import {
-  searchKeymap,
+  search,
+  setSearchQuery,
+  findNext,
+  findPrevious,
+  replaceNext,
+  replaceAll,
+  selectMatches,
   selectSelectionMatches,
-  SearchCursor
+  SearchCursor,
+  SearchQuery
 } from '@codemirror/search'
+
 import type { Command } from '@codemirror/view'
 import { indentUnit, syntaxHighlighting, defaultHighlightStyle, LanguageDescription } from '@codemirror/language'
 import type { LanguageMode } from '../../../../types/tab'
@@ -244,9 +252,24 @@ export function buildBaseExtensions(
       autocorrect: 'off',
       autocapitalize: 'off'
     }),
+    // search() — 검색 상태(searchState) 제공. UI는 커스텀 FindReplace 컴포넌트가 담당.
+    search({ createPanel: () => ({ dom: document.createElement('div') }) }),
+    // Cmd+F / Cmd+H 를 가로채 커스텀 FindReplace 패널 열기
+    keymap.of([
+      {
+        key: 'Mod-f',
+        run: () => { window.dispatchEvent(new CustomEvent('editor:openFind')); return true },
+        preventDefault: true
+      },
+      {
+        key: 'Mod-h',
+        run: () => { window.dispatchEvent(new CustomEvent('editor:openReplace')); return true },
+        preventDefault: true
+      }
+    ]),
     // multi-edit 키맵을 defaultKeymap보다 앞에 배치해 우선순위 확보
     multiEditKeymap,
-    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+    keymap.of([...defaultKeymap, ...historyKeymap]),
     EditorView.updateListener.of((update) => {
       // remote annotation이 붙은 트랜잭션(외부 sync dispatch)은 onChange 제외
       if (update.docChanged && !update.transactions.some((tr) => tr.annotation(Transaction.remote))) {

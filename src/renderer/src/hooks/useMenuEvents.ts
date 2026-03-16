@@ -11,6 +11,8 @@ interface Options {
   onCloseTab: () => void
   onGotoLine: () => void
   onToggleMarkdownPreview: () => void
+  onFind: () => void
+  onReplace: () => void
 }
 
 export function useMenuEvents(opts: Options): void {
@@ -29,6 +31,8 @@ export function useMenuEvents(opts: Options): void {
       window.api.menu.on('menu:toggleMarkdownPreview', () =>
         optsRef.current.onToggleMarkdownPreview()
       ),
+      window.api.menu.on('menu:find', () => optsRef.current.onFind()),
+      window.api.menu.on('menu:replace', () => optsRef.current.onReplace()),
       window.api.menu.on('menu:toggleLineNumbers', () => {
         const { updateEditor, settings } = useSettingsStore.getState()
         updateEditor({ showLineNumbers: !settings.editor.showLineNumbers })
