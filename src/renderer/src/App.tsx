@@ -27,6 +27,7 @@ export function App(): JSX.Element {
   const [gotoLineVisible, setGotoLineVisible] = useState(false);
   const [gotoLineValue, setGotoLineValue] = useState("");
   const [splitRatio, setSplitRatio] = useState(0.5);
+  const [scrollToBottom, setScrollToBottom] = useState(0);
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
@@ -151,6 +152,11 @@ export function App(): JSX.Element {
                 language={tab.language}
                 settings={settings.editor}
                 onChange={(c) => updateContent(tab.id, c)}
+                onCursorAtBottom={
+                  isMarkdown && showPreview
+                    ? () => setScrollToBottom((n) => n + 1)
+                    : undefined
+                }
               />
               {isMarkdown && showPreview && (
                 <>
@@ -158,7 +164,10 @@ export function App(): JSX.Element {
                     className="split-divider"
                     onMouseDown={handleDividerMouseDown}
                   />
-                  <MarkdownPreview content={tab.content} />
+                  <MarkdownPreview
+                    content={tab.content}
+                    scrollToBottom={scrollToBottom}
+                  />
                 </>
               )}
             </div>
