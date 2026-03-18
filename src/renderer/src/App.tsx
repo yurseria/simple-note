@@ -8,6 +8,7 @@ import { useTabStore, inferLanguage } from "./store/tabStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useFile } from "./hooks/useFile";
 import { useMenuEvents } from "./hooks/useMenuEvents";
+import { useTranslation } from "./i18n";
 import type { LanguageMode } from "../../types/tab";
 import "./App.css";
 
@@ -23,6 +24,7 @@ export function App(): JSX.Element {
   } = useTabStore();
   const { settings, loaded, load } = useSettingsStore();
   const { openFile, saveFile, saveFileAs, maybeCloseTab } = useFile();
+  const t = useTranslation();
 
   const [gotoLineVisible, setGotoLineVisible] = useState(false);
   const [gotoLineValue, setGotoLineValue] = useState("");
@@ -121,6 +123,8 @@ export function App(): JSX.Element {
 
   // tabs 참조를 억제하기 위한 lint 무시 (activeId deps로 tab 파생)
   void tabs;
+  void activeId;
+  void togglePreview;
 
   return (
     <div className="app" data-theme={settings.editor.theme}>
@@ -188,7 +192,9 @@ export function App(): JSX.Element {
       {gotoLineVisible && (
         <div className="goto-overlay" onClick={() => setGotoLineVisible(false)}>
           <div className="goto-dialog" onClick={(e) => e.stopPropagation()}>
-            <label className="goto-dialog__label">줄로 이동:</label>
+            <label className="goto-dialog__label">
+              {t.dialog.gotoLineLabel}
+            </label>
             <input
               className="goto-dialog__input"
               type="number"
@@ -212,13 +218,13 @@ export function App(): JSX.Element {
                 className="goto-dialog__btn goto-dialog__btn--primary"
                 onClick={handleGotoLine}
               >
-                이동
+                {t.dialog.gotoBtn}
               </button>
               <button
                 className="goto-dialog__btn"
                 onClick={() => setGotoLineVisible(false)}
               >
-                취소
+                {t.dialog.cancelBtn}
               </button>
             </div>
           </div>

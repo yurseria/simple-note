@@ -1,105 +1,191 @@
+import type { Translations } from "../../i18n/types";
+
 export type MenuItem =
-  | { type: 'separator' }
-  | { 
-      label: string
-      accelerator?: string
-      action?: string
-      actionArgs?: any[]
-      role?: string
-      submenu?: MenuItem[]
-    }
+  | { type: "separator" }
+  | {
+      label: string;
+      accelerator?: string;
+      action?: string;
+      actionArgs?: unknown[];
+      role?: string;
+      submenu?: MenuItem[];
+    };
 
 export interface MenuDefinition {
-  id: string
-  label: string
-  items: MenuItem[]
+  id: string;
+  label: string;
+  items: MenuItem[];
 }
 
-export const appMenuData: MenuDefinition[] = [
-  {
-    id: 'file',
-    label: '파일',
-    items: [
-      { label: '새 탭 열기', accelerator: 'Ctrl+T', action: 'menu:newTab' },
-      { label: '파일 열기...', accelerator: 'Ctrl+O', action: 'menu:open' },
-      { type: 'separator' },
-      { label: '저장', accelerator: 'Ctrl+S', action: 'menu:save' },
-      { label: '다른 이름으로 저장...', accelerator: 'Ctrl+Shift+S', action: 'menu:saveAs' },
-      { type: 'separator' },
-      { label: '탭 닫기', accelerator: 'Ctrl+W', action: 'menu:closeTab' },
-      { type: 'separator' },
-      { label: '종료', role: 'quit' }
-    ]
-  },
-  {
-    id: 'edit',
-    label: '편집',
-    items: [
-      { label: '실행 취소', accelerator: 'Ctrl+Z', role: 'undo' },
-      { label: '다시 실행', accelerator: 'Ctrl+Shift+Z', role: 'redo' },
-      { type: 'separator' },
-      { label: '잘라내기', accelerator: 'Ctrl+X', role: 'cut' },
-      { label: '복사', accelerator: 'Ctrl+C', role: 'copy' },
-      { label: '붙여넣기', accelerator: 'Ctrl+V', role: 'paste' },
-      { type: 'separator' },
-      { label: '다음 일치 항목 선택 추가', accelerator: 'Ctrl+D', action: 'menu:selectNextOccurrence' },
-      { label: '모든 일치 항목 선택', accelerator: 'Ctrl+Shift+L', action: 'menu:selectAllOccurrences' },
-      { type: 'separator' },
-      { label: '전체 선택', accelerator: 'Ctrl+A', role: 'selectAll' }
-    ]
-  },
-  {
-    id: 'view',
-    label: '보기',
-    items: [
-      {
-        label: '모양',
-        submenu: [
-          { label: '줄 번호 표시/숨기기', accelerator: 'Ctrl+Shift+L', action: 'menu:toggleLineNumbers' },
-          { label: '툴바 표시/숨기기', action: 'menu:toggleToolbar' }
-        ]
-      },
-      {
-        label: '테마',
-        submenu: [
-          { label: '밝게 (Light)', action: 'menu:setTheme', actionArgs: ['light'] },
-          { label: '어둡게 (Dark)', action: 'menu:setTheme', actionArgs: ['dark'] }
-        ]
-      },
-      {
-        label: '언어 모드',
-        submenu: [
-          { label: '일반 텍스트', action: 'menu:setLanguage', actionArgs: ['plaintext'] },
-          { label: '마크다운', action: 'menu:setLanguage', actionArgs: ['markdown'] }
-        ]
-      },
-      { type: 'separator' },
-      {
-        label: '확대/축소',
-        submenu: [
-          { label: '확대', accelerator: 'Ctrl+Plus', action: 'menu:fontSizeUp' },
-          { label: '축소', accelerator: 'Ctrl+-', action: 'menu:fontSizeDown' },
-          { label: '기본값으로 복원', accelerator: 'Ctrl+0', action: 'menu:fontSizeReset' }
-        ]
-      },
-      { type: 'separator' },
-      { label: '전체 화면 전환', role: 'togglefullscreen', accelerator: 'F11' }
-    ]
-  },
-  {
-    id: 'go',
-    label: '이동',
-    items: [
-      { label: '지정 줄로 이동...', accelerator: 'Ctrl+G', action: 'menu:gotoLine' }
-    ]
-  },
-  {
-    id: 'help',
-    label: '도움말',
-    items: [
-      { label: '정보', role: 'about' },
-      { type: 'separator' },
-      { label: '개발자 도구 전환', accelerator: 'Ctrl+Alt+I', role: 'toggleDevTools' }
-    ]
-  }
-]
+export function getAppMenuData(t: Translations): MenuDefinition[] {
+  return [
+    {
+      id: "file",
+      label: t.menu.file,
+      items: [
+        { label: t.file.newTab, accelerator: "Ctrl+T", action: "menu:newTab" },
+        { label: t.file.open, accelerator: "Ctrl+O", action: "menu:open" },
+        { type: "separator" },
+        { label: t.file.save, accelerator: "Ctrl+S", action: "menu:save" },
+        {
+          label: t.file.saveAs,
+          accelerator: "Ctrl+Shift+S",
+          action: "menu:saveAs",
+        },
+        { type: "separator" },
+        {
+          label: t.file.closeTab,
+          accelerator: "Ctrl+W",
+          action: "menu:closeTab",
+        },
+        { type: "separator" },
+        { label: t.file.quit, role: "quit" },
+      ],
+    },
+    {
+      id: "edit",
+      label: t.menu.edit,
+      items: [
+        { label: t.edit.undo, accelerator: "Ctrl+Z", role: "undo" },
+        { label: t.edit.redo, accelerator: "Ctrl+Shift+Z", role: "redo" },
+        { type: "separator" },
+        { label: t.edit.cut, accelerator: "Ctrl+X", role: "cut" },
+        { label: t.edit.copy, accelerator: "Ctrl+C", role: "copy" },
+        { label: t.edit.paste, accelerator: "Ctrl+V", role: "paste" },
+        { type: "separator" },
+        {
+          label: t.edit.selectNextOccurrence,
+          accelerator: "Ctrl+D",
+          action: "menu:selectNextOccurrence",
+        },
+        {
+          label: t.edit.selectAllOccurrences,
+          accelerator: "Ctrl+Shift+L",
+          action: "menu:selectAllOccurrences",
+        },
+        { type: "separator" },
+        { label: t.edit.selectAll, accelerator: "Ctrl+A", role: "selectAll" },
+        { type: "separator" },
+        { label: t.edit.find, accelerator: "Ctrl+F", action: "menu:find" },
+        {
+          label: t.edit.replace,
+          accelerator: "Ctrl+H",
+          action: "menu:replace",
+        },
+      ],
+    },
+    {
+      id: "view",
+      label: t.menu.view,
+      items: [
+        {
+          label: t.view.appearance,
+          submenu: [
+            {
+              label: t.view.toggleLineNumbers,
+              accelerator: "Ctrl+Shift+L",
+              action: "menu:toggleLineNumbers",
+            },
+            { label: t.view.toggleToolbar, action: "menu:toggleToolbar" },
+          ],
+        },
+        {
+          label: t.view.theme,
+          submenu: [
+            {
+              label: t.view.themeLight,
+              action: "menu:setTheme",
+              actionArgs: ["light"],
+            },
+            {
+              label: t.view.themeDark,
+              action: "menu:setTheme",
+              actionArgs: ["dark"],
+            },
+          ],
+        },
+        {
+          label: t.view.languageMode,
+          submenu: [
+            {
+              label: t.view.plainText,
+              action: "menu:setLanguage",
+              actionArgs: ["plaintext"],
+            },
+            {
+              label: t.view.markdown,
+              action: "menu:setLanguage",
+              actionArgs: ["markdown"],
+            },
+          ],
+        },
+        {
+          label: t.view.uiLanguage,
+          submenu: [
+            {
+              label: t.view.korean,
+              action: "menu:setUILanguage",
+              actionArgs: ["ko"],
+            },
+            {
+              label: t.view.english,
+              action: "menu:setUILanguage",
+              actionArgs: ["en"],
+            },
+          ],
+        },
+        { type: "separator" },
+        {
+          label: t.view.zoom,
+          submenu: [
+            {
+              label: t.view.zoomIn,
+              accelerator: "Ctrl+Plus",
+              action: "menu:fontSizeUp",
+            },
+            {
+              label: t.view.zoomOut,
+              accelerator: "Ctrl+-",
+              action: "menu:fontSizeDown",
+            },
+            {
+              label: t.view.zoomReset,
+              accelerator: "Ctrl+0",
+              action: "menu:fontSizeReset",
+            },
+          ],
+        },
+        { type: "separator" },
+        {
+          label: t.view.toggleFullScreen,
+          role: "togglefullscreen",
+          accelerator: "F11",
+        },
+      ],
+    },
+    {
+      id: "go",
+      label: t.menu.go,
+      items: [
+        {
+          label: t.go.gotoLine,
+          accelerator: "Ctrl+G",
+          action: "menu:gotoLine",
+        },
+      ],
+    },
+    {
+      id: "help",
+      label: t.menu.help,
+      items: [
+        { label: t.help.about, role: "about" },
+        { type: "separator" },
+        {
+          label: t.help.devTools,
+          accelerator: "Ctrl+Alt+I",
+          role: "toggleDevTools",
+        },
+      ],
+    },
+  ];
+}

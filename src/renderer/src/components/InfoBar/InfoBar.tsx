@@ -1,69 +1,103 @@
-import { useMemo } from 'react'
-import type { InfoBarMode, Settings } from '../../../../types/settings'
-import type { LanguageMode } from '../../../../types/tab'
-import './InfoBar.css'
+import { useMemo } from "react";
+import type { InfoBarMode } from "../../../../types/settings";
+import type { LanguageMode } from "../../../../types/tab";
+import { useTranslation } from "../../i18n";
+import "./InfoBar.css";
 
 interface Props {
-  content: string
-  encoding: string
-  mode: InfoBarMode
-  language: LanguageMode
-  countWhitespaces: boolean
-  onLanguageClick: () => void
+  content: string;
+  encoding: string;
+  mode: InfoBarMode;
+  language: LanguageMode;
+  countWhitespaces: boolean;
+  onLanguageClick: () => void;
 }
 
 function computeStats(content: string, countWhitespaces: boolean) {
-  const chars = countWhitespaces ? content.length : content.replace(/\s/g, '').length
-  const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length
-  const lines = content === '' ? 0 : content.split('\n').length
-  return { chars, words, lines }
+  const chars = countWhitespaces
+    ? content.length
+    : content.replace(/\s/g, "").length;
+  const words = content.trim() === "" ? 0 : content.trim().split(/\s+/).length;
+  const lines = content === "" ? 0 : content.split("\n").length;
+  return { chars, words, lines };
 }
 
 function plural(count: number, singular: string, pluralForm: string): string {
-  return `${count.toLocaleString()} ${count === 1 ? singular : pluralForm}`
+  return `${count.toLocaleString()} ${count === 1 ? singular : pluralForm}`;
 }
 
-function LanguageBadge({ language, onClick }: { language: LanguageMode; onClick: () => void }) {
-  const displayName = language === 'plaintext' ? 'Plain Text' : 
-                      language === 'markdown' ? 'Markdown' : 
-                      language;
+function LanguageBadge({
+  language,
+  onClick,
+  tip,
+}: {
+  language: LanguageMode;
+  onClick: () => void;
+  tip: string;
+}) {
+  const displayName =
+    language === "plaintext"
+      ? "Plain Text"
+      : language === "markdown"
+        ? "Markdown"
+        : language;
   return (
-    <button className="infobar__lang" onClick={onClick} title="클릭해서 언어 전환">
+    <button className="infobar__lang" onClick={onClick} title={tip}>
       {displayName}
     </button>
-  )
+  );
 }
 
-export function InfoBar({ content, encoding, mode, language, countWhitespaces, onLanguageClick }: Props): JSX.Element | null {
+export function InfoBar({
+  content,
+  encoding,
+  mode,
+  language,
+  countWhitespaces,
+  onLanguageClick,
+}: Props): JSX.Element | null {
+  const t = useTranslation();
   const { chars, words, lines } = useMemo(
     () => computeStats(content, countWhitespaces),
-    [content, countWhitespaces]
-  )
+    [content, countWhitespaces],
+  );
 
-  if (mode === 'none') return null
+  if (mode === "none") return null;
 
-  const stats = `${plural(chars, 'Character', 'Characters')} · ${plural(words, 'Word', 'Words')} · ${plural(lines, 'Line', 'Lines')}`
+  const stats = [
+    plural(chars, t.infobar.charSingular, t.infobar.charPlural),
+    plural(words, t.infobar.wordSingular, t.infobar.wordPlural),
+    plural(lines, t.infobar.lineSingular, t.infobar.linePlural),
+  ].join(" · ");
 
-  if (mode === 'hud') {
+  if (mode === "hud") {
     return (
       <div className="infobar infobar--hud" role="status">
         <span className="infobar__stats">{stats}</span>
         <span className="infobar__sep">·</span>
         <span className="infobar__encoding">{encoding}</span>
         <span className="infobar__sep">·</span>
-        <LanguageBadge language={language} onClick={onLanguageClick} />
+        <LanguageBadge
+          language={language}
+          onClick={onLanguageClick}
+          tip={t.infobar.langToggleTip}
+        />
       </div>
-    )
+    );
   }
 
   return (
     <div className="infobar infobar--status" role="status">
       <span className="infobar__stats">{stats}</span>
       <div className="infobar__right">
-        <LanguageBadge language={language} onClick={onLanguageClick} />
+        <LanguageBadge
+          language={language}
+          onClick={onLanguageClick}
+          tip={t.infobar.langToggleTip}
+        />
         <span className="infobar__sep">·</span>
         <span className="infobar__encoding">{encoding}</span>
       </div>
     </div>
-  )
+  );
 }

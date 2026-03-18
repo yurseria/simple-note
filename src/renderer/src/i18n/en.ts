@@ -1,0 +1,71 @@
+import type { Translations } from './types'
+
+export const en: Translations = {
+  menu: {
+    file: 'File',
+    edit: 'Edit',
+    view: 'View',
+    go: 'Go',
+    help: 'Help'
+  },
+  file: {
+    newTab: 'New Tab',
+    open: 'Open File...',
+    save: 'Save',
+    saveAs: 'Save As...',
+    closeTab: 'Close Tab',
+    quit: 'Quit'
+  },
+  edit: {
+    undo: 'Undo',
+    redo: 'Redo',
+    cut: 'Cut',
+    copy: 'Copy',
+    paste: 'Paste',
+    selectNextOccurrence: 'Add Next Occurrence to Selection',
+    selectAllOccurrences: 'Select All Occurrences',
+    selectAll: 'Select All',
+    find: 'Find...',
+    replace: 'Replace...'
+  },
+  view: {
+    appearance: 'Appearance',
+    toggleLineNumbers: 'Toggle Line Numbers',
+    toggleToolbar: 'Toggle Toolbar',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    languageMode: 'Language Mode',
+    plainText: 'Plain Text',
+    markdown: 'Markdown',
+    zoom: 'Zoom',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    zoomReset: 'Reset Zoom',
+    toggleFullScreen: 'Toggle Full Screen',
+    uiLanguage: 'UI Language',
+    korean: '한국어',
+    english: 'English'
+  },
+  go: {
+    gotoLine: 'Go to Line...'
+  },
+  help: {
+    about: 'About',
+    devTools: 'Toggle Developer Tools'
+  },
+  dialog: {
+    gotoLineLabel: 'Go to line:',
+    gotoBtn: 'Go',
+    cancelBtn: 'Cancel'
+  },
+  infobar: {
+    charSingular: 'Character',
+    charPlural: 'Characters',
+    wordSingular: 'Word',
+    wordPlural: 'Words',
+    lineSingular: 'Line',
+    linePlural: 'Lines',
+    langToggleTip: 'Click to switch language mode'
+  }
+}
