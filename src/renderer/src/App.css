@@ -1,5 +1,5 @@
 /* ── CSS 변수: Dark 테마 (기본) ── */
-[data-theme='dark'],
+[data-theme="dark"],
 :root {
   --editor-bg: #282c34;
   --gutter-bg: #21252b;
@@ -17,7 +17,7 @@
 }
 
 /* ── Light 테마 ── */
-[data-theme='light'] {
+[data-theme="light"] {
   --editor-bg: #fafafa;
   --gutter-bg: #f2f2f2;
   --text-primary: #282c34;
@@ -34,9 +34,17 @@
 }
 
 /* ── 전역 리셋 ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   overflow: hidden;
   background: transparent;
@@ -51,7 +59,9 @@ html, body, #root {
   color: var(--text-primary);
 }
 
-.app--loading { background: var(--editor-bg); }
+.app--loading {
+  background: var(--editor-bg);
+}
 
 .app__body {
   flex: 1;
@@ -66,6 +76,15 @@ html, body, #root {
   flex: 1;
   display: flex;
   overflow: hidden;
+}
+
+/* HUD 모드일 때 스크롤 영역 하단에 여백 확보 (floating bar가 가리지 않도록) */
+.app__body--hud .markdown-preview {
+  padding-bottom: 80px;
+}
+
+.app__body--hud .editor .cm-content {
+  padding-bottom: 80px;
 }
 
 .app__editor-pane--split > .editor {
@@ -90,7 +109,7 @@ html, body, #root {
 }
 
 .split-divider::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0 -3px;
 }
@@ -160,7 +179,9 @@ html, body, #root {
   transition: background 0.15s;
 }
 
-.goto-dialog__btn:hover { background: var(--tab-active-bg); }
+.goto-dialog__btn:hover {
+  background: var(--tab-active-bg);
+}
 
 .goto-dialog__btn--primary {
   background: var(--accent-color);
@@ -168,4 +189,6 @@ html, body, #root {
   color: #fff;
 }
 
-.goto-dialog__btn--primary:hover { opacity: 0.9; }
+.goto-dialog__btn--primary:hover {
+  opacity: 0.9;
+}
