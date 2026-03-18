@@ -18,17 +18,9 @@
 </p>
 
 
-<table>
-  <tr>
-    <td><img src="assets/text_editor.png" width="500"/></td>
-    <td><img src="assets/markdown_editor.png" width="500"/></td>
-  </tr>
-  <tr>
-    <td align="center">텍스트 에디터</td>
-    <td align="center">마크다운 에디터/뷰어</td>
-  </tr>
-</table>
+![ㅁㄴㅇㅁㄴㅇ](assets/simple_editor.png)
 
+---
 
 ## 기능
 
