@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 # Temp files
 .tmp
 .DS_Store
+.zed
+.superset

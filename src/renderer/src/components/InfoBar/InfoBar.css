@@ -1,7 +1,7 @@
 .infobar {
   font-size: 13px;
   user-select: none;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 /* HUD 모드 */
@@ -79,7 +79,7 @@
 }
 
 .infobar--status .infobar__lang {
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .infobar--status .infobar__lang:hover {

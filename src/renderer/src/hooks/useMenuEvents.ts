@@ -61,6 +61,11 @@ export function useMenuEvents(opts: Options): void {
           .getState()
           .updateEditor({ theme: theme as "light" | "dark" });
       }),
+      window.api.menu.on("menu:setInfoBarMode", (mode: unknown) => {
+        useSettingsStore
+          .getState()
+          .updateEditor({ infoBarMode: mode as "hud" | "status" });
+      }),
     ];
     return () => offs.forEach((off) => off());
     // 마운트 시 1회만 등록

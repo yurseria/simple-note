@@ -86,7 +86,21 @@ export function getAppMenuData(t: Translations): MenuDefinition[] {
               accelerator: "Ctrl+Shift+L",
               action: "menu:toggleLineNumbers",
             },
-            { label: t.view.toggleToolbar, action: "menu:toggleToolbar" },
+            {
+              label: t.view.infoBarStyle,
+              submenu: [
+                {
+                  label: t.view.floatingHud,
+                  action: "menu:setInfoBarMode",
+                  actionArgs: ["hud"],
+                },
+                {
+                  label: t.view.statusBar,
+                  action: "menu:setInfoBarMode",
+                  actionArgs: ["status"],
+                },
+              ],
+            },
           ],
         },
         {
