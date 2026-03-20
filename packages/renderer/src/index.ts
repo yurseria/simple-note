@@ -1,0 +1,5 @@
+export { App } from './App'
+export { api, setPlatformApi } from './platform'
+export type { NoteAPI, ReadResult } from './types/api'
+export type { Settings } from './types/settings'
+export type { TabState, LanguageMode } from './types/tab'

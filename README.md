@@ -1,7 +1,7 @@
 # Simple Note
 
 <p align="center">
-  <img width="200" height="200" alt="logo" src="./build/icon.png" />  
+  <img width="200" height="200" alt="logo" src="./assets/icon.png" />
 </p>
 
 <p align="center">
@@ -12,14 +12,12 @@
   <br/>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-13+-000000?style=for-the-badge&amp;logo=apple&amp;logoColor=white" alt="macOS"></a>
   <a href="https://www.microsoft.com/windows/"><img src="https://img.shields.io/badge/Windows-10+-0078D6?style=for-the-badge&amp;logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSI+CjxnIGlkPSJzdXJmYWNlMSI+CjxwYXRoIHN0eWxlPSIgc3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87ZmlsbDpyZ2IoMTAwJSwxMDAlLDEwMCUpO2ZpbGwtb3BhY2l0eToxOyIgZD0iTSAwIDAgTCAxMS4zNzg5MDYgMCBMIDExLjM3ODkwNiAxMS4zNzEwOTQgTCAwIDExLjM3MTA5NCBaIE0gMTIuNjIxMDk0IDAgTCAyNCAwIEwgMjQgMTEuMzcxMDk0IEwgMTIuNjIxMDk0IDExLjM3MTA5NCBaIE0gMCAxMi42MjEwOTQgTCAxMS4zNzg5MDYgMTIuNjIxMDk0IEwgMTEuMzc4OTA2IDI0IEwgMCAyNCBaIE0gMTIuNjIxMDk0IDEyLjYyMTA5NCBMIDI0IDEyLjYyMTA5NCBMIDI0IDI0IEwgMTIuNjIxMDk0IDI0ICIvPgo8L2c+Cjwvc3ZnPgo=&amp;logoColor=white" alt="Windows"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-v20.x-339933?style=for-the-badge&amp;logo=node.js&amp;logoColor=white" alt="Node.js"></a>
-  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-v10.x-CB3837?style=for-the-badge&amp;logo=npm&amp;logoColor=white" alt="npm"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-1.77+-DEA584?style=for-the-badge&amp;logo=rust&amp;logoColor=white" alt="Rust"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
   <br/>
   <br/>
   한국어 / <a href="./README_EN.md">English</a>
 </p>
-
 
 ![screenshot](assets/simple_editor.png)
 
@@ -52,11 +50,12 @@
 
 ## 요구사항
 
-| 항목 | 버전 |
-|---|---|
-| 운영체제 | macOS 13 Ventura 이상 또는 Windows 10 이상 |
-| Node.js | v20.x |
-| npm | v10.x |
+| 항목 | Electron 버전 | Tauri 버전 |
+|---|---|---|
+| 운영체제 | macOS 13+ / Windows 10+ / Linux | macOS 13+ / Windows 10+ / Linux |
+| Node.js | v20.x | v20.x |
+| npm | v10.x | v10.x |
+| Rust | - | 1.77+ |
 
 ---
 
@@ -66,76 +65,93 @@
 # 의존성 설치
 npm install
 
-# 개발 서버 + Electron 실행
-npm run dev
+# Electron 버전 실행
+npm run dev:electron
+
+# Tauri 버전 실행
+npm run dev:tauri
 ```
 
 ## 빌드
 
 ```bash
-# 프로덕션 빌드
-npm run build
+# Electron 빌드
+npm run build:electron
 
-# OS용 패키지 생성
-npm run package
+# Tauri 빌드
+npm run build:tauri
 ```
-
-빌드 결과물은 `dist/` 디렉터리에 생성됩니다.
-
-### ⚠️ Windows 빌드(패키징) 시 주의사항
-Windows 환경에서 `npm run package` 실행 시 `winCodeSign` 관련 심볼릭 링크 생성 에러(`ERROR: Cannot create symbolic link`)가 발생하며 빌드가 실패할 수 있습니다. 이는 Windows의 보안 정책 때문이며, 다음 중 하나의 방법으로 해결할 수 있습니다.
-
-1. **개발자 모드 활성화 (권장)**: Windows 설정 > 시스템(또는 업데이트 및 보안) > 개발자용 > **'개발자 모드' 켬**으로 변경
-2. **관리자 권한으로 실행**: 사용 중인 터미널(VS Code, PowerShell, CMD)을 **'관리자 권한'으로 실행**한 후 패키징 명령어 입력
 
 ---
 
 ## 기술 스택
 
-| 구분 | 패키지 |
-|---|---|
-| 런타임 | Electron 41 |
-| UI | React 18 + TypeScript |
-| 에디터 | CodeMirror 6 |
-| 상태 관리 | Zustand 5 |
-| 마크다운 | marked + marked-highlight + highlight.js + DOMPurify |
-| 설정 저장 | electron-store 8 |
-| 인코딩 | chardet + iconv-lite |
-| 빌드 | vite 8 + electron-vite 5 + electron-builder 26 |
+| 구분 | 공통 | Electron | Tauri |
+|---|---|---|---|
+| UI | React 18 + TypeScript | | |
+| 에디터 | CodeMirror 6 | | |
+| 상태 관리 | Zustand 5 | | |
+| 마크다운 | marked + highlight.js + DOMPurify | | |
+| 런타임 | | Electron 41 | Tauri 2 (Rust) |
+| 설정 저장 | | electron-store 8 | tauri-plugin-store |
+| 인코딩 | | chardet + iconv-lite | Rust (encoding_rs) |
+| 빌드 | | electron-vite 5 | Vite 8 + Tauri CLI |
 
 ---
 
 ## 디렉터리 구조
 
 ```
-src/
-├── main/           # Electron 메인 프로세스
-│   ├── index.ts    # BrowserWindow 생성
-│   ├── ipc.ts      # IPC 핸들러 (파일, 설정, 다이얼로그)
-│   ├── menu.ts     # OS 네이티브 메뉴
-│   ├── fileManager.ts  # 파일 읽기/쓰기 + 인코딩
-│   ├── store.ts    # 설정 스키마
-│   └── logger.ts   # 로거
-├── preload/
-│   └── index.ts    # API 노출
-├── types/
-│   ├── settings.ts # 설정 타입
-│   └── tab.ts      # 탭 타입
-└── renderer/src/
-    ├── App.tsx
-    ├── components/
-    │   ├── TitleBar/
-    │   ├── TabBar/
-    │   ├── Editor/             # 에디터 코어 + 확장
-    │   │   ├── extensions.ts
-    │   │   └── markdownPreview/
-    │   └── InfoBar/
-    ├── store/
-    │   ├── tabStore.ts         # 탭 상태 관리
-    │   └── settingsStore.ts
-    └── hooks/
-        ├── useFile.ts
-        └── useMenuEvents.ts
+simple-note/
+├── packages/
+│   ├── renderer/              # 공유 프론트엔드 (@simple-note/renderer)
+│   │   ├── src/
+│   │   │   ├── components/    # TitleBar, TabBar, Editor, InfoBar
+│   │   │   ├── hooks/         # useFile, useKeyboardShortcuts
+│   │   │   ├── store/         # tabStore, settingsStore (zustand)
+│   │   │   ├── i18n/          # 한국어/영어
+│   │   │   ├── types/         # NoteAPI 인터페이스, Settings, Tab
+│   │   │   ├── platform.ts    # 플랫폼 API 싱글톤 (Proxy)
+│   │   │   └── App.tsx        # 메인 앱 컴포넌트
+│   │   └── package.json
+│   │
+│   ├── electron/              # Electron shell (@simple-note/electron)
+│   │   ├── src/
+│   │   │   ├── main/          # Electron 메인 프로세스
+│   │   │   ├── preload/       # NoteAPI 구현 (IPC bridge)
+│   │   │   └── renderer/      # Entry point
+│   │   └── package.json
+│   │
+│   └── tauri/                 # Tauri shell (@simple-note/tauri)
+│       ├── src/
+│       │   ├── api.ts         # NoteAPI 구현 (Tauri invoke)
+│       │   └── main.tsx       # Entry point
+│       ├── src-tauri/         # Rust 백엔드
+│       └── package.json
+│
+├── package.json               # Workspace root
+├── pnpm-workspace.yaml
+└── tsconfig.base.json
+```
+
+---
+
+## 아키텍처
+
+프론트엔드 코드를 `@simple-note/renderer` 패키지에서 공유하고, 플랫폼별 네이티브 기능은 `NoteAPI` 인터페이스를 통해 추상화됩니다.
+
+```
+Electron shell ──┐
+                 ├──▶ @simple-note/renderer (공유 UI)
+Tauri shell ─────┘
+                       │
+                       ▼
+                   NoteAPI (Proxy singleton)
+                       │
+            ┌──────────┼──────────┐
+            ▼                     ▼
+    Electron IPC            Tauri invoke
+    (preload)               (Rust backend)
 ```
 
 ---

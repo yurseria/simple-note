@@ -1,0 +1,25 @@
+{
+  "identifier": "default",
+  "description": "Default capability set for the application",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:allow-ask",
+    {
+      "identifier": "fs:allow-read",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-write",
+      "allow": [{ "path": "**" }]
+    },
+    "fs:allow-exists",
+    "os:default",
+    "store:default",
+    "core:window:allow-start-dragging"
+  ]
+}

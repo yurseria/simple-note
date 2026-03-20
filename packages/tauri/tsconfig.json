@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "noEmit": true,
+    "paths": {
+      "@simple-note/renderer": ["../renderer/src/index.ts"],
+      "@simple-note/renderer/*": ["../renderer/src/*"]
+    }
+  },
+  "include": ["src/**/*", "../renderer/src/**/*"]
+}

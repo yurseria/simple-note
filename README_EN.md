@@ -1,7 +1,7 @@
 # Simple Note
 
 <p align="center">
-  <img width="200" height="200" alt="logo" src="./build/icon.png" />  
+  <img width="200" height="200" alt="logo" src="./assets/icon.png" />
 </p>
 
 <p align="center">
@@ -12,14 +12,12 @@
   <br/>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-13+-000000?style=for-the-badge&amp;logo=apple&amp;logoColor=white" alt="macOS"></a>
   <a href="https://www.microsoft.com/windows/"><img src="https://img.shields.io/badge/Windows-10+-0078D6?style=for-the-badge&amp;logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSI+CjxnIGlkPSJzdXJmYWNlMSI+CjxwYXRoIHN0eWxlPSIgc3Ryb2tlOm5vbmU7ZmlsbC1ydWxlOm5vbnplcm87ZmlsbDpyZ2IoMTAwJSwxMDAlLDEwMCUpO2ZpbGwtb3BhY2l0eToxOyIgZD0iTSAwIDAgTCAxMS4zNzg5MDYgMCBMIDExLjM3ODkwNiAxMS4zNzEwOTQgTCAwIDExLjM3MTA5NCBaIE0gMTIuNjIxMDk0IDAgTCAyNCAwIEwgMjQgMTEuMzcxMDk0IEwgMTIuNjIxMDk0IDExLjM3MTA5NCBaIE0gMCAxMi42MjEwOTQgTCAxMS4zNzg5MDYgMTIuNjIxMDk0IEwgMTEuMzc4OTA2IDI0IEwgMCAyNCBaIE0gMTIuNjIxMDk0IDEyLjYyMTA5NCBMIDI0IDEyLjYyMTA5NCBMIDI0IDI0IEwgMTIuNjIxMDk0IDI0ICIvPgo8L2c+Cjwvc3ZnPgo=&amp;logoColor=white" alt="Windows"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-v20.x-339933?style=for-the-badge&amp;logo=node.js&amp;logoColor=white" alt="Node.js"></a>
-  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-v10.x-CB3837?style=for-the-badge&amp;logo=npm&amp;logoColor=white" alt="npm"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-1.77+-DEA584?style=for-the-badge&amp;logo=rust&amp;logoColor=white" alt="Rust"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
   <br/>
   <br/>
   <a href="./README.md">한국어</a> / English
 </p>
-
 
 ![Simple Note Editor](assets/simple_editor.png)
 
@@ -53,11 +51,12 @@
 
 ## Requirements
 
-| Item | Version |
-|---|---|
-| Operating System | macOS 13 Ventura or later, or Windows 10 or later |
-| Node.js | v20.x |
-| npm | v10.x |
+| Item | Electron | Tauri |
+|---|---|---|
+| OS | macOS 13+ / Windows 10+ / Linux | macOS 13+ / Windows 10+ / Linux |
+| Node.js | v20.x | v20.x |
+| npm | v10.x | v10.x |
+| Rust | - | 1.77+ |
 
 ---
 
@@ -67,81 +66,93 @@
 # Install dependencies
 npm install
 
-# Start dev server + Electron
-npm run dev
+# Run Electron version
+npm run dev:electron
+
+# Run Tauri version
+npm run dev:tauri
 ```
 
 ## Building
 
 ```bash
-# Production build
-npm run build
+# Build Electron
+npm run build:electron
 
-# Package for your OS
-npm run package
+# Build Tauri
+npm run build:tauri
 ```
-
-Build artifacts are output to the `dist/` directory.
-
-### ⚠️ Notes for Windows Build (Packaging)
-When running `npm run package` on Windows, a symbolic link creation error (`ERROR: Cannot create symbolic link`) related to `winCodeSign` may occur, causing the build to fail. This is due to Windows security policies. Resolve it using one of the following methods:
-
-1. **Enable Developer Mode (Recommended):** Go to Windows Settings > System (or Update & Security) > For Developers > turn on **Developer Mode**.
-2. **Run as Administrator:** Open your terminal (VS Code, PowerShell, CMD) with **Administrator privileges** before running the packaging command.
 
 ---
 
 ## Tech Stack
 
-| Category | Package |
-|---|---|
-| Runtime | Electron 41 |
-| UI | React 18 + TypeScript |
-| Editor | CodeMirror 6 |
-| State Management | Zustand 5 |
-| Markdown | marked + marked-highlight + highlight.js + DOMPurify |
-| Settings Storage | electron-store 8 |
-| Encoding | chardet + iconv-lite |
-| Build | vite 8 + electron-vite 5 + electron-builder 26 |
+| Category | Shared | Electron | Tauri |
+|---|---|---|---|
+| UI | React 18 + TypeScript | | |
+| Editor | CodeMirror 6 | | |
+| State | Zustand 5 | | |
+| Markdown | marked + highlight.js + DOMPurify | | |
+| Runtime | | Electron 41 | Tauri 2 (Rust) |
+| Settings | | electron-store 8 | tauri-plugin-store |
+| Encoding | | chardet + iconv-lite | Rust (encoding_rs) |
+| Build | | electron-vite 5 | Vite 8 + Tauri CLI |
 
 ---
 
 ## Directory Structure
 
 ```
-src/
-├── main/           # Electron main process
-│   ├── index.ts    # BrowserWindow creation
-│   ├── ipc.ts      # IPC handlers (file, settings, dialogs)
-│   ├── menu.ts     # OS native menu
-│   ├── fileManager.ts  # File read/write + encoding
-│   ├── store.ts    # Settings schema
-│   └── logger.ts   # Logger
-├── preload/
-│   └── index.ts    # API exposure
-├── types/
-│   ├── settings.ts # Settings types
-│   └── tab.ts      # Tab types
-└── renderer/src/
-    ├── App.tsx
-    ├── i18n/               # Internationalization (ko / en)
-    │   ├── index.ts
-    │   ├── ko.ts
-    │   ├── en.ts
-    │   └── types.ts
-    ├── components/
-    │   ├── TitleBar/
-    │   ├── TabBar/
-    │   ├── Editor/             # Editor core + extensions
-    │   │   ├── extensions.ts
-    │   │   └── markdownPreview/
-    │   └── InfoBar/
-    ├── store/
-    │   ├── tabStore.ts         # Tab state management
-    │   └── settingsStore.ts
-    └── hooks/
-        ├── useFile.ts
-        └── useMenuEvents.ts
+simple-note/
+├── packages/
+│   ├── renderer/              # Shared frontend (@simple-note/renderer)
+│   │   ├── src/
+│   │   │   ├── components/    # TitleBar, TabBar, Editor, InfoBar
+│   │   │   ├── hooks/         # useFile, useKeyboardShortcuts
+│   │   │   ├── store/         # tabStore, settingsStore (zustand)
+│   │   │   ├── i18n/          # Korean / English
+│   │   │   ├── types/         # NoteAPI interface, Settings, Tab
+│   │   │   ├── platform.ts    # Platform API singleton (Proxy)
+│   │   │   └── App.tsx        # Main app component
+│   │   └── package.json
+│   │
+│   ├── electron/              # Electron shell (@simple-note/electron)
+│   │   ├── src/
+│   │   │   ├── main/          # Electron main process
+│   │   │   ├── preload/       # NoteAPI implementation (IPC bridge)
+│   │   │   └── renderer/      # Entry point
+│   │   └── package.json
+│   │
+│   └── tauri/                 # Tauri shell (@simple-note/tauri)
+│       ├── src/
+│       │   ├── api.ts         # NoteAPI implementation (Tauri invoke)
+│       │   └── main.tsx       # Entry point
+│       ├── src-tauri/         # Rust backend
+│       └── package.json
+│
+├── package.json               # Workspace root
+├── pnpm-workspace.yaml
+└── tsconfig.base.json
+```
+
+---
+
+## Architecture
+
+Frontend code is shared via the `@simple-note/renderer` package. Platform-specific native features are abstracted through the `NoteAPI` interface.
+
+```
+Electron shell ──┐
+                 ├──▶ @simple-note/renderer (shared UI)
+Tauri shell ─────┘
+                       │
+                       ▼
+                   NoteAPI (Proxy singleton)
+                       │
+            ┌──────────┼──────────┐
+            ▼                     ▼
+    Electron IPC            Tauri invoke
+    (preload)               (Rust backend)
 ```
 
 ---
