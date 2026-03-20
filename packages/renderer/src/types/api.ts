@@ -35,6 +35,12 @@ export interface NoteAPI {
     onLanguageChange?(lang: string): Promise<void>
   }
 
+  window?: {
+    minimize(): void
+    toggleMaximize(): void
+    close(): void
+  }
+
   platform: string
   runtime: 'electron' | 'tauri'
 }

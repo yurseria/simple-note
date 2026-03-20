@@ -3,9 +3,10 @@ use encoding_rs::Encoding;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_store::StoreExt;
 
+#[cfg(target_os = "macos")]
 use crate::menu;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -147,8 +148,30 @@ pub fn get_locale() -> String {
 }
 
 #[tauri::command]
+#[allow(unused_variables)]
 pub fn rebuild_menu(app: AppHandle, lang: String) -> Result<(), String> {
-    let native_menu = menu::build_menu(&app, &lang).map_err(|e| e.to_string())?;
-    app.set_menu(native_menu).map_err(|e| e.to_string())?;
+    #[cfg(target_os = "macos")]
+    {
+        let native_menu = menu::build_menu(&app, &lang).map_err(|e| e.to_string())?;
+        app.set_menu(native_menu).map_err(|e| e.to_string())?;
+    }
     Ok(())
+}
+
+#[tauri::command]
+pub fn toggle_devtools(app: AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        if win.is_devtools_open() {
+            win.close_devtools();
+        } else {
+            win.open_devtools();
+        }
+    }
+}
+
+#[tauri::command]
+pub fn toggle_fullscreen(app: AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.is_fullscreen().map(|fs| win.set_fullscreen(!fs));
+    }
 }

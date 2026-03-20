@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     AppHandle, Emitter, Manager, Wry,

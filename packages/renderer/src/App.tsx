@@ -60,6 +60,10 @@ export function App(): JSX.Element {
         useTabStore.getState().togglePreview(id);
         break;
       }
+      case "menu:selectNextOccurrence":
+        window.dispatchEvent(new CustomEvent("editor:selectNextOccurrence")); break;
+      case "menu:selectAllOccurrences":
+        window.dispatchEvent(new CustomEvent("editor:selectAllOccurrences")); break;
       case "menu:find":
         window.dispatchEvent(new CustomEvent("editor:openFind")); break;
       case "menu:replace":
@@ -109,7 +113,7 @@ export function App(): JSX.Element {
       "menu:gotoLine", "menu:toggleMarkdownPreview", "menu:find", "menu:replace",
       "menu:toggleLineNumbers", "menu:setLanguage", "menu:setUILanguage",
       "menu:fontSizeUp", "menu:fontSizeDown", "menu:fontSizeReset",
-      "menu:setTheme", "menu:setInfoBarMode",
+      "menu:setTheme", "menu:setInfoBarMode", "menu:selectNextOccurrence", "menu:selectAllOccurrences"
     ]
     const handler = (e: Event) => {
       const ce = e as CustomEvent

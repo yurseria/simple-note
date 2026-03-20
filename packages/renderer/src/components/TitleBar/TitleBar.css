@@ -65,3 +65,35 @@
     display: none;
   }
 }
+
+.titlebar__window-controls {
+  margin-left: auto;
+  display: flex;
+  height: 100%;
+  -webkit-app-region: no-drag;
+  z-index: 2;
+}
+
+.titlebar__control-btn {
+  width: 46px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  opacity: 0.8;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.titlebar__control-btn:hover {
+  background-color: var(--hover-bg, rgba(128, 128, 128, 0.2));
+  opacity: 1;
+}
+
+.titlebar__control-btn.close:hover {
+  background-color: #e81123;
+  color: white;
+}

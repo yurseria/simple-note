@@ -79,14 +79,21 @@ export const tauriApi: NoteAPI = {
     },
     executeRole: (role: string) => {
       if (role === 'togglefullscreen') {
-        import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-          const win = getCurrentWindow()
-          win.isFullscreen().then((fs) => win.setFullscreen(!fs))
-        })
+        invoke('toggle_fullscreen')
       } else if (role === 'quit') {
         import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
           getCurrentWindow().close()
         })
+      } else if (role === 'toggleDevTools') {
+        invoke('toggle_devtools')
+      } else if (role === 'about') {
+        import('@tauri-apps/plugin-dialog').then(({ message }) => {
+          message('Simple Note - A beautiful and simple plain text editor.', { title: 'About Note', kind: 'info' })
+        })
+      } else if (['selectAll', 'undo', 'redo'].includes(role)) {
+        window.dispatchEvent(new CustomEvent(`editor:${role}`))
+      } else if (['cut', 'copy', 'paste'].includes(role)) {
+        document.execCommand(role)
       }
     },
     subscribe: (handler: (action: string, payload?: string) => void) => {
@@ -96,6 +103,24 @@ export const tauriApi: NoteAPI = {
       return () => { unlisten.then((fn) => fn()) }
     },
     onLanguageChange: (lang: string) => invoke('rebuild_menu', { lang }),
+  },
+
+  window: {
+    minimize: () => {
+      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+        getCurrentWindow().minimize()
+      })
+    },
+    toggleMaximize: () => {
+      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+        getCurrentWindow().toggleMaximize()
+      })
+    },
+    close: () => {
+      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+        getCurrentWindow().close()
+      })
+    }
   },
 
   platform: 'darwin',

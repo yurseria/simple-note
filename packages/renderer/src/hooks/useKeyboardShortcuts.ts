@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useSettingsStore } from '../store/settingsStore'
+import { api } from '../platform'
 
 interface Options {
   onNewTab: () => void
@@ -20,6 +21,12 @@ export function useKeyboardShortcuts(opts: Options): void {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const mod = e.metaKey || e.ctrlKey
+
+      if (e.key === 'F11') {
+        e.preventDefault()
+        api.menu.executeRole('togglefullscreen')
+        return
+      }
 
       if (mod && !e.shiftKey && e.key === 't') {
         e.preventDefault()

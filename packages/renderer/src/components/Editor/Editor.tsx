@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { EditorView } from "@codemirror/view";
 import { EditorState, Transaction } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { selectAll, undo, redo } from "@codemirror/commands";
+import { selectNextOccurrence, selectSelectionMatches } from "@codemirror/search";
 import {
   createCompartments,
   buildBaseExtensions,
@@ -185,6 +187,42 @@ export function Editor({
     return () => {
       window.removeEventListener("editor:openFind", openFind);
       window.removeEventListener("editor:openReplace", openReplace);
+    };
+  }, []);
+
+  // 에디터 액션 명령 수신
+  useEffect(() => {
+    const handleAction = (e: Event) => {
+      const view = viewRef.current;
+      if (!view) return;
+      switch (e.type) {
+        case "editor:selectAll":
+          selectAll(view);
+          break;
+        case "editor:undo":
+          undo(view);
+          break;
+        case "editor:redo":
+          redo(view);
+          break;
+        case "editor:selectNextOccurrence":
+          selectNextOccurrence(view);
+          break;
+        case "editor:selectAllOccurrences":
+          selectSelectionMatches(view);
+          break;
+      }
+      // 메뉴 클릭으로 포커스를 잃은 경우를 대비하여 에디터에 다시 포커스를 줍니다.
+      view.focus();
+    };
+    
+    const events = [
+      "editor:selectAll", "editor:undo", "editor:redo",
+      "editor:selectNextOccurrence", "editor:selectAllOccurrences"
+    ];
+    events.forEach(ev => window.addEventListener(ev, handleAction));
+    return () => {
+      events.forEach(ev => window.removeEventListener(ev, handleAction));
     };
   }, []);
 
