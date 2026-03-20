@@ -31,6 +31,7 @@
     "active": true,
     "icon": [
       "icons/icon.icns",
+      "icons/icon.ico",
       "icons/icon.png"
     ],
     "targets": "all",
