@@ -77,12 +77,34 @@ npm run dev:tauri
 ## 빌드
 
 ```bash
-# Electron 빌드
+# Electron 빌드 (코드 컴파일만)
 npm run build:electron
 
-# Tauri 빌드
+# Tauri 빌드 (코드 컴파일만, 번들링 없음)
 npm run build:tauri
 ```
+
+## 패키징
+
+배포용 인스톨러/패키지를 생성합니다.
+
+```bash
+# Electron 패키징 (dmg/zip/AppImage/deb/nsis)
+npm run package:electron
+
+# Tauri 패키징 (dmg/msi/AppImage/deb)
+npm run package:tauri
+```
+
+빌드 결과물은 각 패키지의 출력 디렉터리에 생성됩니다:
+- Electron: `packages/electron/dist/`
+- Tauri: `packages/tauri/src-tauri/target/release/bundle/`
+
+### ⚠️ Windows 빌드(패키징) 시 주의사항
+Windows 환경에서 `npm run package:electron` 실행 시 `winCodeSign` 관련 심볼릭 링크 생성 에러(`ERROR: Cannot create symbolic link`)가 발생하며 빌드가 실패할 수 있습니다. 이는 Windows의 보안 정책 때문이며, 다음 중 하나의 방법으로 해결할 수 있습니다.
+
+1. **개발자 모드 활성화 (권장)**: Windows 설정 > 시스템(또는 업데이트 및 보안) > 개발자용 > **'개발자 모드' 켬**으로 변경
+2. **관리자 권한으로 실행**: 사용 중인 터미널(VS Code, PowerShell, CMD)을 **'관리자 권한'으로 실행**한 후 패키징 명령어 입력
 
 ---
 

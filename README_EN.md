@@ -78,12 +78,34 @@ npm run dev:tauri
 ## Building
 
 ```bash
-# Build Electron
+# Build Electron (compile only)
 npm run build:electron
 
-# Build Tauri
+# Build Tauri (compile only, no bundling)
 npm run build:tauri
 ```
+
+## Packaging
+
+Generate distributable installers/packages.
+
+```bash
+# Electron packaging (dmg/zip/AppImage/deb/nsis)
+npm run package:electron
+
+# Tauri packaging (dmg/msi/AppImage/deb)
+npm run package:tauri
+```
+
+Build artifacts are output to each package's directory:
+- Electron: `packages/electron/dist/`
+- Tauri: `packages/tauri/src-tauri/target/release/bundle/`
+
+### ⚠️ Notes for Windows Packaging
+When running `npm run package:electron` on Windows, a symbolic link creation error (`ERROR: Cannot create symbolic link`) related to `winCodeSign` may occur, causing the build to fail. This is due to Windows security policies. Resolve it using one of the following methods:
+
+1. **Enable Developer Mode (Recommended):** Go to Windows Settings > System (or Update & Security) > For Developers > turn on **Developer Mode**.
+2. **Run as Administrator:** Open your terminal (VS Code, PowerShell, CMD) with **Administrator privileges** before running the packaging command.
 
 ---
 
