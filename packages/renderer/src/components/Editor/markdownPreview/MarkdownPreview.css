@@ -164,3 +164,18 @@
   background: var(--code-bg);
   font-weight: 600;
 }
+
+/* ── Mermaid diagrams ────────────────────────────────────────────────── */
+.markdown-preview .mermaid {
+  margin: 1em 0;
+  text-align: center;
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.markdown-preview .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
