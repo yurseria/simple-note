@@ -2,11 +2,11 @@ import type { Translations } from "./types";
 
 export const en: Translations = {
   menu: {
-    file: "File",
-    edit: "Edit",
-    view: "View",
-    go: "Go",
-    help: "Help",
+    file: "&File",
+    edit: "&Edit",
+    view: "&View",
+    go: "&Go",
+    help: "&Help",
   },
   file: {
     newTab: "New Tab",

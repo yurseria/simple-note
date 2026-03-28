@@ -57,8 +57,8 @@
 
 .custom-menu__top-item:hover,
 .custom-menu__top-item.active {
-  background-color: var(--tab-hover-bg);
-  color: var(--text-primary);
+  background-color: var(--accent-color);
+  color: #ffffff;
 }
 
 .custom-menu__dropdown {
@@ -119,4 +119,10 @@
   position: absolute;
   top: -5px; /* align with item */
   left: 100%;
+}
+
+/* ── Mnemonic underline ── */
+.custom-menu__mnemonic {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

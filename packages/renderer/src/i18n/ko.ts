@@ -2,11 +2,11 @@ import type { Translations } from "./types";
 
 export const ko: Translations = {
   menu: {
-    file: "파일",
-    edit: "편집",
-    view: "보기",
-    go: "이동",
-    help: "도움말",
+    file: "파일(&F)",
+    edit: "편집(&E)",
+    view: "보기(&V)",
+    go: "이동(&G)",
+    help: "도움말(&H)",
   },
   file: {
     newTab: "새 탭 열기",

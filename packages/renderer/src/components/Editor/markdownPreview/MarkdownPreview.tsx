@@ -64,8 +64,20 @@ export function MarkdownPreview({
     if (!el) return;
     const nodes = el.querySelectorAll<HTMLElement>(".mermaid");
     if (nodes.length === 0) return;
-    // 테마 변경 시 재렌더링을 위해 data-processed 제거
-    nodes.forEach((node) => node.removeAttribute("data-processed"));
+
+    // 재렌더링 시 원본 텍스트를 복원해야 함 — mermaid.run()이 실행되면
+    // 내부 HTML이 SVG로 교체되어 다시 파싱하면 "syntax error" 발생
+    nodes.forEach((node) => {
+      if (!node.getAttribute("data-original")) {
+        // 최초 실행: 원본 텍스트 보존
+        node.setAttribute("data-original", node.textContent ?? "");
+      } else {
+        // 재실행: 원본 텍스트 복원
+        node.textContent = node.getAttribute("data-original") ?? "";
+      }
+      node.removeAttribute("data-processed");
+    });
+
     try {
       await mermaid.run({ nodes });
     } catch {

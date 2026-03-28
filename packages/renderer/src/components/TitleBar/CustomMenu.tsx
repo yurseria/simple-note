@@ -1,8 +1,32 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { api } from "../../platform";
 import { getAppMenuData, MenuItem } from "./menuData";
 import { useTranslation } from "../../i18n";
 import "./CustomMenu.css";
+
+/** "&File" → { text: "File", mnemonicChar: "F", mnemonicIndex: 0 }
+ *  "파일(&F)" → { text: "파일(F)", mnemonicChar: "F", mnemonicIndex: 3 } */
+function parseMnemonic(label: string): { text: string; mnemonicChar: string | null; mnemonicIndex: number } {
+  const idx = label.indexOf("&");
+  if (idx === -1 || idx === label.length - 1) {
+    return { text: label, mnemonicChar: null, mnemonicIndex: -1 };
+  }
+  const text = label.slice(0, idx) + label.slice(idx + 1);
+  return { text, mnemonicChar: label[idx + 1].toUpperCase(), mnemonicIndex: idx };
+}
+
+/** 라벨에서 &뒤 문자에 밑줄을 적용해 렌더링 */
+function MnemonicLabel({ label }: { label: string }): JSX.Element {
+  const { text, mnemonicIndex } = parseMnemonic(label);
+  if (mnemonicIndex === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, mnemonicIndex)}
+      <span className="custom-menu__mnemonic">{text[mnemonicIndex]}</span>
+      {text.slice(mnemonicIndex + 1)}
+    </>
+  );
+}
 
 interface Props {
   activeMenu: string | null;
@@ -15,6 +39,16 @@ export function CustomMenu({ activeMenu, setActiveMenu }: Props): JSX.Element {
   const [focusedMenuIndex, setFocusedMenuIndex] = useState<number | null>(null);
 
   const desktopMenus = getAppMenuData(t);
+
+  // 각 메뉴의 니모닉 문자 → 인덱스 매핑
+  const mnemonicMap = useMemo(() => {
+    const map = new Map<string, number>();
+    desktopMenus.forEach((menu, idx) => {
+      const { mnemonicChar } = parseMnemonic(menu.label);
+      if (mnemonicChar) map.set(mnemonicChar, idx);
+    });
+    return map;
+  }, [desktopMenus]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -35,19 +69,42 @@ export function CustomMenu({ activeMenu, setActiveMenu }: Props): JSX.Element {
     function handleKeyDown(e: KeyboardEvent) {
       if (api.platform === "darwin") return;
 
+      // Alt+문자: 해당 메뉴 직접 열기 (드롭다운 포함)
+      if (e.altKey && e.key.length === 1) {
+        const idx = mnemonicMap.get(e.key.toUpperCase());
+        if (idx !== undefined) {
+          e.preventDefault();
+          setFocusedMenuIndex(idx);
+          setActiveMenu(desktopMenus[idx].id);
+          return;
+        }
+      }
+
       if (e.key === "Alt") {
         e.preventDefault();
         if (activeMenu || focusedMenuIndex !== null) {
+          // 이미 포커스/열림 상태 → 전부 해제
           setActiveMenu(null);
           setFocusedMenuIndex(null);
         } else {
+          // 포커스만 부여 (드롭다운은 열지 않음)
           setFocusedMenuIndex(0);
-          setActiveMenu(desktopMenus[0].id);
         }
         return;
       }
 
       if (activeMenu || focusedMenuIndex !== null) {
+        // 포커스 상태에서 니모닉 문자 → 해당 메뉴 열기
+        if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
+          const idx = mnemonicMap.get(e.key.toUpperCase());
+          if (idx !== undefined) {
+            e.preventDefault();
+            setFocusedMenuIndex(idx);
+            setActiveMenu(desktopMenus[idx].id);
+            return;
+          }
+        }
+
         if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
           e.preventDefault();
 
@@ -69,10 +126,11 @@ export function CustomMenu({ activeMenu, setActiveMenu }: Props): JSX.Element {
             setActiveMenu(desktopMenus[nextIndex].id);
           }
         } else if (
-          e.key === "ArrowDown" &&
+          (e.key === "ArrowDown" || e.key === "Enter") &&
           !activeMenu &&
           focusedMenuIndex !== null
         ) {
+          // 포커스 상태에서 Enter/ArrowDown → 드롭다운 열기
           e.preventDefault();
           setActiveMenu(desktopMenus[focusedMenuIndex].id);
         } else if (e.key === "Escape") {
@@ -85,7 +143,7 @@ export function CustomMenu({ activeMenu, setActiveMenu }: Props): JSX.Element {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [activeMenu, focusedMenuIndex, setActiveMenu, desktopMenus]);
+  }, [activeMenu, focusedMenuIndex, setActiveMenu, desktopMenus, mnemonicMap]);
 
   const handleMenuClick = (id: string, index?: number) => {
     if (activeMenu === id) {
@@ -159,7 +217,7 @@ export function CustomMenu({ activeMenu, setActiveMenu }: Props): JSX.Element {
               className={`custom-menu__top-item ${activeMenu === menu.id || (focusedMenuIndex === index && !activeMenu) ? "active" : ""}`}
               onClick={() => handleMenuClick(menu.id, index)}
             >
-              {menu.label}
+              <MnemonicLabel label={menu.label} />
             </div>
             {activeMenu === menu.id && (
               <MenuDropdown
