@@ -70,11 +70,7 @@ export const tauriApi: NoteAPI = {
 
   dialog: {
     confirmClose: async (fileName: string) => {
-      const shouldSave = await ask(
-        `Do you want to save changes to "${fileName}"?`,
-        { title: 'Unsaved Changes', kind: 'warning', okLabel: 'Save', cancelLabel: "Don't Save" }
-      )
-      return shouldSave ? 0 : 1
+      return await invoke<number>('confirm_close_dialog', { fileName })
     },
   },
 

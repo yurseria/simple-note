@@ -21,6 +21,7 @@ pub fn run() {
             commands::rebuild_menu,
             commands::toggle_devtools,
             commands::toggle_fullscreen,
+            commands::confirm_close_dialog,
             commands::save_clipboard_image,
         ])
         .setup(|app| {

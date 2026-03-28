@@ -143,6 +143,46 @@ pub fn set_setting(app: AppHandle, key: String, value: serde_json::Value) -> Res
     store.save().map_err(|e| e.to_string())
 }
 
+/// 3버튼 닫기 확인 다이얼로그: 저장 / 저장하지 않고 닫기 / 취소
+/// 반환: 0 = save, 1 = close without saving, 2 = cancel
+#[tauri::command]
+pub fn confirm_close_dialog(app: AppHandle, file_name: String) -> i32 {
+    let store = app.store("settings.json").ok();
+    let is_ko = store
+        .and_then(|s| s.get("language"))
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_else(|| "en".to_string())
+        .to_lowercase()
+        .starts_with("ko");
+
+    let (title, message, save, dont_save, cancel) = if is_ko {
+        ("변경사항 저장", format!("\"{}\"의 변경사항을 저장하겠습니까?", file_name),
+         "저장", "저장하지 않고 닫기", "취소")
+    } else {
+        ("Unsaved Changes", format!("Do you want to save changes to \"{}\"?", file_name),
+         "Save", "Close Without Saving", "Cancel")
+    };
+
+    let result = rfd::MessageDialog::new()
+        .set_title(title)
+        .set_description(&message)
+        .set_level(rfd::MessageLevel::Warning)
+        .set_buttons(rfd::MessageButtons::YesNoCancelCustom(
+            save.to_string(),
+            dont_save.to_string(),
+            cancel.to_string(),
+        ))
+        .show();
+
+    match result {
+        rfd::MessageDialogResult::Custom(s) if s == save => 0,
+        rfd::MessageDialogResult::Custom(s) if s == dont_save => 1,
+        rfd::MessageDialogResult::Yes => 0,
+        rfd::MessageDialogResult::No => 1,
+        _ => 2, // cancel
+    }
+}
+
 #[tauri::command]
 pub fn save_clipboard_image(dir_path: String) -> Result<Option<String>, String> {
     use arboard::Clipboard;

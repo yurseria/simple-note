@@ -28,7 +28,7 @@ const DIALOG_T: Record<
   ko: {
     confirmSave: (fileName) => `"${fileName}"의 변경사항을 저장하겠습니까?`,
     save: "저장",
-    dontSave: "저장 안 함",
+    dontSave: "저장하지 않고 닫기",
     cancel: "취소",
     aboutTitle: "정보",
     version: "버전",
@@ -37,7 +37,7 @@ const DIALOG_T: Record<
   en: {
     confirmSave: (fileName) => `Do you want to save changes to "${fileName}"?`,
     save: "Save",
-    dontSave: "Don't Save",
+    dontSave: "Close Without Saving",
     cancel: "Cancel",
     aboutTitle: "About",
     version: "Version",
@@ -237,7 +237,7 @@ export function registerIpcHandlers(): void {
       defaultId: 0,
       cancelId: 2,
     });
-    return result.response; // 0: save, 1: don't save, 2: cancel
+    return result.response; // 0: save, 1: close without saving, 2: cancel
   });
 
   ipcMain.on("menu:trigger", (e, channel: string, ...args: unknown[]) => {

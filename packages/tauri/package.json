@@ -6,6 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "clean": "cd src-tauri && cargo clean",
     "dev": "tauri dev",
     "build": "tauri build --no-bundle",
     "package": "tauri build",

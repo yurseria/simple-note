@@ -71,6 +71,7 @@ export function useFile() {
     if (!tab) return
     if (tab.isDirty) {
       const response = await api.dialog.confirmClose(tab.fileName)
+      // 0: save, 1: close without saving, 2: cancel
       if (response === 2) return // 취소
       if (response === 0) {
         // 저장 후 닫기
@@ -81,6 +82,7 @@ export function useFile() {
           if (!saved) return
         }
       }
+      // response === 1: 저장하지 않고 닫기 → 그대로 closeTab 진행
     }
     closeTab(id)
   }
