@@ -9,6 +9,10 @@ import "./MarkdownPreview.css";
 // mermaid 초기화 (startOnLoad: false → useEffect에서 수동 실행)
 mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
 
+function getMermaidTheme(theme: string) {
+  return theme === "light" ? "default" : "dark";
+}
+
 // marked + highlight.js 통합 — 코드 블록 언어별 syntax highlight
 const markedInstance = marked.use(
   markedHighlight({
@@ -39,11 +43,13 @@ const markedInstance = marked.use(
 interface Props {
   content: string;
   scrollToBottom?: number;
+  theme?: string;
 }
 
 export function MarkdownPreview({
   content,
   scrollToBottom,
+  theme = "dark",
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
@@ -56,14 +62,22 @@ export function MarkdownPreview({
   const renderMermaid = useCallback(async () => {
     const el = containerRef.current;
     if (!el) return;
-    const nodes = el.querySelectorAll<HTMLElement>(".mermaid:not([data-processed])");
+    const nodes = el.querySelectorAll<HTMLElement>(".mermaid");
     if (nodes.length === 0) return;
+    // 테마 변경 시 재렌더링을 위해 data-processed 제거
+    nodes.forEach((node) => node.removeAttribute("data-processed"));
     try {
       await mermaid.run({ nodes });
     } catch {
       // 문법 오류 시 mermaid가 에러 메시지를 요소 안에 표시함
     }
   }, []);
+
+  // 에디터 테마 변경 시 mermaid 테마도 동기화
+  useEffect(() => {
+    mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme(theme), securityLevel: "strict" });
+    renderMermaid();
+  }, [theme, renderMermaid]);
 
   useEffect(() => {
     renderMermaid();

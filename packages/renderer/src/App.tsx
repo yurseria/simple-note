@@ -254,6 +254,7 @@ export function App(): JSX.Element {
                   <MarkdownPreview
                     content={tab.content}
                     scrollToBottom={scrollToBottom}
+                    theme={settings.editor.theme}
                   />
                 </>
               )}
