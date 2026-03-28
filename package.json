@@ -9,11 +9,13 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "node scripts/choose-target.mjs dev",
     "dev:electron": "npx turbo run dev --filter=@simple-note/electron",
     "dev:tauri": "npx turbo run dev --filter=@simple-note/tauri",
+    "build": "node scripts/choose-target.mjs build",
     "build:electron": "npx turbo run build --filter=@simple-note/electron",
     "build:tauri": "npx turbo run build --filter=@simple-note/tauri",
-    "build": "npx turbo run build",
+    "package": "node scripts/choose-target.mjs package",
     "package:electron": "npm run build:electron && npm run --workspace=@simple-note/electron package",
     "package:tauri": "npm run --workspace=@simple-note/tauri package"
   },

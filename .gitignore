@@ -30,6 +30,9 @@ packages/tauri/src-tauri/target/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Claude Code
+.claude
+
 # Temp / Tool
 .tmp
 .zed
