@@ -15,6 +15,7 @@ import {
   type EditorCompartments,
 } from "./extensions";
 import { FindReplace } from "./FindReplace/FindReplace";
+import { MarkdownToolbar } from "./MarkdownToolbar/MarkdownToolbar";
 import type { LanguageMode } from "../../types/tab";
 import type { Settings } from "../../types/settings";
 import "./Editor.css";
@@ -247,18 +248,23 @@ export function Editor({
     return () => window.removeEventListener("editor:gotoLine", handleGotoLine);
   }, []);
 
+  const isMarkdown = language === "markdown";
+
   return (
-    <div className="editor" ref={containerRef}>
-      {findOpen && cmView && (
-        <FindReplace
-          view={cmView}
-          initialMode={findMode}
-          onClose={() => {
-            setFindOpen(false);
-            cmView.focus();
-          }}
-        />
-      )}
+    <div className="editor">
+      {isMarkdown && cmView && <MarkdownToolbar view={cmView} />}
+      <div className="editor__cm" ref={containerRef}>
+        {findOpen && cmView && (
+          <FindReplace
+            view={cmView}
+            initialMode={findMode}
+            onClose={() => {
+              setFindOpen(false);
+              cmView.focus();
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

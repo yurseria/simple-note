@@ -9,12 +9,16 @@ import { languages } from '@codemirror/language-data'
 export function inferLanguage(filePath: string | null): LanguageMode {
   if (!filePath) return 'plaintext'
   const fileName = filePath.split('/').pop() || ''
-  const desc = LanguageDescription.matchFilename(languages, fileName)
-  if (desc) return desc.name
-  
+
+  // 확장자를 먼저 확인 — LanguageDescription.matchFilename은 "Markdown"(대문자)을
+  // 반환하지만 프로젝트 전체에서 'markdown'(소문자)을 사용하므로 명시적으로 처리
   const ext = fileName.split('.').pop()?.toLowerCase()
   if (ext === 'md' || ext === 'markdown') return 'markdown'
   if (ext === 'txt') return 'plaintext'
+
+  const desc = LanguageDescription.matchFilename(languages, fileName)
+  if (desc) return desc.name
+
   return 'plaintext'
 }
 

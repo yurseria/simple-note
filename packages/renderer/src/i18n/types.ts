@@ -59,6 +59,33 @@ export interface Translations {
     gotoBtn: string;
     cancelBtn: string;
   };
+  toolbar: {
+    heading: string;
+    h1: string;
+    h2: string;
+    h3: string;
+    h4: string;
+    h5: string;
+    bold: string;
+    italic: string;
+    strikethrough: string;
+    inlineCode: string;
+    codeBlock: string;
+    blockquote: string;
+    unorderedList: string;
+    orderedList: string;
+    taskList: string;
+    link: string;
+    image: string;
+    table: string;
+    tableAddRowAbove: string;
+    tableAddRowBelow: string;
+    tableAddColLeft: string;
+    tableAddColRight: string;
+    tableDelRow: string;
+    tableDelCol: string;
+    horizontalRule: string;
+  };
   infobar: {
     charSingular: string;
     charPlural: string;

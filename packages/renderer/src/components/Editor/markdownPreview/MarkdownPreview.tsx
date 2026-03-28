@@ -80,7 +80,10 @@ export function MarkdownPreview({
   }, [theme, renderMermaid]);
 
   useEffect(() => {
-    renderMermaid();
+    // DOM 페인트 후 mermaid 실행 — 파일 열기 직후 DOM이 아직 갱신되지 않은 상태에서
+    // mermaid.run()이 호출되면 노드를 찾지 못하는 문제 방지
+    const frame = requestAnimationFrame(() => renderMermaid());
+    return () => cancelAnimationFrame(frame);
   }, [html, renderMermaid]);
 
   // scrollToBottom 카운터가 바뀌면 프리뷰를 맨 아래로 스크롤
