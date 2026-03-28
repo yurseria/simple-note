@@ -87,6 +87,7 @@ export const en: Translations = {
     tableDelRow: "Delete Row",
     tableDelCol: "Delete Column",
     horizontalRule: "Horizontal Rule",
+    saveFileFirst: "Save the file first to paste images.",
   },
   infobar: {
     charSingular: "Character",

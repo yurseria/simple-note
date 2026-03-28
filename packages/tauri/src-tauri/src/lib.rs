@@ -21,6 +21,7 @@ pub fn run() {
             commands::rebuild_menu,
             commands::toggle_devtools,
             commands::toggle_fullscreen,
+            commands::save_clipboard_image,
         ])
         .setup(|app| {
             // Initialize settings store

@@ -11,6 +11,8 @@ export interface NoteAPI {
     open(filePath?: string): Promise<(ReadResult & { filePath: string }) | null>
     save(filePath: string, content: string, encoding: string): Promise<boolean>
     saveAs(content: string, encoding: string, defaultPath?: string): Promise<string | null>
+    /** 클립보드 이미지를 dirPath/images/ 에 저장하고 상대경로 반환. 이미지 없으면 null */
+    saveClipboardImage(dirPath: string): Promise<string | null>
   }
 
   settings: {

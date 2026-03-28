@@ -23,6 +23,8 @@ const electronApi: NoteAPI = {
       ipcRenderer.invoke('file:save', filePath, content, encoding),
     saveAs: (content: string, encoding: string, defaultPath?: string) =>
       ipcRenderer.invoke('file:saveAs', content, encoding, defaultPath),
+    saveClipboardImage: (dirPath: string) =>
+      ipcRenderer.invoke('file:saveClipboardImage', dirPath),
   },
   settings: {
     get: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),

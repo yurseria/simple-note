@@ -85,6 +85,7 @@ export interface Translations {
     tableDelRow: string;
     tableDelCol: string;
     horizontalRule: string;
+    saveFileFirst: string;
   };
   infobar: {
     charSingular: string;

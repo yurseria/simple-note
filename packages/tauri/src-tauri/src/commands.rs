@@ -132,6 +132,45 @@ pub fn set_setting(app: AppHandle, key: String, value: serde_json::Value) -> Res
 }
 
 #[tauri::command]
+pub fn save_clipboard_image(dir_path: String) -> Result<Option<String>, String> {
+    use arboard::Clipboard;
+    use image::ImageFormat;
+    use std::io::Cursor;
+
+    let mut clip = Clipboard::new().map_err(|e| e.to_string())?;
+    let img = match clip.get_image() {
+        Ok(img) => img,
+        Err(_) => return Ok(None), // 클립보드에 이미지 없음
+    };
+
+    let images_dir = Path::new(&dir_path).join("images");
+    if !images_dir.exists() {
+        fs::create_dir_all(&images_dir).map_err(|e| e.to_string())?;
+    }
+
+    let now = chrono::Local::now();
+    let file_name = format!("paste-{}.png", now.format("%Y%m%d-%H%M%S"));
+    let file_path = images_dir.join(&file_name);
+
+    // arboard ImageData → PNG
+    let rgba_img = image::RgbaImage::from_raw(
+        img.width as u32,
+        img.height as u32,
+        img.bytes.into_owned(),
+    )
+    .ok_or("Failed to create image from clipboard data")?;
+
+    let mut buf = Cursor::new(Vec::new());
+    rgba_img
+        .write_to(&mut buf, ImageFormat::Png)
+        .map_err(|e| e.to_string())?;
+
+    fs::write(&file_path, buf.into_inner()).map_err(|e| e.to_string())?;
+
+    Ok(Some(format!("./images/{}", file_name)))
+}
+
+#[tauri::command]
 pub fn get_platform() -> String {
     if cfg!(target_os = "macos") {
         "darwin".to_string()

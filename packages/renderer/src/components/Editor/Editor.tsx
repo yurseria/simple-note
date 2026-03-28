@@ -16,6 +16,8 @@ import {
 } from "./extensions";
 import { FindReplace } from "./FindReplace/FindReplace";
 import { MarkdownToolbar } from "./MarkdownToolbar/MarkdownToolbar";
+import { api } from "../../platform";
+import { useTranslation } from "../../i18n";
 import type { LanguageMode } from "../../types/tab";
 import type { Settings } from "../../types/settings";
 import "./Editor.css";
@@ -24,6 +26,7 @@ interface Props {
   tabId: string;
   content: string;
   language: LanguageMode;
+  filePath: string | null;
   settings: Settings["editor"];
   onChange: (content: string) => void;
   onCursorAtBottom?: () => void;
@@ -33,10 +36,12 @@ export function Editor({
   tabId,
   content,
   language,
+  filePath,
   settings,
   onChange,
   onCursorAtBottom,
 }: Props): JSX.Element {
+  const t = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const compartmentsRef = useRef<EditorCompartments | null>(null);
@@ -44,6 +49,8 @@ export function Editor({
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const onCursorAtBottomRef = useRef(onCursorAtBottom);
+  const filePathRef = useRef(filePath);
+  filePathRef.current = filePath;
   onCursorAtBottomRef.current = onCursorAtBottom;
   // 마지막으로 에디터가 스스로 보고한 content — 외부 sync 스킵 판별용
   const lastEditorContentRef = useRef(content);
@@ -247,6 +254,59 @@ export function Editor({
     window.addEventListener("editor:gotoLine", handleGotoLine);
     return () => window.removeEventListener("editor:gotoLine", handleGotoLine);
   }, []);
+
+  // 클립보드 이미지 붙여넣기 (마크다운 모드 전용)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    async function handlePaste(e: ClipboardEvent) {
+      if (language !== "markdown") return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      // 클립보드에 이미지가 있는지 확인
+      const hasImage = Array.from(items).some(
+        (item) => item.type.startsWith("image/"),
+      );
+      if (!hasImage) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const view = viewRef.current;
+      if (!view) return;
+
+      // 파일이 저장되지 않았으면 안내 메시지 표시
+      const currentPath = filePathRef.current;
+      if (!currentPath) {
+        window.dispatchEvent(new CustomEvent("editor:toast", {
+          detail: t.toolbar.saveFileFirst,
+        }));
+        return;
+      }
+
+      // 파일의 디렉토리 경로
+      const dirPath = currentPath.replace(/[\\/][^\\/]+$/, "");
+
+      try {
+        const relativePath = await api.file.saveClipboardImage(dirPath);
+        if (!relativePath) return;
+
+        const pos = view.state.selection.main.head;
+        const insert = `![](${relativePath})`;
+        view.dispatch({
+          changes: { from: pos, insert },
+        });
+        view.focus();
+      } catch (err) {
+        console.error("Failed to save clipboard image:", err);
+      }
+    }
+
+    container.addEventListener("paste", handlePaste, { capture: true });
+    return () => container.removeEventListener("paste", handlePaste, { capture: true });
+  }, [language]);
 
   const isMarkdown = language === "markdown";
 

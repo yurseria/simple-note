@@ -32,6 +32,7 @@ export function App(): JSX.Element {
   const [gotoLineValue, setGotoLineValue] = useState("");
   const [splitRatio, setSplitRatio] = useState(0.5);
   const [scrollToBottom, setScrollToBottom] = useState(0);
+  const [toast, setToast] = useState<string | null>(null);
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
@@ -126,6 +127,17 @@ export function App(): JSX.Element {
       for (const ev of menuEvents) window.removeEventListener(ev, handler)
     }
   }, [dispatchMenuAction])
+
+  // 토스트 메시지 이벤트 수신
+  useEffect(() => {
+    function handleToast(e: Event) {
+      const msg = (e as CustomEvent<string>).detail;
+      setToast(msg);
+      setTimeout(() => setToast(null), 3000);
+    }
+    window.addEventListener("editor:toast", handleToast);
+    return () => window.removeEventListener("editor:toast", handleToast);
+  }, []);
 
   useKeyboardShortcuts({
     onNewTab: handleNewTab,
@@ -237,6 +249,7 @@ export function App(): JSX.Element {
                 tabId={tab.id}
                 content={tab.content}
                 language={tab.language}
+                filePath={tab.filePath}
                 settings={settings.editor}
                 onChange={(c) => updateContent(tab.id, c)}
                 onCursorAtBottom={
@@ -313,6 +326,10 @@ export function App(): JSX.Element {
             </div>
           </div>
         </div>
+      )}
+
+      {toast && (
+        <div className="toast">{toast}</div>
       )}
     </div>
   );

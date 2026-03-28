@@ -1,4 +1,6 @@
-import { ipcMain, dialog, BrowserWindow, nativeTheme, app } from "electron";
+import { ipcMain, dialog, BrowserWindow, nativeTheme, app, clipboard } from "electron";
+import * as path from "path";
+import * as fs from "fs";
 import { readFileWithEncoding, writeFileWithEncoding } from "./fileManager";
 import { store } from "./store";
 import { logger } from "./logger";
@@ -125,6 +127,39 @@ export function registerIpcHandlers(): void {
       }
     },
   );
+
+  // file:saveClipboardImage — 클립보드 이미지를 dirPath/images/에 PNG로 저장
+  ipcMain.handle("file:saveClipboardImage", async (_, dirPath: string) => {
+    const img = clipboard.readImage();
+    if (img.isEmpty()) return null;
+
+    const imagesDir = path.join(dirPath, "images");
+    if (!fs.existsSync(imagesDir)) {
+      fs.mkdirSync(imagesDir, { recursive: true });
+    }
+
+    const now = new Date();
+    const ts = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+      "-",
+      String(now.getHours()).padStart(2, "0"),
+      String(now.getMinutes()).padStart(2, "0"),
+      String(now.getSeconds()).padStart(2, "0"),
+    ].join("");
+    const fileName = `paste-${ts}.png`;
+    const filePath = path.join(imagesDir, fileName);
+
+    try {
+      fs.writeFileSync(filePath, img.toPNG());
+      logger.info("file:saveClipboardImage", { path: filePath });
+      return `./images/${fileName}`;
+    } catch (err) {
+      logger.error("file:saveClipboardImage failed", { error: String(err) });
+      throw err;
+    }
+  });
 
   // settings:get — 첫 실행 시 OS 로케일로 UI 언어 자동 설정
   ipcMain.handle("settings:get", () => {

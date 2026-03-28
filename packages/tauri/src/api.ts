@@ -41,6 +41,10 @@ export const tauriApi: NoteAPI = {
       return true
     },
 
+    saveClipboardImage: async (dirPath: string) => {
+      return await invoke<string | null>('save_clipboard_image', { dirPath })
+    },
+
     saveAs: async (content: string, encoding: string, defaultPath?: string) => {
       const selected = await save({
         defaultPath: defaultPath ?? 'Untitled.txt',

@@ -87,6 +87,7 @@ export const ko: Translations = {
     tableDelRow: "행 삭제",
     tableDelCol: "열 삭제",
     horizontalRule: "수평선",
+    saveFileFirst: "이미지를 붙여넣으려면 먼저 파일을 저장하세요.",
   },
   infobar: {
     charSingular: "글자",
