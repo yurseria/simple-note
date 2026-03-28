@@ -191,6 +191,7 @@ export function getAppMenuData(t: Translations, recentFiles: string[] = []): Men
         },
         {
           label: t.view.zenMode,
+          accelerator: "Ctrl+Shift+Enter",
           action: "menu:toggleZenMode",
         },
       ],

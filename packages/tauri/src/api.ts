@@ -115,4 +115,15 @@ export const tauriApi: NoteAPI = {
 export async function initTauriPlatform(): Promise<void> {
   const platform = await invoke<string>('get_platform')
   ;(tauriApi as { platform: string }).platform = platform
+
+  // Tauri drag-drop 이벤트 → renderer로 전달
+  const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+  const webview = getCurrentWebviewWindow()
+  webview.onDragDropEvent((event) => {
+    if (event.payload.type === 'drop') {
+      for (const path of event.payload.paths) {
+        window.dispatchEvent(new CustomEvent('tauri:file-drop', { detail: path }))
+      }
+    }
+  })
 }

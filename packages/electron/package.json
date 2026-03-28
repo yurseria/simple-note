@@ -49,6 +49,32 @@
       "target": ["nsis", "zip"],
       "icon": "build/icon.png"
     },
+    "fileAssociations": [
+      {
+        "ext": "txt",
+        "name": "Text File",
+        "description": "Plain Text File",
+        "role": "Editor"
+      },
+      {
+        "ext": "md",
+        "name": "Markdown File",
+        "description": "Markdown Document",
+        "role": "Editor"
+      },
+      {
+        "ext": "markdown",
+        "name": "Markdown File",
+        "description": "Markdown Document",
+        "role": "Editor"
+      },
+      {
+        "ext": "log",
+        "name": "Log File",
+        "description": "Log File",
+        "role": "Editor"
+      }
+    ],
     "files": ["out/**/*"],
     "directories": {
       "buildResources": "build"

@@ -141,6 +141,38 @@ export function App(): JSX.Element {
     }
   }, [dispatchMenuAction])
 
+  // 드래그 앤 드롭 파일 열기
+  useEffect(() => {
+    function handleDragOver(e: DragEvent) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    function handleDrop(e: DragEvent) {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+      for (const file of Array.from(files)) {
+        // file.path는 Electron에서 사용 가능
+        const filePath = (file as unknown as { path?: string }).path;
+        if (filePath) openFile(filePath);
+      }
+    }
+    // Tauri drag-drop 이벤트
+    function handleTauriDrop(e: Event) {
+      const filePath = (e as CustomEvent<string>).detail;
+      if (filePath) openFile(filePath);
+    }
+    document.addEventListener("dragover", handleDragOver);
+    document.addEventListener("drop", handleDrop);
+    window.addEventListener("tauri:file-drop", handleTauriDrop);
+    return () => {
+      document.removeEventListener("dragover", handleDragOver);
+      document.removeEventListener("drop", handleDrop);
+      window.removeEventListener("tauri:file-drop", handleTauriDrop);
+    };
+  }, [openFile]);
+
   // Zen 모드에서 Escape로 해제
   useEffect(() => {
     if (!zenMode) return;
@@ -182,6 +214,7 @@ export function App(): JSX.Element {
     onFind: () => window.dispatchEvent(new CustomEvent("editor:openFind")),
     onReplace: () => window.dispatchEvent(new CustomEvent("editor:openReplace")),
     onCommandPalette: () => setCommandPaletteOpen(true),
+    onToggleZenMode: () => dispatchMenuAction("menu:toggleZenMode"),
   });
 
   function handleDividerMouseDown(e: React.MouseEvent) {

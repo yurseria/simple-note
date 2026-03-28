@@ -13,6 +13,7 @@ interface Options {
   onFind: () => void
   onReplace: () => void
   onCommandPalette: () => void
+  onToggleZenMode: () => void
 }
 
 export function useKeyboardShortcuts(opts: Options): void {
@@ -50,6 +51,9 @@ export function useKeyboardShortcuts(opts: Options): void {
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'p') {
         e.preventDefault()
         optsRef.current.onCommandPalette()
+      } else if (mod && e.shiftKey && e.key === 'Enter') {
+        e.preventDefault()
+        optsRef.current.onToggleZenMode()
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'm') {
         e.preventDefault()
         optsRef.current.onToggleMarkdownPreview()

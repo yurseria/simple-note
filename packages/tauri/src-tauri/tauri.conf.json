@@ -24,7 +24,8 @@
     ],
     "security": {
       "csp": null
-    }
+    },
+    "dragDropEnabled": true
   },
   "bundle": {
     "active": true,
@@ -38,6 +39,23 @@
       "minimumSystemVersion": "13.0"
     },
     "category": "public.app-category.productivity",
+    "fileAssociations": [
+      {
+        "ext": ["txt"],
+        "mimeType": "text/plain",
+        "description": "Plain Text File"
+      },
+      {
+        "ext": ["md", "markdown"],
+        "mimeType": "text/markdown",
+        "description": "Markdown Document"
+      },
+      {
+        "ext": ["log"],
+        "mimeType": "text/plain",
+        "description": "Log File"
+      }
+    ],
     "shortDescription": "A beautiful and simple plain text editor",
     "longDescription": "A clean and intuitive text editor designed for focused writing. Supports multi-tab, markdown preview, dark/light theme, and CJK input."
   },
