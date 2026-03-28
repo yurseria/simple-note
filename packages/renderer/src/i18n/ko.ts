@@ -48,6 +48,7 @@ export const ko: Translations = {
     zoomOut: "축소",
     zoomReset: "기본값으로 복원",
     toggleFullScreen: "전체 화면 전환",
+    zenMode: "Zen 모드",
     uiLanguage: "UI 언어",
     korean: "한국어",
     english: "English",

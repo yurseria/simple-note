@@ -35,6 +35,7 @@ export function App(): JSX.Element {
   const [scrollToBottom, setScrollToBottom] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
@@ -110,6 +111,8 @@ export function App(): JSX.Element {
       case "menu:setInfoBarMode":
         if (payload) useSettingsStore.getState().updateEditor({ infoBarMode: payload as "hud" | "status" });
         break;
+      case "menu:toggleZenMode":
+        setZenMode(z => !z); break;
     }
   }, [addTab, openFile, saveFile, saveFileAs, maybeCloseTab]);
 
@@ -124,7 +127,7 @@ export function App(): JSX.Element {
       "menu:toggleLineNumbers", "menu:setLanguage", "menu:setUILanguage",
       "menu:fontSizeUp", "menu:fontSizeDown", "menu:fontSizeReset",
       "menu:setTheme", "menu:setInfoBarMode", "menu:selectNextOccurrence", "menu:selectAllOccurrences",
-      "menu:openRecent", "menu:clearRecentFiles"
+      "menu:openRecent", "menu:clearRecentFiles", "menu:toggleZenMode"
     ]
     const handler = (e: Event) => {
       const ce = e as CustomEvent
@@ -137,6 +140,19 @@ export function App(): JSX.Element {
       for (const ev of menuEvents) window.removeEventListener(ev, handler)
     }
   }, [dispatchMenuAction])
+
+  // Zen 모드에서 Escape로 해제
+  useEffect(() => {
+    if (!zenMode) return;
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setZenMode(false);
+      }
+    }
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [zenMode]);
 
   // 토스트 메시지 이벤트 수신
   useEffect(() => {
@@ -233,12 +249,16 @@ export function App(): JSX.Element {
   void togglePreview;
 
   return (
-    <div className="app" data-theme={settings.editor.theme}>
-      <TitleBar
-        title={tab?.fileName ?? "Note"}
-        isEdited={tab?.isDirty ?? false}
-      />
-      <TabBar onNewTab={handleNewTab} onCloseTab={maybeCloseTab} />
+    <div className={`app${zenMode ? ' app--zen' : ''}`} data-theme={settings.editor.theme}>
+      {!zenMode && (
+        <>
+          <TitleBar
+            title={tab?.fileName ?? "Note"}
+            isEdited={tab?.isDirty ?? false}
+          />
+          <TabBar onNewTab={handleNewTab} onCloseTab={maybeCloseTab} />
+        </>
+      )}
 
       <div
         className={`app__body${settings.editor.infoBarMode === "hud" ? " app__body--hud" : ""}`}
@@ -283,7 +303,7 @@ export function App(): JSX.Element {
                 </>
               )}
             </div>
-            {settings.editor.infoBarMode !== "none" && (
+            {!zenMode && settings.editor.infoBarMode !== "none" && (
               <InfoBar
                 content={tab.content}
                 encoding={tab.encoding}
@@ -344,6 +364,12 @@ export function App(): JSX.Element {
           onClose={() => setCommandPaletteOpen(false)}
           onAction={dispatchMenuAction}
         />
+      )}
+
+      {zenMode && (
+        <div className="zen-hint">
+          {t.view.zenMode} — Esc
+        </div>
       )}
 
       {toast && (

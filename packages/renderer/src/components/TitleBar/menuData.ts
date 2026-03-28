@@ -189,6 +189,10 @@ export function getAppMenuData(t: Translations, recentFiles: string[] = []): Men
           role: "togglefullscreen",
           accelerator: "F11",
         },
+        {
+          label: t.view.zenMode,
+          action: "menu:toggleZenMode",
+        },
       ],
     },
     {

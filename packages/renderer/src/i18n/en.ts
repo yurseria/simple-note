@@ -48,6 +48,7 @@ export const en: Translations = {
     zoomOut: "Zoom Out",
     zoomReset: "Reset Zoom",
     toggleFullScreen: "Toggle Full Screen",
+    zenMode: "Zen Mode",
     uiLanguage: "UI Language",
     korean: "한국어",
     english: "English",

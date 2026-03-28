@@ -73,6 +73,37 @@ body,
   background: var(--editor-bg);
 }
 
+/* ── Zen 모드 ── */
+.app--zen .md-toolbar {
+  display: none;
+}
+
+.zen-hint {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  font-size: 12px;
+  border-radius: 6px;
+  z-index: 150;
+  pointer-events: none;
+  background: var(--accent-color);
+  color: #fff;
+  animation: zen-hint-fade 2s ease-out forwards;
+}
+
+@keyframes zen-hint-fade {
+  0%, 70% {
+    background: var(--accent-color);
+    color: #fff;
+  }
+  100% {
+    background: var(--border-color);
+    color: var(--text-muted);
+  }
+}
+
 .app__body {
   flex: 1;
   display: flex;

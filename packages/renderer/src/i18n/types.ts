@@ -46,6 +46,7 @@ export interface Translations {
     zoomOut: string;
     zoomReset: string;
     toggleFullScreen: string;
+    zenMode: string;
     uiLanguage: string;
     korean: string;
     english: string;
