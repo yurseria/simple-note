@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
-import { open, save, ask } from '@tauri-apps/plugin-dialog'
+import { open, save, ask, message } from '@tauri-apps/plugin-dialog'
 import { listen } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import type { NoteAPI, ReadResult } from '@simple-note/renderer/types/api'
 import type { Settings } from '@simple-note/renderer/types/settings'
 
@@ -81,15 +82,11 @@ export const tauriApi: NoteAPI = {
       if (role === 'togglefullscreen') {
         invoke('toggle_fullscreen')
       } else if (role === 'quit') {
-        import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-          getCurrentWindow().close()
-        })
+        getCurrentWindow().close()
       } else if (role === 'toggleDevTools') {
         invoke('toggle_devtools')
       } else if (role === 'about') {
-        import('@tauri-apps/plugin-dialog').then(({ message }) => {
-          message('Simple Note - A beautiful and simple plain text editor.', { title: 'About Note', kind: 'info' })
-        })
+        message('Simple Note - A beautiful and simple plain text editor.', { title: 'About Note', kind: 'info' })
       } else if (['selectAll', 'undo', 'redo'].includes(role)) {
         window.dispatchEvent(new CustomEvent(`editor:${role}`))
       } else if (['cut', 'copy', 'paste'].includes(role)) {
@@ -106,21 +103,9 @@ export const tauriApi: NoteAPI = {
   },
 
   window: {
-    minimize: () => {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-        getCurrentWindow().minimize()
-      })
-    },
-    toggleMaximize: () => {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-        getCurrentWindow().toggleMaximize()
-      })
-    },
-    close: () => {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-        getCurrentWindow().close()
-      })
-    }
+    minimize: () => getCurrentWindow().minimize(),
+    toggleMaximize: () => getCurrentWindow().toggleMaximize(),
+    close: () => getCurrentWindow().close(),
   },
 
   platform: 'darwin',

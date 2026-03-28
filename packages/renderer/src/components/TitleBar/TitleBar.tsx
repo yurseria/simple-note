@@ -18,8 +18,9 @@ export function TitleBar({ title, isEdited }: Props): JSX.Element {
   const handleClose = () => api.window?.close()
 
   return (
-    <div className={`titlebar ${isMac ? 'mac' : 'windows'}`} {...dragProps}>
+    <div className={`titlebar ${isMac ? 'mac' : 'windows'}`}>
       {api.runtime === 'electron' && <div className="titlebar__drag" />}
+      {api.runtime === 'tauri' && <div className="titlebar__tauri-drag" {...dragProps} />}
 
       {!isMac && (
         <CustomMenu activeMenu={activeMenu} setActiveMenu={setActiveMenu} />

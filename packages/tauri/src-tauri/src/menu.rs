@@ -160,6 +160,7 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
         .build()?;
 
     // ── Build final menu ────────────────────────────────────
+    #[allow(unused_mut)]
     let mut builder = MenuBuilder::new(app);
 
     #[cfg(target_os = "macos")]

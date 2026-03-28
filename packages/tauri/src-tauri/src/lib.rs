@@ -58,13 +58,19 @@ pub fn run() {
 
             drop(store);
 
-            // Build native menu
+            // Platform-specific window setup
             #[cfg(target_os = "macos")]
             {
+                use tauri::TitleBarStyle;
+
+                if let Some(win) = app.get_webview_window("main") {
+                    win.set_title_bar_style(TitleBarStyle::Overlay).unwrap();
+                }
+
                 let handle = app.handle().clone();
                 let native_menu = menu::build_menu(&handle, &lang)?;
                 app.set_menu(native_menu)?;
-                
+
                 app.on_menu_event(move |app_handle, event| {
                     menu::handle_menu_event(app_handle, event);
                 });

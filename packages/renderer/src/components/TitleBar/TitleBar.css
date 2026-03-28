@@ -25,6 +25,12 @@
   z-index: 0;
 }
 
+.titlebar__tauri-drag {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 .titlebar__title-container {
   position: absolute;
   left: 50%;
