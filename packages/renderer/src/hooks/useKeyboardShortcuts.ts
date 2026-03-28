@@ -12,6 +12,7 @@ interface Options {
   onToggleMarkdownPreview: () => void
   onFind: () => void
   onReplace: () => void
+  onCommandPalette: () => void
 }
 
 export function useKeyboardShortcuts(opts: Options): void {
@@ -46,6 +47,9 @@ export function useKeyboardShortcuts(opts: Options): void {
       } else if (mod && !e.shiftKey && e.key === 'g') {
         e.preventDefault()
         optsRef.current.onGotoLine()
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        optsRef.current.onCommandPalette()
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'm') {
         e.preventDefault()
         optsRef.current.onToggleMarkdownPreview()

@@ -7,7 +7,7 @@ import "./CustomMenu.css";
 
 /** "&File" → { text: "File", mnemonicChar: "F", mnemonicIndex: 0 }
  *  "파일(&F)" → { text: "파일(F)", mnemonicChar: "F", mnemonicIndex: 3 } */
-function parseMnemonic(label: string): { text: string; mnemonicChar: string | null; mnemonicIndex: number } {
+export function parseMnemonic(label: string): { text: string; mnemonicChar: string | null; mnemonicIndex: number } {
   const idx = label.indexOf("&");
   if (idx === -1 || idx === label.length - 1) {
     return { text: label, mnemonicChar: null, mnemonicIndex: -1 };

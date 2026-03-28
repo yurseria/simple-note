@@ -92,6 +92,10 @@ export const en: Translations = {
     horizontalRule: "Horizontal Rule",
     saveFileFirst: "Save the file first to paste images.",
   },
+  commandPalette: {
+    placeholder: "Type a command...",
+    noResults: "No matching commands",
+  },
   infobar: {
     charSingular: "Character",
     charPlural: "Characters",

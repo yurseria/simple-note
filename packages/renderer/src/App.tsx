@@ -8,6 +8,7 @@ import { useTabStore, inferLanguage } from "./store/tabStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useFile } from "./hooks/useFile";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import { api } from "./platform";
 import { useTranslation } from "./i18n";
 import type { LanguageMode } from "./types/tab";
@@ -33,6 +34,7 @@ export function App(): JSX.Element {
   const [splitRatio, setSplitRatio] = useState(0.5);
   const [scrollToBottom, setScrollToBottom] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
@@ -163,6 +165,7 @@ export function App(): JSX.Element {
     },
     onFind: () => window.dispatchEvent(new CustomEvent("editor:openFind")),
     onReplace: () => window.dispatchEvent(new CustomEvent("editor:openReplace")),
+    onCommandPalette: () => setCommandPaletteOpen(true),
   });
 
   function handleDividerMouseDown(e: React.MouseEvent) {
@@ -334,6 +337,13 @@ export function App(): JSX.Element {
             </div>
           </div>
         </div>
+      )}
+
+      {commandPaletteOpen && (
+        <CommandPalette
+          onClose={() => setCommandPaletteOpen(false)}
+          onAction={dispatchMenuAction}
+        />
       )}
 
       {toast && (

@@ -92,6 +92,10 @@ export const ko: Translations = {
     horizontalRule: "수평선",
     saveFileFirst: "이미지를 붙여넣으려면 먼저 파일을 저장하세요.",
   },
+  commandPalette: {
+    placeholder: "명령어를 입력하세요...",
+    noResults: "일치하는 명령어 없음",
+  },
   infobar: {
     charSingular: "글자",
     charPlural: "글자",

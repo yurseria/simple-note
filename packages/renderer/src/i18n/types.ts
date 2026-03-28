@@ -90,6 +90,10 @@ export interface Translations {
     horizontalRule: string;
     saveFileFirst: string;
   };
+  commandPalette: {
+    placeholder: string;
+    noResults: string;
+  };
   infobar: {
     charSingular: string;
     charPlural: string;
