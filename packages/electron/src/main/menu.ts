@@ -1,4 +1,5 @@
 import { Menu, BrowserWindow, app, ipcMain } from "electron";
+import { store } from "./store";
 
 const isMac = process.platform === "darwin";
 
@@ -25,6 +26,9 @@ const T: Record<MenuLanguage, Record<string, string>> = {
     selectAll: "전체 선택",
     find: "찾기...",
     replace: "바꾸기...",
+    recentFiles: "최근 파일",
+    noRecentFiles: "최근 파일 없음",
+    clearRecentFiles: "최근 파일 목록 지우기",
     view: "보기",
     appearance: "모양",
     toggleLineNumbers: "줄 번호 표시/숨기기",
@@ -70,6 +74,9 @@ const T: Record<MenuLanguage, Record<string, string>> = {
     selectAll: "Select All",
     find: "Find...",
     replace: "Replace...",
+    recentFiles: "Recent Files",
+    noRecentFiles: "No Recent Files",
+    clearRecentFiles: "Clear Recent Files",
     view: "View",
     appearance: "Appearance",
     toggleLineNumbers: "Toggle Line Numbers",
@@ -133,6 +140,10 @@ export function buildMenu(language: MenuLanguage = "ko"): void {
           label: t.open,
           accelerator: "CmdOrCtrl+O",
           click: sendToRenderer("menu:open"),
+        },
+        {
+          label: t.recentFiles,
+          submenu: buildRecentFilesSubmenu(t),
         },
         { type: "separator" },
         {
@@ -340,6 +351,26 @@ export function buildMenu(language: MenuLanguage = "ko"): void {
       }
     });
   }
+}
+
+function buildRecentFilesSubmenu(
+  t: Record<string, string>,
+): Electron.MenuItemConstructorOptions[] {
+  const recentFiles: string[] =
+    (store.get("general.recentFiles" as keyof import("../types/settings").Settings) as unknown as string[]) ?? [];
+
+  if (recentFiles.length === 0) {
+    return [{ label: t.noRecentFiles, enabled: false }];
+  }
+
+  return [
+    ...recentFiles.map((fp) => ({
+      label: fp.split(/[\\/]/).pop() ?? fp,
+      click: sendToRenderer("menu:openRecent", fp),
+    })),
+    { type: "separator" as const },
+    { label: t.clearRecentFiles, click: sendToRenderer("menu:clearRecentFiles") },
+  ];
 }
 
 function sendToRenderer(channel: string, ...args: unknown[]) {

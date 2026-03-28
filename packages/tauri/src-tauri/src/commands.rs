@@ -65,6 +65,7 @@ pub fn get_settings(app: AppHandle) -> Result<serde_json::Value, String> {
 
     let general = serde_json::json!({
         "doubleEscToLeaveFullScreen": store.get("general.doubleEscToLeaveFullScreen").unwrap_or(serde_json::Value::Bool(false)),
+        "recentFiles": store.get("general.recentFiles").unwrap_or(serde_json::Value::Array(vec![])),
     });
 
     let editor = serde_json::json!({
@@ -122,6 +123,17 @@ pub fn set_setting(app: AppHandle, key: String, value: serde_json::Value) -> Res
         if let serde_json::Value::Object(map) = &value {
             for (k, v) in map {
                 store.set(format!("general.{}", k), v.clone());
+            }
+        }
+        // general 설정 변경 시 메뉴 재빌드 (최근 파일 서브메뉴 갱신)
+        #[cfg(target_os = "macos")]
+        {
+            let lang = store
+                .get("language")
+                .and_then(|v| v.as_str().map(|s| s.to_string()))
+                .unwrap_or_else(|| "en".to_string());
+            if let Ok(native_menu) = crate::menu::build_menu(&app, &lang) {
+                let _ = app.set_menu(native_menu);
             }
         }
     } else {

@@ -14,6 +14,9 @@ export const ko: Translations = {
     save: "저장",
     saveAs: "다른 이름으로 저장...",
     closeTab: "탭 닫기",
+    recentFiles: "최근 파일",
+    noRecentFiles: "최근 파일 없음",
+    clearRecentFiles: "최근 파일 목록 지우기",
     quit: "종료",
   },
   edit: {

@@ -18,7 +18,19 @@ export interface MenuDefinition {
   items: MenuItem[];
 }
 
-export function getAppMenuData(t: Translations): MenuDefinition[] {
+export function getAppMenuData(t: Translations, recentFiles: string[] = []): MenuDefinition[] {
+  const recentSubmenu: MenuItem[] = recentFiles.length > 0
+    ? [
+        ...recentFiles.map((fp) => ({
+          label: fp.split(/[\\/]/).pop() ?? fp,
+          action: "menu:openRecent",
+          actionArgs: [fp] as unknown[],
+        })),
+        { type: "separator" as const },
+        { label: t.file.clearRecentFiles, action: "menu:clearRecentFiles" },
+      ]
+    : [{ label: t.file.noRecentFiles }]
+
   return [
     {
       id: "file",
@@ -26,6 +38,7 @@ export function getAppMenuData(t: Translations): MenuDefinition[] {
       items: [
         { label: t.file.newTab, accelerator: "Ctrl+T", action: "menu:newTab" },
         { label: t.file.open, accelerator: "Ctrl+O", action: "menu:open" },
+        { label: t.file.recentFiles, submenu: recentSubmenu },
         { type: "separator" },
         { label: t.file.save, accelerator: "Ctrl+S", action: "menu:save" },
         {

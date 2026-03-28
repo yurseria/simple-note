@@ -14,6 +14,7 @@ const MENU_CHANNELS = [
   'menu:setLanguage', 'menu:setUILanguage',
   'menu:fontSizeUp', 'menu:fontSizeDown', 'menu:fontSizeReset',
   'menu:setTheme', 'menu:setInfoBarMode',
+  'menu:openRecent', 'menu:clearRecentFiles',
 ]
 
 const electronApi: NoteAPI = {

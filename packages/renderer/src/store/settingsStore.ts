@@ -8,10 +8,11 @@ interface SettingsStore {
   load: () => Promise<void>
   update: <K extends keyof Settings>(key: K, value: Settings[K]) => void
   updateEditor: (patch: Partial<Settings['editor']>) => void
+  addRecentFile: (filePath: string) => void
 }
 
 const defaultSettings: Settings = {
-  general: { doubleEscToLeaveFullScreen: false },
+  general: { doubleEscToLeaveFullScreen: false, recentFiles: [] },
   editor: {
     fontFamily: 'Pretendard',
     fontSize: 14,
@@ -53,5 +54,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const next = { ...get().settings.editor, ...patch }
     set((s) => ({ settings: { ...s.settings, editor: next } }))
     api.settings.set('editor', next)
+  },
+
+  addRecentFile: (filePath) => {
+    const general = get().settings.general
+    const recent = [filePath, ...(general.recentFiles || []).filter(p => p !== filePath)].slice(0, 10)
+    const next = { ...general, recentFiles: recent }
+    set((s) => ({ settings: { ...s.settings, general: next } }))
+    api.settings.set('general', next)
   }
 }))

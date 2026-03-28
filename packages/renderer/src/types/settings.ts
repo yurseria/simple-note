@@ -5,6 +5,7 @@ export type UILanguage = "ko" | "en";
 export interface Settings {
   general: {
     doubleEscToLeaveFullScreen: boolean;
+    recentFiles: string[];
   };
   editor: {
     fontFamily: string;

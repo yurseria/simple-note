@@ -14,6 +14,9 @@ export const en: Translations = {
     save: "Save",
     saveAs: "Save As...",
     closeTab: "Close Tab",
+    recentFiles: "Recent Files",
+    noRecentFiles: "No Recent Files",
+    clearRecentFiles: "Clear Recent Files",
     quit: "Quit",
   },
   edit: {

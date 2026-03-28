@@ -48,6 +48,13 @@ export function App(): JSX.Element {
     switch (action) {
       case "menu:newTab": addTab(); break;
       case "menu:open": openFile(); break;
+      case "menu:openRecent":
+        if (payload) openFile(payload); break;
+      case "menu:clearRecentFiles":
+        useSettingsStore.getState().update("general", {
+          ...useSettingsStore.getState().settings.general,
+          recentFiles: [],
+        }); break;
       case "menu:save": saveFile(); break;
       case "menu:saveAs": saveFileAs(); break;
       case "menu:closeTab": {
@@ -114,7 +121,8 @@ export function App(): JSX.Element {
       "menu:gotoLine", "menu:toggleMarkdownPreview", "menu:find", "menu:replace",
       "menu:toggleLineNumbers", "menu:setLanguage", "menu:setUILanguage",
       "menu:fontSizeUp", "menu:fontSizeDown", "menu:fontSizeReset",
-      "menu:setTheme", "menu:setInfoBarMode", "menu:selectNextOccurrence", "menu:selectAllOccurrences"
+      "menu:setTheme", "menu:setInfoBarMode", "menu:selectNextOccurrence", "menu:selectAllOccurrences",
+      "menu:openRecent", "menu:clearRecentFiles"
     ]
     const handler = (e: Event) => {
       const ce = e as CustomEvent

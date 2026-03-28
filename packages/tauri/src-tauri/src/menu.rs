@@ -3,6 +3,7 @@ use tauri::{
     menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
     AppHandle, Emitter, Manager, Wry,
 };
+use tauri_plugin_store::StoreExt;
 
 pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Menu<Wry>> {
     let is_ko = lang.to_lowercase().starts_with("ko");
@@ -24,6 +25,12 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
         ("찾기...", "바꾸기...")
     } else {
         ("Find...", "Replace...")
+    };
+
+    let (recent_files_label, no_recent, clear_recent) = if is_ko {
+        ("최근 파일", "최근 파일 없음", "최근 파일 목록 지우기")
+    } else {
+        ("Recent Files", "No Recent Files", "Clear Recent Files")
     };
 
     let (appearance, toggle_line_numbers) = if is_ko {
@@ -79,10 +86,35 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
         };
     }
 
+    // ── Recent files submenu ──────────────────────────────────
+    let mut recent_sub = SubmenuBuilder::new(app, recent_files_label);
+    let recent_files: Vec<String> = app
+        .store("settings.json")
+        .ok()
+        .and_then(|s| s.get("general.recentFiles"))
+        .and_then(|v| serde_json::from_value(v).ok())
+        .unwrap_or_default();
+
+    if recent_files.is_empty() {
+        let disabled = MenuItemBuilder::new(no_recent).enabled(false).build(app)?;
+        recent_sub = recent_sub.item(&disabled);
+    } else {
+        for fp in &recent_files {
+            let file_name = fp.rsplit(['/', '\\']).next().unwrap_or(fp);
+            let id = format!("menu:openRecent:{}", fp);
+            let item = MenuItemBuilder::new(file_name).id(id).build(app)?;
+            recent_sub = recent_sub.item(&item);
+        }
+        recent_sub = recent_sub.separator();
+        recent_sub = recent_sub.item(&menu_item!("menu:clearRecentFiles", clear_recent));
+    }
+    let recent_submenu = recent_sub.build()?;
+
     // ── File ────────────────────────────────────────────────
     let file_menu = SubmenuBuilder::new(app, file)
         .item(&menu_item!("menu:newTab", new_tab, "CmdOrCtrl+T"))
         .item(&menu_item!("menu:open", open, "CmdOrCtrl+O"))
+        .item(&recent_submenu)
         .separator()
         .item(&menu_item!("menu:save", save, "CmdOrCtrl+S"))
         .item(&menu_item!("menu:saveAs", save_as, "CmdOrCtrl+Shift+S"))
@@ -193,14 +225,19 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     let id = event.id().0.as_str();
 
-    // Parse compound IDs like "menu:setTheme:dark"
+    // Parse compound IDs like "menu:setTheme:dark" or "menu:openRecent:C:\path\file.md"
     let (event_name, payload) = {
-        let parts: Vec<&str> = id.splitn(3, ':').collect();
-        if parts.len() == 3 {
-            let name = format!("{}:{}", parts[0], parts[1]);
-            (name, Some(parts[2].to_string()))
+        // menu:openRecent: 은 경로에 ':'가 포함될 수 있으므로 특별 처리
+        if let Some(path) = id.strip_prefix("menu:openRecent:") {
+            ("menu:openRecent".to_string(), Some(path.to_string()))
         } else {
-            (id.to_string(), None)
+            let parts: Vec<&str> = id.splitn(3, ':').collect();
+            if parts.len() == 3 {
+                let name = format!("{}:{}", parts[0], parts[1]);
+                (name, Some(parts[2].to_string()))
+            } else {
+                (id.to_string(), None)
+            }
         }
     };
 

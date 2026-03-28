@@ -1,13 +1,16 @@
 import { api } from '../platform'
 import { useTabStore, inferLanguage } from '../store/tabStore'
+import { useSettingsStore } from '../store/settingsStore'
 
 export function useFile() {
   const { tabs, activeTab, addTab, markSaved, closeTab } = useTabStore()
+  const { addRecentFile } = useSettingsStore()
 
   async function openFile(filePath?: string) {
     const result = await api.file.open(filePath)
     if (!result) return
 
+    addRecentFile(result.filePath)
     const fileName = result.filePath.split('/').pop() ?? result.filePath
     // 이미 열려 있는 탭이면 포커스만 이동
     const existing = tabs.find((t) => t.filePath === result.filePath)
@@ -57,7 +60,10 @@ export function useFile() {
     const tab = activeTab()
     if (!tab) return
     const saved = await api.file.saveAs(tab.content, tab.encoding, tab.fileName)
-    if (saved) markSaved(tab.id, saved)
+    if (saved) {
+      markSaved(tab.id, saved)
+      addRecentFile(saved)
+    }
   }
 
   async function maybeCloseTab(id: string) {

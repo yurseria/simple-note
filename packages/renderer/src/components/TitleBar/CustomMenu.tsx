@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { api } from "../../platform";
 import { getAppMenuData, MenuItem } from "./menuData";
 import { useTranslation } from "../../i18n";
+import { useSettingsStore } from "../../store/settingsStore";
 import "./CustomMenu.css";
 
 /** "&File" → { text: "File", mnemonicChar: "F", mnemonicIndex: 0 }
@@ -35,10 +36,11 @@ interface Props {
 
 export function CustomMenu({ activeMenu, setActiveMenu }: Props): JSX.Element {
   const t = useTranslation();
+  const recentFiles = useSettingsStore((s) => s.settings.general.recentFiles ?? []);
   const containerRef = useRef<HTMLDivElement>(null);
   const [focusedMenuIndex, setFocusedMenuIndex] = useState<number | null>(null);
 
-  const desktopMenus = getAppMenuData(t);
+  const desktopMenus = getAppMenuData(t, recentFiles);
 
   // 각 메뉴의 니모닉 문자 → 인덱스 매핑
   const mnemonicMap = useMemo(() => {

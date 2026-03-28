@@ -12,6 +12,9 @@ export interface Translations {
     save: string;
     saveAs: string;
     closeTab: string;
+    recentFiles: string;
+    noRecentFiles: string;
+    clearRecentFiles: string;
     quit: string;
   };
   edit: {

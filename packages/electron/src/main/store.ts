@@ -3,7 +3,8 @@ import type { Settings } from '../types/settings'
 
 const defaults: Settings = {
   general: {
-    doubleEscToLeaveFullScreen: false
+    doubleEscToLeaveFullScreen: false,
+    recentFiles: []
   },
   editor: {
     fontFamily: 'Hack Nerd Font',

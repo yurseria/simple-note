@@ -195,8 +195,13 @@ export function registerIpcHandlers(): void {
       logger.info("settings:set", { key });
 
       if (key === "language") {
-        // UI 언어 변경 시 네이티브 메뉴 재구성 (macOS)
         buildMenu(value as UILanguage);
+      }
+
+      // 최근 파일 등 general 설정 변경 시 메뉴 재빌드 (최근 파일 서브메뉴 갱신)
+      if (key === "general") {
+        const lang = (store.get("language") as UILanguage) ?? "en";
+        buildMenu(lang);
       }
 
       if (key === "editor") {
