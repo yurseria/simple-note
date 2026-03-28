@@ -36,13 +36,23 @@
 ### File Management
 - **Multi-Tab Support:** Open multiple files simultaneously in tabs, reorder them with drag-and-drop, and switch between them with ease.
 - **Auto-Detection:** Automatically detects text encoding when opening documents to prevent garbled characters, and automatically switches to edit mode for Markdown files.
+- **Drag & Drop:** Drop files from your file manager onto the app window to open them instantly.
+- **Recent Files:** Quickly access recently opened files from the File menu.
+- **File Associations:** Double-click `.txt`, `.md` files to open them directly in Simple Note. (Available after packaging and installation)
 
 ### Markdown Optimization
+- **Markdown Toolbar:** Quickly insert markdown formatting with toolbar buttons — headings (H1–H5), bold, italic, strikethrough, code, blockquote, lists, task lists, links, images, tables, and more. (Remix Icon)
+- **Table Editing:** Add/delete rows and columns from the table dropdown in the toolbar.
+- **Image Paste:** Paste clipboard images with `Ctrl+V` in markdown mode — automatically saved to `./images/` folder and inserted as markdown.
 - **Real-time Syntax Highlighting:** Markdown elements such as headings, bold/italic, code, and links are visually distinguished so you can focus on writing.
 - **Split-Screen Preview:** View and edit your Markdown document in real time with a live preview panel. Drag the divider to freely adjust the ratio of the preview pane.
+- **Mermaid Diagrams:** Render Mermaid diagrams in markdown code blocks. Theme syncs automatically with the editor theme.
 - **Safe and Accurate Rendering:** Fully supports syntax highlighting in code blocks and safely renders documents against security threats (XSS).
 
 ### User-Friendly UI
+- **Command Palette:** Access all commands quickly with `Ctrl+Shift+P`. Supports bilingual search (Korean/English) regardless of current UI language.
+- **Zen Mode:** Hide the tab bar, info bar, and toolbar to focus on writing. (`Ctrl+Shift+Enter`, press `Esc` to exit)
+- **Menu Mnemonics:** Focus menu with `Alt` key, open menus directly with `Alt+F`, etc. (Windows)
 - **Dark/Light Theme:** Easily switch the editor theme to match your work environment and preference.
 - **Document Statistics:** View useful information such as character count, word count, line count, and language mode in the status bar at a glance.
 - **Flexible Display Settings:** Adjust zoom level, font size, and more to suit your needs.
@@ -116,7 +126,7 @@ When running `npm run package:electron` on Windows, a symbolic link creation err
 | UI | React 18 + TypeScript | | |
 | Editor | CodeMirror 6 | | |
 | State | Zustand 5 | | |
-| Markdown | marked + highlight.js + DOMPurify | | |
+| Markdown | marked + highlight.js + DOMPurify + Mermaid | | |
 | Runtime | | Electron 41 | Tauri 2 (Rust) |
 | Settings | | electron-store 8 | tauri-plugin-store |
 | Encoding | | chardet + iconv-lite | Rust (encoding_rs) |
@@ -131,7 +141,7 @@ simple-note/
 ├── packages/
 │   ├── renderer/              # Shared frontend (@simple-note/renderer)
 │   │   ├── src/
-│   │   │   ├── components/    # TitleBar, TabBar, Editor, InfoBar
+│   │   │   ├── components/    # TitleBar, TabBar, Editor, InfoBar, CommandPalette
 │   │   │   ├── hooks/         # useFile, useKeyboardShortcuts
 │   │   │   ├── store/         # tabStore, settingsStore (zustand)
 │   │   │   ├── i18n/          # Korean / English
