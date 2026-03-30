@@ -51,7 +51,7 @@ export function useKeyboardShortcuts(opts: Options): void {
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'p') {
         e.preventDefault()
         optsRef.current.onCommandPalette()
-      } else if (mod && e.shiftKey && e.key === 'Enter') {
+      } else if (mod && !e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault()
         optsRef.current.onToggleZenMode()
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'm') {
