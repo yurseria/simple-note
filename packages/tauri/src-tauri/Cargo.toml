@@ -1,6 +1,6 @@
 [package]
 name = "simple-note-tauri"
-version = "0.1.0"
+version = "0.1.0" # x-release-please-version
 description = "A beautiful and simple plain text editor"
 authors = ["yurseria"]
 license = "MIT"

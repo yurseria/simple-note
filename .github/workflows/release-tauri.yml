@@ -1,19 +1,74 @@
-name: Release Tauri (Windows)
+name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [release]
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  # ── 1. release-please: 버전 범프 PR 생성 / 머지 시 릴리스 생성 ──
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: release
 
+  # ── 2. macOS 빌드 ──────────────────────────────────────────
+  build-macos:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/tauri/src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri (universal)
+        working-directory: packages/tauri
+        run: npx tauri build --target universal-apple-darwin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            packages/tauri/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            packages/tauri/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz
+
+  # ── 3. Windows 빌드 ─────────────────────────────────────────
+  build-windows:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -28,14 +83,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Tauri app
+      - name: Build Tauri
         working-directory: packages/tauri
         run: npx tauri build
 
-      - name: Upload artifacts to release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: windows
+          path: |
             packages/tauri/src-tauri/target/release/bundle/nsis/*.exe
             packages/tauri/src-tauri/target/release/bundle/msi/*.msi
-          generate_release_notes: true
+
+  # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
+  upload-assets:
+    needs: [release-please, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: |
+            artifacts/macos/*
+            artifacts/windows/*
