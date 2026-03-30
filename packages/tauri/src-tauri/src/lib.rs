@@ -65,6 +65,11 @@ pub fn run() {
             {
                 use tauri::TitleBarStyle;
 
+                // 키 반복 입력 활성화 (macOS accent 팝업 비활성화)
+                let _ = std::process::Command::new("defaults")
+                    .args(["write", "-g", "ApplePressAndHoldEnabled", "-bool", "false"])
+                    .output();
+
                 if let Some(win) = app.get_webview_window("main") {
                     win.set_title_bar_style(TitleBarStyle::Overlay).unwrap();
                 }
