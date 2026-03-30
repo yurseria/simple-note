@@ -113,6 +113,8 @@ export function App(): JSX.Element {
         break;
       case "menu:toggleZenMode":
         setZenMode(z => !z); break;
+      case "menu:commandPalette":
+        setCommandPaletteOpen(o => !o); break;
     }
   }, [addTab, openFile, saveFile, saveFileAs, maybeCloseTab]);
 
@@ -127,7 +129,7 @@ export function App(): JSX.Element {
       "menu:toggleLineNumbers", "menu:setLanguage", "menu:setUILanguage",
       "menu:fontSizeUp", "menu:fontSizeDown", "menu:fontSizeReset",
       "menu:setTheme", "menu:setInfoBarMode", "menu:selectNextOccurrence", "menu:selectAllOccurrences",
-      "menu:openRecent", "menu:clearRecentFiles", "menu:toggleZenMode"
+      "menu:openRecent", "menu:clearRecentFiles", "menu:toggleZenMode", "menu:commandPalette"
     ]
     const handler = (e: Event) => {
       const ce = e as CustomEvent
@@ -283,7 +285,7 @@ export function App(): JSX.Element {
 
   return (
     <div className={`app${zenMode ? ' app--zen' : ''}`} data-theme={settings.editor.theme}>
-      {!zenMode && (
+      {!zenMode ? (
         <>
           <TitleBar
             title={tab?.fileName ?? "Note"}
@@ -291,6 +293,13 @@ export function App(): JSX.Element {
           />
           <TabBar onNewTab={handleNewTab} onCloseTab={maybeCloseTab} />
         </>
+      ) : (
+        <div
+          className="zen-drag-region"
+          {...(api.runtime === 'tauri' ? { 'data-tauri-drag-region': true } as Record<string, unknown> : {})}
+        >
+          <span className="zen-drag-region__hint">{t.view.zenMode} — Esc</span>
+        </div>
       )}
 
       <div
@@ -397,12 +406,6 @@ export function App(): JSX.Element {
           onClose={() => setCommandPaletteOpen(false)}
           onAction={dispatchMenuAction}
         />
-      )}
-
-      {zenMode && (
-        <div className="zen-hint">
-          {t.view.zenMode} — Esc
-        </div>
       )}
 
       {toast && (

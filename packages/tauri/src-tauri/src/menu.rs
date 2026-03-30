@@ -27,6 +27,12 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
         ("Find...", "Replace...")
     };
 
+    let (select_next_occurrence, select_all_occurrences) = if is_ko {
+        ("다음 일치 항목 선택 추가", "모든 일치 항목 선택")
+    } else {
+        ("Add Next Occurrence to Selection", "Select All Occurrences")
+    };
+
     let (recent_files_label, no_recent, clear_recent) = if is_ko {
         ("최근 파일", "최근 파일 없음", "최근 파일 목록 지우기")
     } else {
@@ -70,6 +76,8 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
     };
 
     let toggle_full_screen = if is_ko { "전체 화면 전환" } else { "Toggle Full Screen" };
+    let zen_mode = if is_ko { "Zen 모드" } else { "Zen Mode" };
+    let command_palette = if is_ko { "명령 팔레트..." } else { "Command Palette..." };
     let goto_line = if is_ko { "지정 줄로 이동..." } else { "Go to Line..." };
     let toggle_preview = if is_ko { "마크다운 미리보기 전환" } else { "Toggle Markdown Preview" };
     let dev_tools = if is_ko { "개발자 도구 전환" } else { "Toggle Developer Tools" };
@@ -131,6 +139,9 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
         .copy()
         .paste()
         .separator()
+        .item(&menu_item!("menu:selectNextOccurrence", select_next_occurrence, "CmdOrCtrl+D"))
+        .item(&menu_item!("menu:selectAllOccurrences", select_all_occurrences, "CmdOrCtrl+Shift+L"))
+        .separator()
         .select_all()
         .separator()
         .item(&menu_item!("menu:find", find, "CmdOrCtrl+F"))
@@ -178,7 +189,10 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
         .item(&zoom_sub)
         .separator()
         .item(&menu_item!("menu:toggleFullScreen", toggle_full_screen))
+        .item(&menu_item!("menu:toggleZenMode", zen_mode, "CmdOrCtrl+E"))
+        .separator()
         .item(&menu_item!("menu:toggleMarkdownPreview", toggle_preview, "CmdOrCtrl+Shift+M"))
+        .item(&menu_item!("menu:commandPalette", command_palette, "CmdOrCtrl+Shift+P"))
         .build()?;
 
     // ── Go ──────────────────────────────────────────────────
