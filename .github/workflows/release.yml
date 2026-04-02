@@ -8,41 +8,48 @@ permissions:
   contents: write
 
 jobs:
-  # ── 1. 버전 범프 + 태그 + changelog ─────────────────────────
-  bump:
+  # ── 1. auto shipit: 버전 범프 + 태그 + GitHub Release ──────
+  release:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
     outputs:
-      tag: ${{ steps.bump.outputs.tag }}
-      version: ${{ steps.bump.outputs.version }}
-      changelog: ${{ steps.bump.outputs.changelog }}
-      skipped: ${{ steps.bump.outputs.skipped }}
+      tag: ${{ steps.release.outputs.tag }}
+      released: ${{ steps.release.outputs.released }}
       install_guide: ${{ steps.guide.outputs.content }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Bump version & tag
-        id: bump
-        run: |
-          node scripts/bump-version.mjs
-          if [ -z "$(git tag --points-at HEAD)" ]; then
-            echo "skipped=true" >> $GITHUB_OUTPUT
-          else
-            echo "skipped=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Install auto
+        run: npm i -D auto @auto-it/git-tag @auto-it/exec
 
-      - name: Push commit & tag
-        if: steps.bump.outputs.skipped == 'false'
+      - name: Create labels
+        run: npx auto create-labels
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Release
+        id: release
         run: |
-          git push origin release --tags
+          npx auto shipit
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$TAG" ]; then
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Load install guide
-        if: steps.bump.outputs.skipped == 'false'
+        if: steps.release.outputs.released == 'true'
         id: guide
         run: |
           {
@@ -53,8 +60,8 @@ jobs:
 
   # ── 2. Electron 패키징 (Windows + Linux) ────────────────────
   package-electron:
-    needs: bump
-    if: needs.bump.outputs.skipped == 'false'
+    needs: release
+    if: needs.release.outputs.released == 'true'
     strategy:
       matrix:
         include:
@@ -66,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.bump.outputs.tag }}
+          ref: ${{ needs.release.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -85,13 +92,13 @@ jobs:
 
   # ── 3. Tauri 패키징 (Windows) ───────────────────────────────
   package-tauri:
-    needs: bump
-    if: needs.bump.outputs.skipped == 'false'
+    needs: release
+    if: needs.release.outputs.released == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.bump.outputs.tag }}
+          ref: ${{ needs.release.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -116,9 +123,9 @@ jobs:
             packages/tauri/src-tauri/target/release/bundle/nsis/*.exe
             packages/tauri/src-tauri/target/release/bundle/msi/*.msi
 
-  # ── 4. GitHub Release 생성 ──────────────────────────────────
-  release:
-    needs: [bump, package-electron, package-tauri]
+  # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
+  upload-assets:
+    needs: [release, package-electron, package-tauri]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -127,14 +134,11 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.bump.outputs.tag }}
-          name: ${{ needs.bump.outputs.tag }}
+          tag_name: ${{ needs.release.outputs.tag }}
+          append_body: true
           body: |
-            ## Changes
-            ${{ needs.bump.outputs.changelog }}
-
             ---
-            ${{ needs.bump.outputs.install_guide }}
+            ${{ needs.release.outputs.install_guide }}
           files: |
             artifacts/electron-windows/*
             artifacts/electron-linux/*
