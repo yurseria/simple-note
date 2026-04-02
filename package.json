@@ -18,7 +18,8 @@
     "package": "node scripts/choose-target.mjs package",
     "package:electron": "npm run build:electron && npm run --workspace=@simple-note/electron package",
     "package:tauri": "npm run --workspace=@simple-note/tauri package",
-    "clean": "npm run --workspace=@simple-note/tauri clean"
+    "clean": "npm run --workspace=@simple-note/tauri clean",
+    "release": "node scripts/bump-version.mjs"
   },
   "packageManager": "npm@11.5.1",
   "devDependencies": {
