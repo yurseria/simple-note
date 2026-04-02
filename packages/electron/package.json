@@ -5,6 +5,7 @@
   "main": "./out/main/index.js",
   "author": "yurseria<yurseria@gmail.com>",
   "license": "MIT",
+  "homepage": "https://github.com/yurseria/simple-note",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
