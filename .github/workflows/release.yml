@@ -2,41 +2,47 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches: [release]
 
 permissions:
   contents: write
 
 jobs:
-  # ── 1. changelog 생성 ──────────────────────────────────────
-  prepare:
+  # ── 1. 버전 범프 + 태그 + changelog ─────────────────────────
+  bump:
     runs-on: ubuntu-latest
     outputs:
-      changelog: ${{ steps.changelog.outputs.content }}
+      tag: ${{ steps.bump.outputs.tag }}
+      version: ${{ steps.bump.outputs.version }}
+      changelog: ${{ steps.bump.outputs.changelog }}
+      skipped: ${{ steps.bump.outputs.skipped }}
       install_guide: ${{ steps.guide.outputs.content }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
-        id: changelog
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Bump version & tag
+        id: bump
         run: |
-          prev_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -n "$prev_tag" ]; then
-            range="${prev_tag}..HEAD"
+          node scripts/bump-version.mjs
+          if [ -z "$(git tag --points-at HEAD)" ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
           else
-            range="HEAD"
+            echo "skipped=false" >> $GITHUB_OUTPUT
           fi
 
-          {
-            echo 'content<<CHANGELOG_EOF'
-            git log $range --pretty=format:"- %s" --no-merges | grep -v "chore(release)"
-            echo ''
-            echo 'CHANGELOG_EOF'
-          } >> $GITHUB_OUTPUT
+      - name: Push commit & tag
+        if: steps.bump.outputs.skipped == 'false'
+        run: |
+          git push origin release --tags
 
       - name: Load install guide
+        if: steps.bump.outputs.skipped == 'false'
         id: guide
         run: |
           {
@@ -47,6 +53,8 @@ jobs:
 
   # ── 2. Electron 패키징 (Windows + Linux) ────────────────────
   package-electron:
+    needs: bump
+    if: needs.bump.outputs.skipped == 'false'
     strategy:
       matrix:
         include:
@@ -57,6 +65,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -75,9 +85,13 @@ jobs:
 
   # ── 3. Tauri 패키징 (Windows) ───────────────────────────────
   package-tauri:
+    needs: bump
+    if: needs.bump.outputs.skipped == 'false'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -104,7 +118,7 @@ jobs:
 
   # ── 4. GitHub Release 생성 ──────────────────────────────────
   release:
-    needs: [prepare, package-electron, package-tauri]
+    needs: [bump, package-electron, package-tauri]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -113,12 +127,14 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.bump.outputs.tag }}
+          name: ${{ needs.bump.outputs.tag }}
           body: |
             ## Changes
-            ${{ needs.prepare.outputs.changelog }}
+            ${{ needs.bump.outputs.changelog }}
 
             ---
-            ${{ needs.prepare.outputs.install_guide }}
+            ${{ needs.bump.outputs.install_guide }}
           files: |
             artifacts/electron-windows/*
             artifacts/electron-linux/*

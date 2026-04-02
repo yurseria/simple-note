@@ -101,11 +101,16 @@ for (const [key, items] of Object.entries(categories)) {
 }
 
 // ── commit + tag ───────────────────────────────────────────
+if (process.env.CI) {
+  execSync('git config user.name "github-actions[bot]"', { cwd: root });
+  execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', { cwd: root });
+}
+
 execSync("git add -A", { cwd: root });
 execSync(`git commit -m "chore(release): v${next}"`, { cwd: root });
 execSync(`git tag -a "v${next}" -m "v${next}"`, { cwd: root });
 
-console.log(`\nTagged v${next}. Run:\n  git push origin release --tags\n`);
+console.log(`\nTagged v${next}`);
 
 // ── GitHub Actions output ──────────────────────────────────
 if (process.env.GITHUB_OUTPUT) {
