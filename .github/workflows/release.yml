@@ -27,7 +27,7 @@ jobs:
           node-version: 22
 
       - name: Install auto
-        run: npm i -D auto @auto-it/git-tag @auto-it/exec
+        run: npm i -D auto @auto-it/git-tag @auto-it/exec @auto-it/conventional-commits
 
       - name: Create labels
         run: npx auto create-labels

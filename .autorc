@@ -2,6 +2,7 @@
   "baseBranch": "release",
   "plugins": [
     "git-tag",
+    "conventional-commits",
     [
       "exec",
       {
