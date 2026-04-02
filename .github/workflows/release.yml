@@ -24,11 +24,24 @@ jobs:
           manifest-file: .release-please-manifest.json
           target-branch: release
 
-  # ── 2. macOS 빌드 ──────────────────────────────────────────
-  build-macos:
+  # ── 2. Electron 패키징 (Windows + Linux) ────────────────────
+  package-electron:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: electron-windows
+            paths: |
+              packages/electron/dist/*.exe
+              packages/electron/dist/*.msi
+          - os: ubuntu-latest
+            artifact: electron-linux
+            paths: |
+              packages/electron/dist/*.AppImage
+              packages/electron/dist/*.deb
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,30 +51,19 @@ jobs:
         with:
           node-version: 22
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: packages/tauri/src-tauri
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Tauri (universal)
-        working-directory: packages/tauri
-        run: npx tauri build --target universal-apple-darwin
+      - name: Package Electron
+        run: npm run package:electron
 
       - uses: actions/upload-artifact@v4
         with:
-          name: macos
-          path: |
-            packages/tauri/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
-            packages/tauri/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.paths }}
 
-  # ── 3. Windows 빌드 ─────────────────────────────────────────
-  build-windows:
+  # ── 3. Tauri 패키징 (Windows) ───────────────────────────────
+  package-tauri:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: windows-latest
@@ -83,29 +85,44 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Tauri
-        working-directory: packages/tauri
-        run: npx tauri build
+      - name: Package Tauri
+        run: npm run package:tauri
 
       - uses: actions/upload-artifact@v4
         with:
-          name: windows
+          name: tauri-windows
           path: |
             packages/tauri/src-tauri/target/release/bundle/nsis/*.exe
             packages/tauri/src-tauri/target/release/bundle/msi/*.msi
 
-  # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
+  # ── 4. 릴리스에 산출물 첨부 ─────────────────────────────────
   upload-assets:
-    needs: [release-please, build-macos, build-windows]
+    needs: [release-please, package-electron, package-tauri]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: Build release body
+        id: body
+        run: |
+          {
+            echo 'content<<BODY_EOF'
+            cat .github/RELEASE_TEMPLATE.md
+            echo 'BODY_EOF'
+          } >> $GITHUB_OUTPUT
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
+          append_body: true
+          body: ${{ steps.body.outputs.content }}
           files: |
-            artifacts/macos/*
-            artifacts/windows/*
+            artifacts/electron-windows/*
+            artifacts/electron-linux/*
+            artifacts/tauri-windows/*
