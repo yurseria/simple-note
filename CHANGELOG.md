@@ -1,0 +1,45 @@
+# Changelog
+
+## [0.2.0](https://github.com/yurseria/simple-note/compare/simple-note-v0.1.0...simple-note-v0.2.0) (2026-04-02)
+
+
+### Features
+
+* add clipboard image paste for markdown mode ([8e78e6c](https://github.com/yurseria/simple-note/commit/8e78e6c1a13ed9512f1f4ece1461316fe65e0212))
+* add command palette (Ctrl+Shift+P) ([633c146](https://github.com/yurseria/simple-note/commit/633c1467663364dd516146a15ae117b8f01bdff6))
+* add drag-and-drop, file associations, and Zen mode shortcut ([c909f4c](https://github.com/yurseria/simple-note/commit/c909f4ca58d7fe61fb2643a35c83043350f0461e))
+* Add Info Bar mode (HUD/Status) and i18n updates ([55b3a93](https://github.com/yurseria/simple-note/commit/55b3a93e63fa6dc680e762943f53584ee8047e32))
+* add interactive target selector for dev/build/package scripts ([cae432d](https://github.com/yurseria/simple-note/commit/cae432d65be9979b907d4c3b047815ef0fec5018))
+* add markdown toolbar with Remix icons and various fixes ([fb0efd9](https://github.com/yurseria/simple-note/commit/fb0efd9e2521302b0c16e9111b0cc49fc5a5bea4))
+* add menu mnemonics and fix mermaid re-render bug ([1347c3d](https://github.com/yurseria/simple-note/commit/1347c3d0252083574c30d648a87c257275268da1))
+* add recent files menu ([8972b6b](https://github.com/yurseria/simple-note/commit/8972b6b849035f52118db66224d0054f13249fb4))
+* add Zen mode for distraction-free writing ([0395e84](https://github.com/yurseria/simple-note/commit/0395e8460b017d40656303adf1c2940c6a592423))
+* Auto-scroll markdown preview at bottom cursor ([a749e27](https://github.com/yurseria/simple-note/commit/a749e27db2b372e8255a5258d4d240d81e353c1d))
+* change Zen mode shortcut to Cmd+E ([282f90a](https://github.com/yurseria/simple-note/commit/282f90acca2f3eeffcd9f45ed9bf748d9d48c538))
+* **editor:** add Find and Replace functionality with custom panel ([3efe1ac](https://github.com/yurseria/simple-note/commit/3efe1ac6d84c5d89757780fc221c2ca42179def6))
+* **editor:** 확장자 기반 문법 강조 기능 추가 ([924f52e](https://github.com/yurseria/simple-note/commit/924f52e517a396a01a186a7b401a982cfdf727f6))
+* Format code and implement HUD padding ([47f9e9f](https://github.com/yurseria/simple-note/commit/47f9e9fb33012391ba8e249f3f07de7fc646286b))
+* Introduce i18n support and language-aware menus ([70d83a2](https://github.com/yurseria/simple-note/commit/70d83a2555fa6f6c0fd28d664d7b64ea95695dd1))
+* markdown에서 mermaid 지원 ([273b017](https://github.com/yurseria/simple-note/commit/273b01766cd535e8ce865b0a6ed02bbd6bf5561a))
+* Replace editor images with simple_editor image ([814711e](https://github.com/yurseria/simple-note/commit/814711e452b5d232441f6dbd30a32c3633afe2a8))
+* sync mermaid diagram theme with editor theme ([5cc7f6d](https://github.com/yurseria/simple-note/commit/5cc7f6debb16fe2cc1fe6fdf211b149a51c07402))
+* sync native macOS menu with React menu items ([c8ed620](https://github.com/yurseria/simple-note/commit/c8ed6206f1130d2b08d910d421fb1979400e9996))
+* tauri 버전 포함하여 monorepo로 변경 ([803d54a](https://github.com/yurseria/simple-note/commit/803d54abc0221715759dafff463f54289f720e7a))
+* **ui:** 타이틀바 및 인포바 개선 ([0044972](https://github.com/yurseria/simple-note/commit/004497257901e61d9a368361fb80fdd5df5e682f))
+* **windows:** implement custom titlebar and wire up custom menu actions ([48ecb68](https://github.com/yurseria/simple-note/commit/48ecb6862fb6286b61e428c80c428a3ace83eda1))
+* 노트 앱 기능 구현 ([cfa879e](https://github.com/yurseria/simple-note/commit/cfa879e58e34043fa7a8baceb59a69f52f5b0270))
+* 윈도우/리눅스 용 메뉴바 추가 ([fd917f4](https://github.com/yurseria/simple-note/commit/fd917f4aa47f1ad7487f22f8430f39c692d93406))
+
+
+### Bug Fixes
+
+* Downgrade vite and plugin-react ([a6abefb](https://github.com/yurseria/simple-note/commit/a6abefbec64e25d7ca519873887d43c0dc952518))
+* improve close dialog and add cargo clean script ([9cdf6f6](https://github.com/yurseria/simple-note/commit/9cdf6f6668c31277f4a4dc7c69490bff11138c5f))
+* improve Zen mode on macOS — drag region, key repeat ([0b3f943](https://github.com/yurseria/simple-note/commit/0b3f943adf3eb1d6e3c50499f63c4622f557b196))
+* **InfoBar:** correct line count for empty content and enhance stats display with pluralization ([cff2954](https://github.com/yurseria/simple-note/commit/cff2954bd8286dd20870c41d93681367b78b3c21))
+* pin electronVersion in build config for electron-builder ([b7b5da2](https://github.com/yurseria/simple-note/commit/b7b5da24507039d1aaffa017afcdb64d9b8ffa3f))
+* recover removed line ([cefa518](https://github.com/yurseria/simple-note/commit/cefa5182d78e68eaccc299104a26b938446433f0))
+* remove invalid dragDropEnabled from tauri.conf.json ([5c669ae](https://github.com/yurseria/simple-note/commit/5c669ae9c321f8a7842e6dcee984fab4cee05a72))
+* Simplify logger to console output only ([6fd48bb](https://github.com/yurseria/simple-note/commit/6fd48bb525b7563530666f4f52b422e8100ecc6a))
+* **tauri:** add missing .ico and update build config ([a1f9fe3](https://github.com/yurseria/simple-note/commit/a1f9fe32adab61eed310f243f0dfc2e9037a6145))
+* **windows:** fix window controls and menu actions not working on Windows ([d41e94f](https://github.com/yurseria/simple-note/commit/d41e94fe7025bfda56def11f521d574b8f16f991))
