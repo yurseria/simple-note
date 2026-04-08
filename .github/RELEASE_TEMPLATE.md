@@ -1,24 +1,30 @@
-## macOS
+## Install
 
-macOS builds are unsigned (no Apple Developer certificate). To install:
+### macOS / Linux (Quick Install)
 
-### Tauri (.dmg)
-1. Open the `.dmg` file
-2. Drag **Note** to Applications
-3. Right-click the app → **Open** (first launch only, to bypass Gatekeeper)
+```bash
+curl -fsSL https://raw.githubusercontent.com/yurseria/simple-note/main/scripts/install.sh | bash
+```
 
-### Electron (.dmg / .zip)
-1. Open the `.dmg` or extract the `.zip`
-2. Move **Note** to Applications
-3. Run: `xattr -cr /Applications/Note.app`
-4. Open the app normally
+> `curl`, `jq` 필요
 
-> `xattr -cr` removes the quarantine flag that macOS sets on unsigned apps.
+### macOS (수동 설치)
 
-## Windows
+macOS 빌드는 Apple 인증서로 서명되지 않았습니다. 브라우저에서 DMG를 다운로드한 경우 Gatekeeper가 앱을 차단합니다.
 
-Download and run the `.exe` (NSIS installer) or `.msi` installer.
+**방법 1 — 터미널:**
+```bash
+xattr -cr /Applications/Note.app
+```
 
-## Linux (Electron)
+**방법 2 — Finder:**
+1. `.dmg`를 열어 **Note**를 Applications로 드래그
+2. Applications에서 앱을 **우클릭 → 열기** (최초 1회만)
 
-Download the `.AppImage` or `.deb` package.
+### Windows
+
+`.exe` (NSIS) 또는 `.msi` 설치 파일을 다운로드하여 실행하세요.
+
+### Linux
+
+`.deb` 패키지 또는 `.AppImage`를 다운로드하세요.
