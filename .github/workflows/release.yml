@@ -6,46 +6,74 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  # ── 1. release-please: 버전 범프 PR 생성 / 머지 시 릴리스 생성 ──
-  release-please:
+  # ── 1. auto shipit: 버전 범프 + 태그 + GitHub Release ──────
+  release:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'ci skip') && !contains(github.event.head_commit.message, 'skip ci')"
     outputs:
-      release_created: ${{ steps.rp.outputs.release_created }}
-      tag_name: ${{ steps.rp.outputs.tag_name }}
-      version: ${{ steps.rp.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      released: ${{ steps.release.outputs.released }}
+      install_guide: ${{ steps.guide.outputs.content }}
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: rp
+      - uses: actions/checkout@v4
         with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          target-branch: release
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install auto
+        run: npm i -D auto @auto-it/git-tag @auto-it/exec @auto-it/conventional-commits
+
+      - name: Create labels
+        run: npx auto create-labels
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Release
+        id: release
+        run: |
+          npx auto shipit
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$TAG" ]; then
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Load install guide
+        if: steps.release.outputs.released == 'true'
+        id: guide
+        run: |
+          {
+            echo 'content<<GUIDE_EOF'
+            cat .github/RELEASE_TEMPLATE.md
+            echo 'GUIDE_EOF'
+          } >> $GITHUB_OUTPUT
 
   # ── 2. Electron 패키징 (Windows + Linux) ────────────────────
   package-electron:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: release
+    if: needs.release.outputs.released == 'true'
     strategy:
       matrix:
         include:
           - os: windows-latest
             artifact: electron-windows
-            paths: |
-              packages/electron/dist/*.exe
-              packages/electron/dist/*.msi
           - os: ubuntu-latest
             artifact: electron-linux
-            paths: |
-              packages/electron/dist/*.AppImage
-              packages/electron/dist/*.deb
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -60,17 +88,17 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.paths }}
+          path: packages/electron/dist/!(*.blockmap|*-unpacked|*.yaml)
 
   # ── 3. Tauri 패키징 (Windows) ───────────────────────────────
   package-tauri:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: release
+    if: needs.release.outputs.released == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -95,33 +123,22 @@ jobs:
             packages/tauri/src-tauri/target/release/bundle/nsis/*.exe
             packages/tauri/src-tauri/target/release/bundle/msi/*.msi
 
-  # ── 4. 릴리스에 산출물 첨부 ─────────────────────────────────
+  # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
   upload-assets:
-    needs: [release-please, package-electron, package-tauri]
+    needs: [release, package-electron, package-tauri]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Build release body
-        id: body
-        run: |
-          {
-            echo 'content<<BODY_EOF'
-            cat .github/RELEASE_TEMPLATE.md
-            echo 'BODY_EOF'
-          } >> $GITHUB_OUTPUT
-
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          tag_name: ${{ needs.release.outputs.tag }}
           append_body: true
-          body: ${{ steps.body.outputs.content }}
+          body: |
+            ---
+            ${{ needs.release.outputs.install_guide }}
           files: |
             artifacts/electron-windows/*
             artifacts/electron-linux/*

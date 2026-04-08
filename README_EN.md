@@ -61,6 +61,20 @@
 
 ---
 
+## Quick Install
+
+Install the latest version on macOS or Linux with a single command.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yurseria/simple-note/main/scripts/install.sh | bash
+```
+
+> **Prerequisites:** `curl`, `jq`
+>
+> Windows users: download the `.exe` or `.msi` installer directly from [GitHub Releases](https://github.com/yurseria/simple-note/releases/latest).
+
+---
+
 ## Requirements
 
 | Item | Electron | Tauri |

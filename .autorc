@@ -1,0 +1,13 @@
+{
+  "baseBranch": "release",
+  "plugins": [
+    "git-tag",
+    "conventional-commits",
+    [
+      "exec",
+      {
+        "afterVersion": "node scripts/sync-version.mjs"
+      }
+    ]
+  ]
+}

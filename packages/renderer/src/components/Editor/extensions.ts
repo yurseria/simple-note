@@ -41,6 +41,7 @@ import type { Command } from '@codemirror/view'
 import { indentUnit, syntaxHighlighting, defaultHighlightStyle, LanguageDescription } from '@codemirror/language'
 import type { LanguageMode } from '../../types/tab'
 import type { Settings } from '../../types/settings'
+import { wrapSelection, toggleLinePrefix, insertCodeBlock, insertLink } from './markdownActions'
 
 export interface EditorCompartments {
   language: Compartment
@@ -230,7 +231,18 @@ export function buildBaseExtensions(
     { key: 'Alt-Mod-ArrowDown', run: addCursorBelow, preventDefault: true }
   ])
 
+  // 마크다운 전용 서식 단축키
+  const markdownKeymap = language === 'markdown'
+    ? keymap.of([
+        { key: 'Mod-b', run: (v) => { wrapSelection(v, '**', '**'); return true }, preventDefault: true },
+        { key: 'Mod-i', run: (v) => { wrapSelection(v, '*', '*'); return true }, preventDefault: true },
+        { key: 'Mod-Shift-x', run: (v) => { wrapSelection(v, '~~', '~~'); return true }, preventDefault: true },
+        { key: 'Mod-k', run: (v) => { insertLink(v); return true }, preventDefault: true },
+      ])
+    : []
+
   return [
+    markdownKeymap,
     history(),
     // drawSelection: 커스텀 커서/셀렉션 레이어 렌더링 (네이티브 selection 숨김)
     drawSelection({ cursorBlinkRate: 1200 }),

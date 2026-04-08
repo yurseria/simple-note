@@ -60,6 +60,20 @@
 
 ---
 
+## 빠른 설치
+
+macOS 또는 Linux 환경에서 한 줄로 최신 버전을 설치할 수 있습니다.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yurseria/simple-note/main/scripts/install.sh | bash
+```
+
+> **필요 조건:** `curl`, `jq`
+>
+> Windows 사용자는 [GitHub Releases](https://github.com/yurseria/simple-note/releases/latest)에서 `.exe` 또는 `.msi` 설치 파일을 직접 다운로드해주세요.
+
+---
+
 ## 요구사항
 
 | 항목 | Electron 버전 | Tauri 버전 |
