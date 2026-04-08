@@ -58,13 +58,15 @@ jobs:
             echo 'GUIDE_EOF'
           } >> $GITHUB_OUTPUT
 
-  # ── 2. Electron 패키징 (Windows + Linux) ────────────────────
+  # ── 2. Electron 패키징 (macOS + Windows + Linux) ────────────
   package-electron:
     needs: release
     if: needs.release.outputs.released == 'true'
     strategy:
       matrix:
         include:
+          - os: macos-latest
+            artifact: electron-macos
           - os: windows-latest
             artifact: electron-windows
           - os: ubuntu-latest
@@ -90,11 +92,18 @@ jobs:
           name: ${{ matrix.artifact }}
           path: packages/electron/dist/!(*.blockmap|*-unpacked|*.yaml)
 
-  # ── 3. Tauri 패키징 (Windows) ───────────────────────────────
+  # ── 3. Tauri 패키징 (macOS + Windows) ──────────────────────
   package-tauri:
     needs: release
     if: needs.release.outputs.released == 'true'
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: tauri-macos
+          - os: windows-latest
+            artifact: tauri-windows
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -116,9 +125,18 @@ jobs:
       - name: Package Tauri
         run: npm run package:tauri
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload macOS artifacts
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
         with:
-          name: tauri-windows
+          name: ${{ matrix.artifact }}
+          path: packages/tauri/src-tauri/target/release/bundle/dmg/*.dmg
+
+      - name: Upload Windows artifacts
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
           path: |
             packages/tauri/src-tauri/target/release/bundle/nsis/*.exe
             packages/tauri/src-tauri/target/release/bundle/msi/*.msi
@@ -140,6 +158,8 @@ jobs:
             ---
             ${{ needs.release.outputs.install_guide }}
           files: |
+            artifacts/electron-macos/*
             artifacts/electron-windows/*
             artifacts/electron-linux/*
+            artifacts/tauri-macos/*
             artifacts/tauri-windows/*
