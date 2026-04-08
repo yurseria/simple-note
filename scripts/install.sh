@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPO="yurseria/simple-note"
-APP_NAME="Simple Note"
+APP_NAME="Note"
 
 # ── Helpers ──
 
@@ -50,19 +50,9 @@ fetch_latest_release() {
 # ── Find matching asset ──
 
 find_asset() {
-  local pattern
-  case "$OS" in
-    macos)
-      # Tauri: .dmg, Electron: .dmg
-      pattern="\.dmg$"
-      ;;
-    linux)
-      # Prefer .deb, fallback to .AppImage
-      pattern="\.(deb|AppImage)$"
-      ;;
-  esac
+  local pattern="$1"
 
-  # Filter assets by platform pattern and architecture
+  # Filter assets by pattern and architecture
   ASSET_URL="$(echo "$RELEASE_JSON" | jq -r \
     --arg pat "$pattern" --arg arch "$ARCH" \
     '[.assets[] | select(.name | test($pat)) | select(.name | test($arch; "i"))] | first | .browser_download_url // empty'
@@ -77,26 +67,32 @@ find_asset() {
   fi
 
   if [ -z "$ASSET_URL" ]; then
-    error "No matching asset found for $OS/$ARCH. Please download manually:\n  https://github.com/${REPO}/releases/latest"
+    error "No matching asset found for $OS/$ARCH.\n  Download manually: https://github.com/${REPO}/releases/latest"
   fi
 
   ASSET_NAME="$(basename "$ASSET_URL")"
   info "Found: $ASSET_NAME"
 }
 
-# ── Download & install ──
+# ── Install on macOS ──
 
 install_macos() {
-  local tmpdir
-  tmpdir="$(mktemp -d)"
-  trap 'rm -rf "$tmpdir"' EXIT
+  find_asset '\.dmg$'
+
+  TMPDIR_CLEANUP="$(mktemp -d)"
+  trap 'rm -rf "$TMPDIR_CLEANUP"' EXIT
 
   info "Downloading $ASSET_NAME..."
-  curl -fSL --progress-bar -o "$tmpdir/$ASSET_NAME" "$ASSET_URL"
+  curl -fSL --progress-bar -o "$TMPDIR_CLEANUP/$ASSET_NAME" "$ASSET_URL"
 
   info "Mounting disk image..."
   local mount_point
-  mount_point="$(hdiutil attach "$tmpdir/$ASSET_NAME" -nobrowse -noautoopen | tail -1 | awk '{print $NF}')"
+  mount_point="$(hdiutil attach "$TMPDIR_CLEANUP/$ASSET_NAME" -nobrowse -noautoopen 2>/dev/null \
+    | sed -n 's/.*\(\/Volumes\/.*\)/\1/p' | tail -1)"
+
+  if [ -z "$mount_point" ]; then
+    error "Failed to mount DMG."
+  fi
 
   local app
   app="$(find "$mount_point" -maxdepth 1 -name '*.app' | head -1)"
@@ -115,34 +111,42 @@ install_macos() {
   xattr -rd com.apple.quarantine "/Applications/$(basename "$app")" 2>/dev/null || true
 
   info "$APP_NAME has been installed to /Applications."
+  echo
+  echo "Open from Applications or run:"
+  echo "  open -a '${APP_NAME}'"
 }
 
+# ── Install on Linux ──
+
 install_linux() {
-  local tmpdir
-  tmpdir="$(mktemp -d)"
-  trap 'rm -rf "$tmpdir"' EXIT
+  if command -v dpkg >/dev/null 2>&1; then
+    find_asset '\.deb$'
 
-  info "Downloading $ASSET_NAME..."
-  curl -fSL --progress-bar -o "$tmpdir/$ASSET_NAME" "$ASSET_URL"
+    TMPDIR_CLEANUP="$(mktemp -d)"
+    trap 'rm -rf "$TMPDIR_CLEANUP"' EXIT
 
-  case "$ASSET_NAME" in
-    *.deb)
-      info "Installing .deb package..."
-      if command -v sudo >/dev/null 2>&1; then
-        sudo dpkg -i "$tmpdir/$ASSET_NAME"
-      else
-        dpkg -i "$tmpdir/$ASSET_NAME"
-      fi
-      ;;
-    *.AppImage)
-      local dest="$HOME/.local/bin/simple-note"
-      mkdir -p "$(dirname "$dest")"
-      mv "$tmpdir/$ASSET_NAME" "$dest"
-      chmod +x "$dest"
-      info "Installed AppImage to $dest"
-      info "Make sure ~/.local/bin is in your PATH."
-      ;;
-  esac
+    info "Downloading $ASSET_NAME..."
+    curl -fSL --progress-bar -o "$TMPDIR_CLEANUP/$ASSET_NAME" "$ASSET_URL"
+
+    info "Installing .deb package..."
+    if command -v sudo >/dev/null 2>&1; then
+      sudo dpkg -i "$TMPDIR_CLEANUP/$ASSET_NAME" || sudo apt-get install -f -y
+    else
+      dpkg -i "$TMPDIR_CLEANUP/$ASSET_NAME"
+    fi
+  else
+    find_asset '\.AppImage$'
+
+    local dest="$HOME/.local/bin/simple-note"
+    mkdir -p "$(dirname "$dest")"
+
+    info "Downloading $ASSET_NAME..."
+    curl -fSL --progress-bar -o "$dest" "$ASSET_URL"
+    chmod +x "$dest"
+
+    info "Installed AppImage to $dest"
+    echo "Make sure ~/.local/bin is in your PATH."
+  fi
 
   info "$APP_NAME has been installed."
 }
@@ -155,7 +159,6 @@ main() {
 
   detect_platform
   fetch_latest_release
-  find_asset
 
   case "$OS" in
     macos) install_macos ;;
@@ -163,7 +166,7 @@ main() {
   esac
 
   echo
-  info "Done! Enjoy $APP_NAME."
+  info "Done!"
 }
 
 main
