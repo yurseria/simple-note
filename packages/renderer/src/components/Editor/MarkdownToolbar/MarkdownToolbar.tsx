@@ -1,7 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { EditorView } from '@codemirror/view'
-import { EditorSelection } from '@codemirror/state'
 import { useTranslation } from '../../../i18n'
+import {
+  wrapSelection,
+  toggleLinePrefix,
+  setHeading,
+  insertCodeBlock,
+  insertTable,
+  insertLink,
+  insertImage,
+  insertHr,
+  tableAddRow,
+  tableDelRow,
+  tableAddCol,
+  tableDelCol,
+} from '../markdownActions'
 import './MarkdownToolbar.css'
 
 interface Props {
@@ -45,301 +58,13 @@ const icons = {
   chevron:       icon('M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z'),
 }
 
-// ── Editor actions ──
+// ── Shortcut hint helper ──
 
-function wrapSelection(view: EditorView, prefix: string, suffix: string) {
-  const { state } = view
-  const { from, to } = state.selection.main
-  const selected = state.sliceDoc(from, to)
+const isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.userAgent)
+const mod = isMac ? '\u2318' : 'Ctrl+'
 
-  if (selected.startsWith(prefix) && selected.endsWith(suffix)) {
-    const inner = selected.slice(prefix.length, selected.length - suffix.length)
-    view.dispatch({
-      changes: { from, to, insert: inner },
-      selection: EditorSelection.single(from, from + inner.length),
-    })
-    view.focus()
-    return
-  }
-
-  const beforeFrom = Math.max(0, from - prefix.length)
-  const afterTo = Math.min(state.doc.length, to + suffix.length)
-  const before = state.sliceDoc(beforeFrom, from)
-  const after = state.sliceDoc(to, afterTo)
-  if (before === prefix && after === suffix) {
-    view.dispatch({
-      changes: [
-        { from: beforeFrom, to: from, insert: '' },
-        { from: to, to: afterTo, insert: '' },
-      ],
-      selection: EditorSelection.single(beforeFrom, beforeFrom + selected.length),
-    })
-    view.focus()
-    return
-  }
-
-  const wrapped = prefix + selected + suffix
-  view.dispatch({
-    changes: { from, to, insert: wrapped },
-    selection: EditorSelection.single(from + prefix.length, from + prefix.length + selected.length),
-  })
-  view.focus()
-}
-
-function toggleLinePrefix(view: EditorView, prefix: string) {
-  const { state } = view
-  const { from, to } = state.selection.main
-  const fromLine = state.doc.lineAt(from)
-  const toLine = state.doc.lineAt(to)
-
-  const changes: { from: number; to: number; insert: string }[] = []
-  let allHavePrefix = true
-
-  for (let i = fromLine.number; i <= toLine.number; i++) {
-    if (!state.doc.line(i).text.startsWith(prefix)) { allHavePrefix = false; break }
-  }
-
-  for (let i = fromLine.number; i <= toLine.number; i++) {
-    const line = state.doc.line(i)
-    if (allHavePrefix) {
-      changes.push({ from: line.from, to: line.from + prefix.length, insert: '' })
-    } else {
-      changes.push({ from: line.from, to: line.from, insert: prefix })
-    }
-  }
-
-  view.dispatch({ changes })
-  view.focus()
-}
-
-function setHeading(view: EditorView, level: number) {
-  const { state } = view
-  const line = state.doc.lineAt(state.selection.main.head)
-  const match = line.text.match(/^(#{1,6})\s/)
-  const prefix = '#'.repeat(level) + ' '
-
-  if (match) {
-    view.dispatch({ changes: { from: line.from, to: line.from + match[0].length, insert: prefix } })
-  } else {
-    view.dispatch({ changes: { from: line.from, to: line.from, insert: prefix } })
-  }
-  view.focus()
-}
-
-function insertCodeBlock(view: EditorView) {
-  const { from, to } = view.state.selection.main
-  const selected = view.state.sliceDoc(from, to)
-  const line = view.state.doc.lineAt(from)
-  const prefix = line.text.trim() === '' && from === line.from ? '' : '\n'
-  const insert = `${prefix}\`\`\`\n${selected}\n\`\`\`\n`
-  const cursorPos = from + prefix.length + 3 // after opening ```
-  view.dispatch({
-    changes: { from, to, insert },
-    selection: EditorSelection.cursor(cursorPos),
-  })
-  view.focus()
-}
-
-function insertTable(view: EditorView) {
-  const pos = view.state.selection.main.head
-  const line = view.state.doc.lineAt(pos)
-  const prefix = line.text.trim() === '' ? '' : '\n'
-  const table = `${prefix}| Header 1 | Header 2 | Header 3 |\n| --- | --- | --- |\n|  |  |  |\n`
-  view.dispatch({
-    changes: { from: pos, insert: table },
-    selection: EditorSelection.cursor(pos + prefix.length + '| '.length),
-  })
-  view.focus()
-}
-
-/** 커서가 테이블 안에 있는지 감지하고, 테이블 정보를 반환 */
-function getTableContext(view: EditorView) {
-  const { state } = view
-  const pos = state.selection.main.head
-  const curLine = state.doc.lineAt(pos)
-
-  // 현재 줄이 테이블 행인지 확인
-  if (!curLine.text.trim().startsWith('|')) return null
-
-  // 위로 스캔해서 테이블 시작 찾기
-  let startLine = curLine.number
-  while (startLine > 1) {
-    const prev = state.doc.line(startLine - 1)
-    if (!prev.text.trim().startsWith('|')) break
-    startLine--
-  }
-
-  // 아래로 스캔해서 테이블 끝 찾기
-  let endLine = curLine.number
-  while (endLine < state.doc.lines) {
-    const next = state.doc.line(endLine + 1)
-    if (!next.text.trim().startsWith('|')) break
-    endLine++
-  }
-
-  // 구분자 행 확인 (2번째 줄이 --- 패턴이어야)
-  if (endLine - startLine < 1) return null
-  const sepLine = state.doc.line(startLine + 1)
-  if (!/^\|[\s:|-]+\|$/.test(sepLine.text.trim())) return null
-
-  const curRowIdx = curLine.number - startLine
-  const colCount = state.doc.line(startLine).text.split('|').filter((_, i, arr) => i > 0 && i < arr.length - 1).length
-
-  return { startLine, endLine, curRowIdx, colCount, curLineNum: curLine.number }
-}
-
-function tableAddRow(view: EditorView, direction: 'above' | 'below') {
-  const ctx = getTableContext(view)
-  if (!ctx) return
-  const { state } = view
-  const { colCount, curLineNum, startLine } = ctx
-
-  // 구분자 행 위에는 추가 불가
-  const isSepRow = curLineNum === startLine + 1
-  const targetLineNum = direction === 'above'
-    ? (isSepRow || curLineNum === startLine ? startLine + 2 : curLineNum)
-    : (isSepRow ? startLine + 2 : curLineNum)
-
-  const emptyRow = '| ' + Array(colCount).fill(' ').join(' | ') + ' |\n'
-  const targetLine = state.doc.line(targetLineNum)
-  const insertPos = direction === 'above' ? targetLine.from : targetLine.to + 1
-
-  view.dispatch({ changes: { from: insertPos, insert: emptyRow } })
-  view.focus()
-}
-
-function tableDelRow(view: EditorView) {
-  const ctx = getTableContext(view)
-  if (!ctx) return
-  const { state } = view
-  const { curLineNum, startLine, endLine } = ctx
-
-  // 헤더행이나 구분자행은 삭제 불가, 데이터 행이 1개 이하면 삭제 불가
-  if (curLineNum <= startLine + 1) return
-  if (endLine - (startLine + 1) <= 1) return
-
-  const line = state.doc.line(curLineNum)
-  const from = line.from
-  const to = Math.min(line.to + 1, state.doc.length)
-  view.dispatch({ changes: { from, to } })
-  view.focus()
-}
-
-function tableAddCol(view: EditorView, direction: 'left' | 'right') {
-  const ctx = getTableContext(view)
-  if (!ctx) return
-  const { state } = view
-  const { startLine, endLine, colCount } = ctx
-
-  // 커서가 몇 번째 셀에 있는지 정확히 계산
-  // 헤더 행에서 각 셀의 시작/끝 위치를 찾아서 커서 위치와 비교
-  const headerLine = state.doc.line(startLine)
-  const cursorPos = state.selection.main.head
-  let curCol = 0
-  let pipeCount = 0
-  for (let j = 0; j < headerLine.text.length; j++) {
-    if (headerLine.text[j] === '|') {
-      pipeCount++
-      if (pipeCount > 1 && headerLine.from + j >= cursorPos) break
-      if (pipeCount > 1) curCol++
-    }
-  }
-  // 커서가 현재 줄에 없으면 (다른 행에 있으면) 해당 행에서 다시 계산
-  const curLine = state.doc.lineAt(cursorPos)
-  if (curLine.number !== startLine) {
-    curCol = 0
-    pipeCount = 0
-    for (let j = 0; j < curLine.text.length; j++) {
-      if (curLine.text[j] === '|') {
-        pipeCount++
-        if (pipeCount > 1 && curLine.from + j >= cursorPos) break
-        if (pipeCount > 1) curCol++
-      }
-    }
-  }
-  if (curCol >= colCount) curCol = colCount - 1
-
-  // parts: ['', ' cell0 ', ' cell1 ', ..., ' cellN ', '']
-  // 셀 curCol은 parts[curCol + 1]
-  // left: 셀 앞에 삽입 → splice(curCol + 1)
-  // right: 셀 뒤에 삽입 → splice(curCol + 2)
-  const spliceIdx = direction === 'left' ? curCol + 1 : curCol + 2
-
-  const changes: { from: number; to: number; insert: string }[] = []
-  for (let i = startLine; i <= endLine; i++) {
-    const line = state.doc.line(i)
-    const parts = line.text.split('|')
-    const isSep = i === startLine + 1
-    const newCell = isSep ? ' --- ' : '  '
-    parts.splice(spliceIdx, 0, newCell)
-    changes.push({ from: line.from, to: line.to, insert: parts.join('|') })
-  }
-
-  view.dispatch({ changes })
-  view.focus()
-}
-
-function tableDelCol(view: EditorView) {
-  const ctx = getTableContext(view)
-  if (!ctx || ctx.colCount <= 1) return
-  const { state } = view
-  const { startLine, endLine, colCount } = ctx
-
-  const cursorPos = state.selection.main.head
-  const curLine = state.doc.lineAt(cursorPos)
-  let curCol = 0
-  let pipeCount = 0
-  for (let j = 0; j < curLine.text.length; j++) {
-    if (curLine.text[j] === '|') {
-      pipeCount++
-      if (pipeCount > 1 && curLine.from + j >= cursorPos) break
-      if (pipeCount > 1) curCol++
-    }
-  }
-  if (curCol >= colCount) curCol = colCount - 1
-
-  const changes: { from: number; to: number; insert: string }[] = []
-  for (let i = startLine; i <= endLine; i++) {
-    const line = state.doc.line(i)
-    const parts = line.text.split('|')
-    if (curCol + 1 < parts.length) {
-      parts.splice(curCol + 1, 1)
-    }
-    changes.push({ from: line.from, to: line.to, insert: parts.join('|') })
-  }
-
-  view.dispatch({ changes })
-  view.focus()
-}
-
-function insertLink(view: EditorView) {
-  const { from, to } = view.state.selection.main
-  const selected = view.state.sliceDoc(from, to)
-  if (/^https?:\/\//.test(selected)) {
-    view.dispatch({ changes: { from, to, insert: `[](${selected})` }, selection: EditorSelection.cursor(from + 1) })
-  } else {
-    const insert = `[${selected}](url)`
-    const urlFrom = from + selected.length + 3
-    view.dispatch({ changes: { from, to, insert }, selection: EditorSelection.single(urlFrom, urlFrom + 3) })
-  }
-  view.focus()
-}
-
-function insertImage(view: EditorView) {
-  const { from, to } = view.state.selection.main
-  const selected = view.state.sliceDoc(from, to)
-  const insert = `![${selected || 'alt'}](url)`
-  const urlFrom = from + (selected || 'alt').length + 4
-  view.dispatch({ changes: { from, to, insert }, selection: EditorSelection.single(urlFrom, urlFrom + 3) })
-  view.focus()
-}
-
-function insertHr(view: EditorView) {
-  const pos = view.state.selection.main.head
-  const line = view.state.doc.lineAt(pos)
-  const prefix = line.text.trim() === '' ? '' : '\n'
-  view.dispatch({ changes: { from: pos, insert: `${prefix}---\n` } })
-  view.focus()
+function shortcut(key: string): string {
+  return ` (${mod}${key})`
 }
 
 // ── Dropdown button component ──
@@ -421,9 +146,9 @@ export function MarkdownToolbar({ view }: Props): JSX.Element {
         ))}
       </DropdownButton>
 
-      <button className="md-toolbar__btn" title={t.bold} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '**', '**')}>{icons.bold}</button>
-      <button className="md-toolbar__btn" title={t.italic} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '*', '*')}>{icons.italic}</button>
-      <button className="md-toolbar__btn" title={t.strikethrough} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '~~', '~~')}>{icons.strikethrough}</button>
+      <button className="md-toolbar__btn" title={t.bold + shortcut('B')} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '**', '**')}>{icons.bold}</button>
+      <button className="md-toolbar__btn" title={t.italic + shortcut('I')} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '*', '*')}>{icons.italic}</button>
+      <button className="md-toolbar__btn" title={t.strikethrough + shortcut(isMac ? '\u21E7X' : 'Shift+X')} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '~~', '~~')}>{icons.strikethrough}</button>
       <button className="md-toolbar__btn" title={t.inlineCode} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '`', '`')}>{icons.inlineCode}</button>
       <button className="md-toolbar__btn" title={t.codeBlock} onMouseDown={e => e.preventDefault()} onClick={() => insertCodeBlock(view)}>{icons.codeBlock}</button>
 
@@ -436,7 +161,7 @@ export function MarkdownToolbar({ view }: Props): JSX.Element {
 
       <div className="md-toolbar__sep" />
 
-      <button className="md-toolbar__btn" title={t.link} onMouseDown={e => e.preventDefault()} onClick={() => insertLink(view)}>{icons.link}</button>
+      <button className="md-toolbar__btn" title={t.link + shortcut('K')} onMouseDown={e => e.preventDefault()} onClick={() => insertLink(view)}>{icons.link}</button>
       <button className="md-toolbar__btn" title={t.image} onMouseDown={e => e.preventDefault()} onClick={() => insertImage(view)}>{icons.image}</button>
 
       {/* Table dropdown */}
