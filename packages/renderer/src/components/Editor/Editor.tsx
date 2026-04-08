@@ -17,6 +17,7 @@ import {
 import { FindReplace } from "./FindReplace/FindReplace";
 import { MarkdownToolbar } from "./MarkdownToolbar/MarkdownToolbar";
 import { api } from "../../platform";
+import { csvTsvToMarkdownTable } from "./markdownActions";
 import { useTranslation } from "../../i18n";
 import type { LanguageMode } from "../../types/tab";
 import type { Settings } from "../../types/settings";
@@ -269,38 +270,55 @@ export function Editor({
       const hasImage = Array.from(items).some(
         (item) => item.type.startsWith("image/"),
       );
-      if (!hasImage) return;
 
-      e.preventDefault();
-      e.stopPropagation();
+      if (hasImage) {
+        e.preventDefault();
+        e.stopPropagation();
 
-      const view = viewRef.current;
-      if (!view) return;
+        const view = viewRef.current;
+        if (!view) return;
 
-      // 파일이 저장되지 않았으면 안내 메시지 표시
-      const currentPath = filePathRef.current;
-      if (!currentPath) {
-        window.dispatchEvent(new CustomEvent("editor:toast", {
-          detail: t.toolbar.saveFileFirst,
-        }));
+        // 파일이 저장되지 않았으면 안내 메시지 표시
+        const currentPath = filePathRef.current;
+        if (!currentPath) {
+          window.dispatchEvent(new CustomEvent("editor:toast", {
+            detail: t.toolbar.saveFileFirst,
+          }));
+          return;
+        }
+
+        // 파일의 디렉토리 경로
+        const dirPath = currentPath.replace(/[\\/][^\\/]+$/, "");
+
+        try {
+          const relativePath = await api.file.saveClipboardImage(dirPath);
+          if (!relativePath) return;
+
+          const pos = view.state.selection.main.head;
+          const insert = `![](${relativePath})`;
+          view.dispatch({
+            changes: { from: pos, insert },
+          });
+          view.focus();
+        } catch (err) {
+          console.error("Failed to save clipboard image:", err);
+        }
         return;
       }
 
-      // 파일의 디렉토리 경로
-      const dirPath = currentPath.replace(/[\\/][^\\/]+$/, "");
-
-      try {
-        const relativePath = await api.file.saveClipboardImage(dirPath);
-        if (!relativePath) return;
-
-        const pos = view.state.selection.main.head;
-        const insert = `![](${relativePath})`;
-        view.dispatch({
-          changes: { from: pos, insert },
-        });
-        view.focus();
-      } catch (err) {
-        console.error("Failed to save clipboard image:", err);
+      // CSV/TSV 텍스트를 마크다운 테이블로 자동 변환
+      const text = e.clipboardData?.getData("text/plain");
+      if (text) {
+        const table = csvTsvToMarkdownTable(text);
+        if (table) {
+          e.preventDefault();
+          e.stopPropagation();
+          const view = viewRef.current;
+          if (!view) return;
+          const { from, to } = view.state.selection.main;
+          view.dispatch({ changes: { from, to, insert: table } });
+          view.focus();
+        }
       }
     }
 
