@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
- * root package.json의 version을 나머지 4곳에 동기화
+ * 모든 패키지의 version을 동기화
  * auto의 afterVersion hook에서 호출됨
+ *
+ * git-tag 플러그인은 package.json version을 bump하지 않으므로,
+ * 환경변수 ARG_0 (새 버전)을 사용하거나 root package.json에서 읽음
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
@@ -9,7 +12,15 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const version = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).version;
+
+// auto exec 플러그인이 ARG_0으로 새 버전을 전달
+const version = process.env.ARG_0
+  || JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).version;
+
+if (!version || version === "0.0.0") {
+  console.error("No version found");
+  process.exit(1);
+}
 
 function updateJson(filepath) {
   const content = JSON.parse(readFileSync(filepath, "utf8"));
@@ -24,6 +35,7 @@ function updateToml(filepath) {
 }
 
 const targets = [
+  resolve(root, "package.json"),
   resolve(root, "packages/electron/package.json"),
   resolve(root, "packages/tauri/package.json"),
   resolve(root, "packages/tauri/src-tauri/tauri.conf.json"),
