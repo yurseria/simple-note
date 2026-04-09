@@ -105,7 +105,7 @@ jobs:
             packages/electron/dist/*.AppImage
             packages/electron/dist/*.deb
 
-  # ── 3. Tauri 패키징 (macOS + Windows) ──────────────────────
+  # ── 3. Tauri 패키징 (macOS + Windows + Linux) ──────────────
   package-tauri:
     needs: release
     if: needs.release.outputs.released == 'true'
@@ -116,6 +116,8 @@ jobs:
             artifact: tauri-macos
           - os: windows-latest
             artifact: tauri-windows
+          - os: ubuntu-latest
+            artifact: tauri-linux
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -132,27 +134,29 @@ jobs:
         with:
           workspaces: packages/tauri/src-tauri
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
       - name: Install dependencies
         run: npm ci
 
       - name: Package Tauri
         run: npm run package:tauri
 
-      - name: Upload macOS artifacts
-        if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: packages/tauri/src-tauri/target/release/bundle/dmg/*.dmg
+      - name: Collect Tauri artifacts
+        shell: bash
+        run: |
+          mkdir -p tauri-out
+          find packages/tauri/src-tauri/target/release/bundle -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.AppImage" \) -exec cp {} tauri-out/ \;
+          ls -la tauri-out/
 
-      - name: Upload Windows artifacts
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: |
-            packages/tauri/src-tauri/target/release/bundle/nsis/*.exe
-            packages/tauri/src-tauri/target/release/bundle/msi/*.msi
+          path: tauri-out/*
 
   # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
   upload-assets:
@@ -192,3 +196,4 @@ jobs:
             artifacts/electron-linux/*
             artifacts/tauri-macos/*
             artifacts/tauri-windows/*
+            artifacts/tauri-linux/*
