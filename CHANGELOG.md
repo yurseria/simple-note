@@ -1,3 +1,15 @@
+# v0.3.2 (Thu Apr 09 2026)
+
+#### 🐛 Bug Fix
+
+- fix: fix Electron artifact upload path and disable auto-publish ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.1 (Thu Apr 09 2026)
 
 #### 🐛 Bug Fix
