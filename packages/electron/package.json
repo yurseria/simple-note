@@ -77,7 +77,7 @@
         "role": "Editor"
       }
     ],
-    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "artifactName": "${productName}-Electron-${version}-${arch}.${ext}",
     "files": ["out/**/*"],
     "directories": {
       "buildResources": "build",

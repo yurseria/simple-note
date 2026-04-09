@@ -163,6 +163,22 @@ jobs:
         with:
           path: artifacts
 
+      - name: Rename Tauri assets with prefix
+        shell: bash
+        run: |
+          for dir in artifacts/tauri-*; do
+            for f in "$dir"/*; do
+              [ -f "$f" ] || continue
+              base="$(basename "$f")"
+              # Note_0.3.0_aarch64.dmg → Note-Tauri_0.3.0_aarch64.dmg
+              mv "$f" "$dir/${base/Note/Note-Tauri}"
+            done
+          done
+
+      - name: List all artifacts
+        shell: bash
+        run: find artifacts -type f | sort
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release.outputs.tag }}

@@ -4,6 +4,7 @@
  * auto의 afterVersion hook에서 호출됨
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,9 +23,19 @@ function updateToml(filepath) {
   writeFileSync(filepath, content);
 }
 
-updateJson(resolve(root, "packages/electron/package.json"));
-updateJson(resolve(root, "packages/tauri/package.json"));
-updateJson(resolve(root, "packages/tauri/src-tauri/tauri.conf.json"));
-updateToml(resolve(root, "packages/tauri/src-tauri/Cargo.toml"));
+const targets = [
+  resolve(root, "packages/electron/package.json"),
+  resolve(root, "packages/tauri/package.json"),
+  resolve(root, "packages/tauri/src-tauri/tauri.conf.json"),
+  resolve(root, "packages/tauri/src-tauri/Cargo.toml"),
+];
+
+for (const t of targets) {
+  if (t.endsWith(".toml")) updateToml(t);
+  else updateJson(t);
+}
+
+// auto의 커밋에 포함되도록 변경된 파일을 stage
+execSync(`git add ${targets.join(" ")}`, { cwd: root, stdio: "inherit" });
 
 console.log(`Synced version ${version} to all packages`);
