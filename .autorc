@@ -1,5 +1,6 @@
 {
   "baseBranch": "release",
+  "tagPrefix": "v",
   "plugins": [
     "git-tag",
     "conventional-commits",
