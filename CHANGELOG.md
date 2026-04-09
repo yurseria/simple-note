@@ -1,3 +1,15 @@
+# v0.3.3 (Thu Apr 09 2026)
+
+#### 🐛 Bug Fix
+
+- fix: use bash shell for ls step on Windows runner ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.2 (Thu Apr 09 2026)
 
 #### 🐛 Bug Fix
