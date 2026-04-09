@@ -1,3 +1,15 @@
+# v0.3.1 (Thu Apr 09 2026)
+
+#### 🐛 Bug Fix
+
+- fix: set artifactName to avoid scoped package path in deb output ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.0 (Thu Apr 09 2026)
 
 #### 🚀 Enhancement
