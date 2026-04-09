@@ -4,6 +4,38 @@
 
 - feat: auto-convert CSV/TSV clipboard paste to markdown table ([@yurseria](https://github.com/yurseria))
 - feat: add markdown formatting keyboard shortcuts (⌘B/I/K, ⌘⇧X) ([@yurseria](https://github.com/yurseria))
+
+#### 🐛 Bug Fix
+
+- fix: set explicit output directory for electron-builder ([@yurseria](https://github.com/yurseria))
+- fix: reset lock file after auto install to avoid dirty tree ([@yurseria](https://github.com/yurseria))
+- fix: checkout release branch instead of tag for packaging ([@yurseria](https://github.com/yurseria))
+- fix: add homepage to electron package.json for deb packaging ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- chore: rewrite install.sh and update release template ([@yurseria](https://github.com/yurseria))
+- ci: add macOS builds to release workflow ([@yurseria](https://github.com/yurseria))
+- Merge branch 'main' into release ([@yurseria](https://github.com/yurseria))
+- Merge branch 'release' of https://github.com/yurseria/simple-note into release ([@yurseria](https://github.com/yurseria))
+- docs: add quick install section with curl one-liner ([@yurseria](https://github.com/yurseria))
+- ci: use conventional-commits plugin for PR-less releases ([@yurseria](https://github.com/yurseria))
+- ci: switch to intuit/auto for release automation ([@yurseria](https://github.com/yurseria))
+- ci: auto bump + tag + release on push to release branch ([@yurseria](https://github.com/yurseria))
+- ci: replace release-please with tag-based release workflow ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
+# v0.3.0 (Thu Apr 09 2026)
+
+#### 🚀 Enhancement
+
+- feat: auto-convert CSV/TSV clipboard paste to markdown table ([@yurseria](https://github.com/yurseria))
+- feat: add markdown formatting keyboard shortcuts (⌘B/I/K, ⌘⇧X) ([@yurseria](https://github.com/yurseria))
 - feat: change Zen mode shortcut to Cmd+E ([@yurseria](https://github.com/yurseria))
 - feat: sync native macOS menu with React menu items ([@yurseria](https://github.com/yurseria))
 
