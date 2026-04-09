@@ -1,3 +1,15 @@
+# v0.3.4 (Thu Apr 09 2026)
+
+#### 🐛 Bug Fix
+
+- fix: sync version to all packages and distinguish Electron/Tauri assets ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.3 (Thu Apr 09 2026)
 
 #### 🐛 Bug Fix
