@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect, useCallback } from "react";
-import { marked } from "marked";
+import { marked, type Token, type Tokens } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
@@ -40,20 +40,68 @@ const markedInstance = marked.use(
   },
 );
 
+/**
+ * marked lexer의 토큰을 사용해 소스 줄 번호를 계산.
+ * 토큰의 raw 길이를 누적해서 각 최상위 블록 토큰의 시작 줄을 추적한다.
+ */
+function getTokenLineMap(markdown: string): number[] {
+  const tokens = marked.lexer(markdown);
+  const lineMap: number[] = [];
+  let offset = 0;
+
+  for (const token of tokens) {
+    // 빈 space 토큰 등은 스킵
+    if (token.type === "space") {
+      offset += (token.raw.match(/\n/g) || []).length;
+      continue;
+    }
+    lineMap.push(offset + 1); // 1-based
+    offset += (token.raw.match(/\n/g) || []).length;
+  }
+  return lineMap;
+}
+
+/**
+ * HTML의 최상위 블록 요소에 data-source-line 속성을 삽입.
+ * marked lexer 토큰 순서와 HTML 블록 순서가 1:1로 대응됨.
+ */
+function addSourceLines(markdown: string, html: string): string {
+  const lineMap = getTokenLineMap(markdown);
+  let idx = 0;
+  return html.replace(
+    /(<(?:h[1-6]|p|ul|ol|blockquote|pre|table|hr|div)(?=[\s>]))/g,
+    (match) => {
+      if (idx < lineMap.length) {
+        const line = lineMap[idx++];
+        return `${match} data-source-line="${line}"`;
+      }
+      return match;
+    },
+  );
+}
+
+// DOMPurify가 data-source-line 속성을 제거하지 않도록 허용
+DOMPurify.addHook("uponSanitizeAttribute", (_, data) => {
+  if (data.attrName === "data-source-line") {
+    data.forceKeepAttr = true;
+  }
+});
+
 interface Props {
   content: string;
-  scrollToBottom?: number;
+  topLine?: number;
   theme?: string;
 }
 
 export function MarkdownPreview({
   content,
-  scrollToBottom,
+  topLine,
   theme = "dark",
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
-    return DOMPurify.sanitize(raw);
+    const withLines = addSourceLines(content, raw);
+    return DOMPurify.sanitize(withLines);
   }, [content]);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,14 +113,10 @@ export function MarkdownPreview({
     const nodes = el.querySelectorAll<HTMLElement>(".mermaid");
     if (nodes.length === 0) return;
 
-    // 재렌더링 시 원본 텍스트를 복원해야 함 — mermaid.run()이 실행되면
-    // 내부 HTML이 SVG로 교체되어 다시 파싱하면 "syntax error" 발생
     nodes.forEach((node) => {
       if (!node.getAttribute("data-original")) {
-        // 최초 실행: 원본 텍스트 보존
         node.setAttribute("data-original", node.textContent ?? "");
       } else {
-        // 재실행: 원본 텍스트 복원
         node.textContent = node.getAttribute("data-original") ?? "";
       }
       node.removeAttribute("data-processed");
@@ -92,20 +136,36 @@ export function MarkdownPreview({
   }, [theme, renderMermaid]);
 
   useEffect(() => {
-    // DOM 페인트 후 mermaid 실행 — 파일 열기 직후 DOM이 아직 갱신되지 않은 상태에서
-    // mermaid.run()이 호출되면 노드를 찾지 못하는 문제 방지
     const frame = requestAnimationFrame(() => renderMermaid());
     return () => cancelAnimationFrame(frame);
   }, [html, renderMermaid]);
 
-  // scrollToBottom 카운터가 바뀌면 프리뷰를 맨 아래로 스크롤
-  // html도 deps에 포함 — content 변경으로 HTML이 재렌더된 뒤 새 높이 기준으로 스크롤
+  // 커서 줄에 해당하는 프리뷰 요소를 맨 위로 스크롤
   useEffect(() => {
-    if (!scrollToBottom) return;
+    if (topLine == null || topLine < 1) return;
     const el = containerRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [scrollToBottom, html]);
+
+    const elements = el.querySelectorAll<HTMLElement>("[data-source-line]");
+    if (elements.length === 0) return;
+
+    // topLine 이하이면서 가장 가까운 요소 찾기
+    let closest: HTMLElement | null = null;
+    for (const elem of elements) {
+      const line = parseInt(elem.getAttribute("data-source-line") || "0", 10);
+      if (line <= topLine) {
+        closest = elem;
+      } else {
+        break; // 정렬되어 있으므로 넘어가면 종료
+      }
+    }
+
+    if (!closest) closest = elements[0];
+
+    const containerTop = el.getBoundingClientRect().top;
+    const elementTop = closest.getBoundingClientRect().top;
+    el.scrollTop += elementTop - containerTop;
+  }, [topLine]);
 
   useEffect(() => {
     const el = containerRef.current;

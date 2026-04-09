@@ -32,7 +32,7 @@ export function App(): JSX.Element {
   const [gotoLineVisible, setGotoLineVisible] = useState(false);
   const [gotoLineValue, setGotoLineValue] = useState("");
   const [splitRatio, setSplitRatio] = useState(0.5);
-  const [scrollToBottom, setScrollToBottom] = useState(0);
+  const [previewTopLine, setPreviewTopLine] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
@@ -325,9 +325,9 @@ export function App(): JSX.Element {
                 filePath={tab.filePath}
                 settings={settings.editor}
                 onChange={(c) => updateContent(tab.id, c)}
-                onCursorAtBottom={
+                onTopLine={
                   isMarkdown && showPreview
-                    ? () => setScrollToBottom((n) => n + 1)
+                    ? setPreviewTopLine
                     : undefined
                 }
               />
@@ -339,7 +339,7 @@ export function App(): JSX.Element {
                   />
                   <MarkdownPreview
                     content={tab.content}
-                    scrollToBottom={scrollToBottom}
+                    topLine={previewTopLine}
                     theme={settings.editor.theme}
                   />
                 </>

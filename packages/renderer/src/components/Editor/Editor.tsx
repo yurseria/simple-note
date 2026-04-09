@@ -30,7 +30,7 @@ interface Props {
   filePath: string | null;
   settings: Settings["editor"];
   onChange: (content: string) => void;
-  onCursorAtBottom?: () => void;
+  onTopLine?: (line: number) => void;
 }
 
 export function Editor({
@@ -40,7 +40,7 @@ export function Editor({
   filePath,
   settings,
   onChange,
-  onCursorAtBottom,
+  onTopLine,
 }: Props): JSX.Element {
   const t = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,10 +49,10 @@ export function Editor({
   // onChange / onCursorAtBottom ref로 stale closure 방지
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const onCursorAtBottomRef = useRef(onCursorAtBottom);
+  const onTopLineRef = useRef(onTopLine);
   const filePathRef = useRef(filePath);
   filePathRef.current = filePath;
-  onCursorAtBottomRef.current = onCursorAtBottom;
+  onTopLineRef.current = onTopLine;
   // 마지막으로 에디터가 스스로 보고한 content — 외부 sync 스킵 판별용
   const lastEditorContentRef = useRef(content);
 
@@ -78,16 +78,11 @@ export function Editor({
     const extensions = [
       settings.theme === "dark" ? oneDark : [],
       ...buildBaseExtensions(stableOnChange, compartments, settings, language),
-      // 커서가 마지막 줄에 있고 내용이 바뀌면 onCursorAtBottom 호출
+      // 커서 이동 시 프리뷰에 커서 줄 번호 전달
       EditorView.updateListener.of((update) => {
-        if (!update.docChanged) return;
-        if (update.transactions.some((tr) => tr.annotation(Transaction.remote)))
-          return;
-        const { state } = update;
-        const cursorLine = state.doc.lineAt(state.selection.main.head).number;
-        if (cursorLine === state.doc.lines) {
-          onCursorAtBottomRef.current?.();
-        }
+        if (!update.selectionSet) return;
+        const line = update.state.doc.lineAt(update.state.selection.main.head).number;
+        onTopLineRef.current?.(line);
       }),
     ];
 
