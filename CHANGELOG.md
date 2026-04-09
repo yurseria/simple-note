@@ -1,3 +1,15 @@
+# v0.3.5 (Thu Apr 09 2026)
+
+#### 🐛 Bug Fix
+
+- fix: add Tauri Linux build and flatten artifact paths ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.4 (Thu Apr 09 2026)
 
 #### 🐛 Bug Fix
