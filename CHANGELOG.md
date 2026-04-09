@@ -1,3 +1,15 @@
+# v0.3.6 (Thu Apr 09 2026)
+
+#### 🐛 Bug Fix
+
+- fix: sync all package versions to 0.3.5 and fix sync script ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.5 (Thu Apr 09 2026)
 
 #### 🐛 Bug Fix
