@@ -1,3 +1,15 @@
+# v0.4.0 (Thu Apr 09 2026)
+
+#### 🚀 Enhancement
+
+- feat: sync preview scroll to editor cursor position ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.3.6 (Thu Apr 09 2026)
 
 #### 🐛 Bug Fix
