@@ -79,7 +79,8 @@
     ],
     "files": ["out/**/*"],
     "directories": {
-      "buildResources": "build"
+      "buildResources": "build",
+      "output": "dist"
     }
   }
 }
