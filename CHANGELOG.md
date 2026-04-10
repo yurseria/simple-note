@@ -1,3 +1,15 @@
+# v0.6.4 (Fri Apr 10 2026)
+
+#### 🐛 Bug Fix
+
+- fix: resolve closed tab reopen failure and detect external file changes ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.6.3 (Fri Apr 10 2026)
 
 #### 🐛 Bug Fix
