@@ -60,53 +60,7 @@ jobs:
             echo 'GUIDE_EOF'
           } >> $GITHUB_OUTPUT
 
-  # ── 2. Electron 패키징 (macOS + Windows + Linux) ────────────
-  package-electron:
-    needs: release
-    if: needs.release.outputs.released == 'true'
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            artifact: electron-macos
-          - os: windows-latest
-            artifact: electron-windows
-          - os: ubuntu-latest
-            artifact: electron-linux
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: release
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Package Electron
-        run: npm run package:electron
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
-
-      - name: List dist contents
-        shell: bash
-        run: ls -la packages/electron/dist/ || true
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: |
-            packages/electron/dist/*.dmg
-            packages/electron/dist/*.zip
-            packages/electron/dist/*.exe
-            packages/electron/dist/*.AppImage
-            packages/electron/dist/*.deb
-            packages/electron/dist/latest*.yml
-
-  # ── 3. Tauri 패키징 (macOS + Windows + Linux) ──────────────
+  # ── 2. Tauri 패키징 (macOS + Windows + Linux) ──────────────
   package-tauri:
     needs: release
     if: needs.release.outputs.released == 'true'
@@ -162,28 +116,14 @@ jobs:
           name: ${{ matrix.artifact }}
           path: tauri-out/*
 
-  # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
+  # ── 3. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
   upload-assets:
-    needs: [release, package-electron, package-tauri]
+    needs: [release, package-tauri]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      - name: Rename Tauri assets with prefix
-        shell: bash
-        run: |
-          for dir in artifacts/tauri-*; do
-            for f in "$dir"/*; do
-              [ -f "$f" ] || continue
-              base="$(basename "$f")"
-              # Note_0.3.0_aarch64.dmg → Note-Tauri_0.3.0_aarch64.dmg
-              newbase="${base/Note/Note-Tauri}"
-              [ "$base" = "$newbase" ] && continue
-              mv "$f" "$dir/$newbase"
-            done
-          done
 
       - name: Generate latest.json for Tauri updater
         shell: bash
@@ -192,10 +132,8 @@ jobs:
           VERSION="${TAG#v}"
           BASE_URL="https://github.com/yurseria/simple-note/releases/download/${TAG}"
 
-          # Helper: read .sig file content
           read_sig() { cat "$1" 2>/dev/null || echo ""; }
 
-          # Find platform-specific artifacts and signatures
           MAC_TAR=$(find artifacts/tauri-macos -name "*.tar.gz" ! -name "*.sig" | head -1)
           MAC_SIG=$(find artifacts/tauri-macos -name "*.tar.gz.sig" | head -1)
           WIN_ZIP=$(find artifacts/tauri-windows -name "*.msi.zip" -o -name "*.nsis.zip" | head -1)
@@ -203,26 +141,22 @@ jobs:
           LINUX_TAR=$(find artifacts/tauri-linux -name "*.tar.gz" ! -name "*.sig" | head -1)
           LINUX_SIG=$(find artifacts/tauri-linux -name "*.tar.gz.sig" | head -1)
 
-          # Build platform entries
           PLATFORMS="{}"
           if [ -n "$MAC_TAR" ] && [ -f "$MAC_SIG" ]; then
-            MAC_NAME="Note-Tauri_${VERSION}_$(basename "$MAC_TAR" | sed 's/Note_[^_]*_//')"
             PLATFORMS=$(echo "$PLATFORMS" | jq \
-              --arg url "${BASE_URL}/${MAC_NAME}" \
+              --arg url "${BASE_URL}/$(basename "$MAC_TAR")" \
               --arg sig "$(read_sig "$MAC_SIG")" \
               '. + {"darwin-aarch64": {"url": $url, "signature": $sig}, "darwin-x86_64": {"url": $url, "signature": $sig}}')
           fi
           if [ -n "$WIN_ZIP" ] && [ -f "$WIN_SIG" ]; then
-            WIN_NAME="Note-Tauri_${VERSION}_$(basename "$WIN_ZIP" | sed 's/Note_[^_]*_//')"
             PLATFORMS=$(echo "$PLATFORMS" | jq \
-              --arg url "${BASE_URL}/${WIN_NAME}" \
+              --arg url "${BASE_URL}/$(basename "$WIN_ZIP")" \
               --arg sig "$(read_sig "$WIN_SIG")" \
               '. + {"windows-x86_64": {"url": $url, "signature": $sig}}')
           fi
           if [ -n "$LINUX_TAR" ] && [ -f "$LINUX_SIG" ]; then
-            LINUX_NAME="Note-Tauri_${VERSION}_$(basename "$LINUX_TAR" | sed 's/Note_[^_]*_//')"
             PLATFORMS=$(echo "$PLATFORMS" | jq \
-              --arg url "${BASE_URL}/${LINUX_NAME}" \
+              --arg url "${BASE_URL}/$(basename "$LINUX_TAR")" \
               --arg sig "$(read_sig "$LINUX_SIG")" \
               '. + {"linux-x86_64": {"url": $url, "signature": $sig}}')
           fi
@@ -249,9 +183,6 @@ jobs:
             ---
             ${{ needs.release.outputs.install_guide }}
           files: |
-            artifacts/electron-macos/*
-            artifacts/electron-windows/*
-            artifacts/electron-linux/*
             artifacts/tauri-macos/*
             artifacts/tauri-windows/*
             artifacts/tauri-linux/*
