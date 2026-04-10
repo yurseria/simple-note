@@ -125,6 +125,26 @@ jobs:
         with:
           path: artifacts
 
+      - name: Rename artifacts to match release tag version
+        shell: bash
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          VERSION="${TAG#v}"
+
+          for dir in artifacts/tauri-macos artifacts/tauri-windows artifacts/tauri-linux; do
+            [ -d "$dir" ] || continue
+            for file in "$dir"/*; do
+              [ -f "$file" ] || continue
+              base=$(basename "$file")
+              # Replace any semver pattern (X.Y.Z) in the filename with the tag version
+              new_base=$(echo "$base" | sed -E "s/[0-9]+\.[0-9]+\.[0-9]+/${VERSION}/g")
+              if [ "$base" != "$new_base" ]; then
+                mv "$file" "$dir/$new_base"
+                echo "Renamed: $base -> $new_base"
+              fi
+            done
+          done
+
       - name: Generate latest.json for Tauri updater
         shell: bash
         run: |

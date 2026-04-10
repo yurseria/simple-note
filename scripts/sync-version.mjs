@@ -14,8 +14,10 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 // auto exec 플러그인이 ARG_0으로 새 버전을 전달
+// git-tag 플러그인은 package.json을 bump하지 않으므로,
+// ARG_0이 없으면 최신 git tag에서 버전을 가져옴
 const version = process.env.ARG_0
-  || JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).version;
+  || execSync("git describe --tags --abbrev=0", { cwd: root, encoding: "utf8" }).trim().replace(/^v/, "");
 
 if (!version || version === "0.0.0") {
   console.error("No version found");
@@ -36,7 +38,6 @@ function updateToml(filepath) {
 
 const targets = [
   resolve(root, "package.json"),
-  resolve(root, "packages/electron/package.json"),
   resolve(root, "packages/tauri/package.json"),
   resolve(root, "packages/tauri/src-tauri/tauri.conf.json"),
   resolve(root, "packages/tauri/src-tauri/Cargo.toml"),
