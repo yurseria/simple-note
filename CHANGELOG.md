@@ -1,3 +1,19 @@
+# v0.6.5 (Fri Apr 10 2026)
+
+#### 🐛 Bug Fix
+
+- fix: align release artifact filenames with git tag version ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- chore: remove Electron from release pipeline, simplify Tauri artifact names ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.6.4 (Fri Apr 10 2026)
 
 #### 🐛 Bug Fix
