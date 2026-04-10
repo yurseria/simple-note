@@ -145,12 +145,15 @@ jobs:
 
       - name: Package Tauri
         run: npm run package:tauri
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
 
       - name: Collect Tauri artifacts
         shell: bash
         run: |
           mkdir -p tauri-out
-          find packages/tauri/src-tauri/target/release/bundle -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.AppImage" \) -exec cp {} tauri-out/ \;
+          find packages/tauri/src-tauri/target/release/bundle -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" -o -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} tauri-out/ \;
           ls -la tauri-out/
 
       - uses: actions/upload-artifact@v4
@@ -179,6 +182,58 @@ jobs:
             done
           done
 
+      - name: Generate latest.json for Tauri updater
+        shell: bash
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          VERSION="${TAG#v}"
+          BASE_URL="https://github.com/yurseria/simple-note/releases/download/${TAG}"
+
+          # Helper: read .sig file content
+          read_sig() { cat "$1" 2>/dev/null || echo ""; }
+
+          # Find platform-specific artifacts and signatures
+          MAC_TAR=$(find artifacts/tauri-macos -name "*.tar.gz" ! -name "*.sig" | head -1)
+          MAC_SIG=$(find artifacts/tauri-macos -name "*.tar.gz.sig" | head -1)
+          WIN_ZIP=$(find artifacts/tauri-windows -name "*.msi.zip" -o -name "*.nsis.zip" | head -1)
+          WIN_SIG="${WIN_ZIP}.sig"
+          LINUX_TAR=$(find artifacts/tauri-linux -name "*.tar.gz" ! -name "*.sig" | head -1)
+          LINUX_SIG=$(find artifacts/tauri-linux -name "*.tar.gz.sig" | head -1)
+
+          # Build platform entries
+          PLATFORMS="{}"
+          if [ -n "$MAC_TAR" ] && [ -f "$MAC_SIG" ]; then
+            MAC_NAME="Note-Tauri_${VERSION}_$(basename "$MAC_TAR" | sed 's/Note_[^_]*_//')"
+            PLATFORMS=$(echo "$PLATFORMS" | jq \
+              --arg url "${BASE_URL}/${MAC_NAME}" \
+              --arg sig "$(read_sig "$MAC_SIG")" \
+              '. + {"darwin-aarch64": {"url": $url, "signature": $sig}, "darwin-x86_64": {"url": $url, "signature": $sig}}')
+          fi
+          if [ -n "$WIN_ZIP" ] && [ -f "$WIN_SIG" ]; then
+            WIN_NAME="Note-Tauri_${VERSION}_$(basename "$WIN_ZIP" | sed 's/Note_[^_]*_//')"
+            PLATFORMS=$(echo "$PLATFORMS" | jq \
+              --arg url "${BASE_URL}/${WIN_NAME}" \
+              --arg sig "$(read_sig "$WIN_SIG")" \
+              '. + {"windows-x86_64": {"url": $url, "signature": $sig}}')
+          fi
+          if [ -n "$LINUX_TAR" ] && [ -f "$LINUX_SIG" ]; then
+            LINUX_NAME="Note-Tauri_${VERSION}_$(basename "$LINUX_TAR" | sed 's/Note_[^_]*_//')"
+            PLATFORMS=$(echo "$PLATFORMS" | jq \
+              --arg url "${BASE_URL}/${LINUX_NAME}" \
+              --arg sig "$(read_sig "$LINUX_SIG")" \
+              '. + {"linux-x86_64": {"url": $url, "signature": $sig}}')
+          fi
+
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq -n \
+            --arg version "$VERSION" \
+            --arg pub_date "$NOW" \
+            --argjson platforms "$PLATFORMS" \
+            '{"version": $version, "pub_date": $pub_date, "platforms": $platforms}' > artifacts/latest.json
+
+          echo "Generated latest.json:"
+          cat artifacts/latest.json
+
       - name: List all artifacts
         shell: bash
         run: find artifacts -type f | sort
@@ -197,3 +252,4 @@ jobs:
             artifacts/tauri-macos/*
             artifacts/tauri-windows/*
             artifacts/tauri-linux/*
+            artifacts/latest.json

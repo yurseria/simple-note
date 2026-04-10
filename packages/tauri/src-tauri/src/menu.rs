@@ -81,6 +81,7 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
     let goto_line = if is_ko { "지정 줄로 이동..." } else { "Go to Line..." };
     let toggle_preview = if is_ko { "마크다운 미리보기 전환" } else { "Toggle Markdown Preview" };
     let dev_tools = if is_ko { "개발자 도구 전환" } else { "Toggle Developer Tools" };
+    let check_update = if is_ko { "업데이트 확인..." } else { "Check for Updates..." };
 
     macro_rules! menu_item {
         ($id:expr, $label:expr) => {
@@ -202,6 +203,8 @@ pub fn build_menu(app: &AppHandle, lang: &str) -> tauri::Result<tauri::menu::Men
 
     // ── Help ────────────────────────────────────────────────
     let help_menu = SubmenuBuilder::new(app, help_label)
+        .item(&menu_item!("menu:checkForUpdates", check_update))
+        .separator()
         .item(&menu_item!("menu:toggleDevTools", dev_tools, "CmdOrCtrl+Alt+I"))
         .build()?;
 

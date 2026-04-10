@@ -2,6 +2,8 @@ import { invoke } from '@tauri-apps/api/core'
 import { open, save, ask, message } from '@tauri-apps/plugin-dialog'
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { check } from '@tauri-apps/plugin-updater'
+import { relaunch } from '@tauri-apps/plugin-process'
 import type { NoteAPI, ReadResult } from '@simple-note/renderer/types/api'
 import type { Settings } from '@simple-note/renderer/types/settings'
 
@@ -112,9 +114,36 @@ export const tauriApi: NoteAPI = {
   runtime: 'tauri',
 }
 
+async function checkForUpdates(): Promise<void> {
+  try {
+    const update = await check()
+    if (update) {
+      const yes = await ask(
+        `새 버전 ${update.version}이 있습니다. 지금 업데이트하시겠습니까?`,
+        { title: '업데이트 확인', kind: 'info', okLabel: '업데이트', cancelLabel: '나중에' }
+      )
+      if (yes) {
+        await update.downloadAndInstall()
+        await relaunch()
+      }
+    } else {
+      await message('현재 최신 버전입니다.', { title: '업데이트 확인', kind: 'info' })
+    }
+  } catch (e) {
+    await message(`업데이트 확인 중 오류가 발생했습니다: ${e}`, { title: '업데이트 오류', kind: 'error' })
+  }
+}
+
 export async function initTauriPlatform(): Promise<void> {
   const platform = await invoke<string>('get_platform')
   ;(tauriApi as { platform: string }).platform = platform
+
+  // 업데이트 확인 메뉴 이벤트 리스너
+  listen<{ action: string }>('menu-event', (event) => {
+    if (event.payload.action === 'menu:checkForUpdates') {
+      checkForUpdates()
+    }
+  })
 
   // Tauri drag-drop 이벤트 → renderer로 전달
   const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
