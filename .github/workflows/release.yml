@@ -104,6 +104,7 @@ jobs:
             packages/electron/dist/*.exe
             packages/electron/dist/*.AppImage
             packages/electron/dist/*.deb
+            packages/electron/dist/latest*.yml
 
   # ── 3. Tauri 패키징 (macOS + Windows + Linux) ──────────────
   package-tauri:

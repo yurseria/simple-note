@@ -1,5 +1,6 @@
 import { Menu, BrowserWindow, app, ipcMain } from "electron";
 import { store } from "./store";
+import { checkForUpdates } from "./updater";
 
 const isMac = process.platform === "darwin";
 
@@ -52,6 +53,7 @@ const T: Record<MenuLanguage, Record<string, string>> = {
     go: "이동",
     gotoLine: "지정 줄로 이동...",
     help: "도움말",
+    checkForUpdates: "업데이트 확인...",
     devTools: "개발자 도구 전환",
   },
   en: {
@@ -100,6 +102,7 @@ const T: Record<MenuLanguage, Record<string, string>> = {
     go: "Go",
     gotoLine: "Go to Line...",
     help: "Help",
+    checkForUpdates: "Check for Updates...",
     devTools: "Toggle Developer Tools",
   },
 };
@@ -314,6 +317,11 @@ export function buildMenu(language: MenuLanguage = "ko"): void {
       id: "help",
       label: t.help,
       submenu: [
+        {
+          label: t.checkForUpdates,
+          click: () => checkForUpdates(),
+        },
+        { type: "separator" },
         {
           label: t.devTools,
           accelerator: "CmdOrCtrl+Alt+I",

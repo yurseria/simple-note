@@ -16,6 +16,7 @@
     "@simple-note/renderer": "*",
     "chardet": "^2.1.1",
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.0",
     "iconv-lite": "^0.7.2"
   },
   "devDependencies": {
@@ -86,6 +87,15 @@
         "role": "Editor"
       }
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "yurseria",
+      "repo": "simple-note"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false
+    },
     "artifactName": "${productName}-Electron-${version}-${arch}.${ext}",
     "files": [
       "out/**/*"
