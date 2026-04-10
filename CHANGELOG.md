@@ -1,3 +1,15 @@
+# v0.6.1 (Fri Apr 10 2026)
+
+#### 🐛 Bug Fix
+
+- fix: skip rename for non-Note files and narrow Tauri artifact glob ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.6.0 (Fri Apr 10 2026)
 
 #### 🚀 Enhancement
