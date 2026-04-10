@@ -161,13 +161,39 @@ jobs:
   # ── 4. 빌드 산출물을 릴리스에 첨부 ─────────────────────────
   upload-assets:
     needs: [release, package-electron, package-tauri]
+    if: always() && needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: Verify artifact count
+        id: verify
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          EXPECTED_ARTIFACTS=6  # electron-{macos,windows,linux} + tauri-{macos,windows,linux}
+          ACTUAL=$(find artifacts -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+          echo "Expected: $EXPECTED_ARTIFACTS, Actual: $ACTUAL"
+
+          if [ "$ACTUAL" -lt "$EXPECTED_ARTIFACTS" ]; then
+            echo "::error::Artifact count mismatch ($ACTUAL/$EXPECTED_ARTIFACTS). Deleting release and tag."
+            TAG="${{ needs.release.outputs.tag }}"
+            # Delete GitHub release
+            gh release delete "$TAG" --repo yurseria/simple-note --yes 2>/dev/null || true
+            # Delete remote tag
+            git push --delete origin "$TAG" 2>/dev/null || true
+            echo "pass=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "pass=true" >> $GITHUB_OUTPUT
+
       - name: Rename Tauri assets with prefix
+        if: steps.verify.outputs.pass == 'true'
         shell: bash
         run: |
           for dir in artifacts/tauri-*; do
@@ -180,10 +206,12 @@ jobs:
           done
 
       - name: List all artifacts
+        if: steps.verify.outputs.pass == 'true'
         shell: bash
         run: find artifacts -type f | sort
 
       - uses: softprops/action-gh-release@v2
+        if: steps.verify.outputs.pass == 'true'
         with:
           tag_name: ${{ needs.release.outputs.tag }}
           append_body: true
