@@ -1,3 +1,15 @@
+# v0.6.2 (Fri Apr 10 2026)
+
+#### 🐛 Bug Fix
+
+- fix: remove invalid nsis.installMode from tauri.conf.json ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.6.1 (Fri Apr 10 2026)
 
 #### 🐛 Bug Fix
