@@ -10,7 +10,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "npm run build && electron-builder"
+    "package": "npm run build && electron-builder --publish never"
   },
   "dependencies": {
     "@simple-note/renderer": "*",
@@ -91,10 +91,6 @@
       "provider": "github",
       "owner": "yurseria",
       "repo": "simple-note"
-    },
-    "nsis": {
-      "oneClick": true,
-      "allowToChangeInstallationDirectory": false
     },
     "artifactName": "${productName}-Electron-${version}-${arch}.${ext}",
     "files": [
