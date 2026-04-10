@@ -1,3 +1,15 @@
+# v0.6.0 (Fri Apr 10 2026)
+
+#### 🚀 Enhancement
+
+- feat: add in-app update to Electron via electron-updater ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.5.0 (Fri Apr 10 2026)
 
 #### 🚀 Enhancement
