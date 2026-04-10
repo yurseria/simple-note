@@ -154,7 +154,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p tauri-out
-          find packages/tauri/src-tauri/target/release/bundle -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" -o -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} tauri-out/ \;
+          find packages/tauri/src-tauri/target/release/bundle -type f \( -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" -o -name "*.app.tar.gz" -o -name "*.nsis.zip" -o -name "*.msi.zip" \) -exec cp {} tauri-out/ \;
           ls -la tauri-out/
 
       - uses: actions/upload-artifact@v4
@@ -179,7 +179,9 @@ jobs:
               [ -f "$f" ] || continue
               base="$(basename "$f")"
               # Note_0.3.0_aarch64.dmg → Note-Tauri_0.3.0_aarch64.dmg
-              mv "$f" "$dir/${base/Note/Note-Tauri}"
+              newbase="${base/Note/Note-Tauri}"
+              [ "$base" = "$newbase" ] && continue
+              mv "$f" "$dir/$newbase"
             done
           done
 
