@@ -1,3 +1,15 @@
+# v0.5.0 (Fri Apr 10 2026)
+
+#### 🚀 Enhancement
+
+- feat: add in-app update via Help menu using tauri-plugin-updater ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.4.0 (Thu Apr 09 2026)
 
 #### 🚀 Enhancement
