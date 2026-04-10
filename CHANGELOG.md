@@ -1,3 +1,15 @@
+# v0.6.3 (Fri Apr 10 2026)
+
+#### 🐛 Bug Fix
+
+- fix: add --publish never to electron-builder to prevent auto-upload ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.6.2 (Fri Apr 10 2026)
 
 #### 🐛 Bug Fix
