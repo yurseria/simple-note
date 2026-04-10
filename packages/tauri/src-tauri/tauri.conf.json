@@ -1,6 +1,6 @@
 {
   "productName": "Note",
-  "version": "0.1.0",
+  "version": "0.3.5",
   "identifier": "com.yurseria.simple-note",
   "build": {
     "beforeDevCommand": "npm run dev:vite",
@@ -40,17 +40,24 @@
     "category": "public.app-category.productivity",
     "fileAssociations": [
       {
-        "ext": ["txt"],
+        "ext": [
+          "txt"
+        ],
         "mimeType": "text/plain",
         "description": "Plain Text File"
       },
       {
-        "ext": ["md", "markdown"],
+        "ext": [
+          "md",
+          "markdown"
+        ],
         "mimeType": "text/markdown",
         "description": "Markdown Document"
       },
       {
-        "ext": ["log"],
+        "ext": [
+          "log"
+        ],
         "mimeType": "text/plain",
         "description": "Log File"
       }
@@ -58,5 +65,12 @@
     "shortDescription": "A beautiful and simple plain text editor",
     "longDescription": "A clean and intuitive text editor designed for focused writing. Supports multi-tab, markdown preview, dark/light theme, and CJK input."
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/yurseria/simple-note/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZDMUIzNzIwNzdFNTlCOEEKUldTS20rVjNJRGNiL0tuYVcrTmdwNnFTejhFd0UvTUZDZTAwMWx1SjVXQnB6bi9IcjVIU25lUkcK"
+    }
+  }
 }

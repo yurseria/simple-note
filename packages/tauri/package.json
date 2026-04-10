@@ -1,6 +1,6 @@
 {
   "name": "@simple-note/tauri",
-  "version": "0.1.0",
+  "version": "0.3.5",
   "description": "Simple Note — Tauri shell",
   "author": "yurseria<yurseria@gmail.com>",
   "license": "MIT",
@@ -22,6 +22,8 @@
     "@tauri-apps/plugin-fs": "^2.0.0",
     "@tauri-apps/plugin-os": "^2.0.0",
     "@tauri-apps/plugin-store": "^2.0.0",
+    "@tauri-apps/plugin-process": "^2.0.0",
+    "@tauri-apps/plugin-updater": "^2.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

@@ -20,6 +20,7 @@ const MENU_CHANNELS = [
 const electronApi: NoteAPI = {
   file: {
     open: (filePath?: string) => ipcRenderer.invoke('file:open', filePath),
+    read: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
     save: (filePath: string, content: string, encoding: string) =>
       ipcRenderer.invoke('file:save', filePath, content, encoding),
     saveAs: (content: string, encoding: string, defaultPath?: string) =>

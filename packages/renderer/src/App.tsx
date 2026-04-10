@@ -8,6 +8,7 @@ import { useTabStore, inferLanguage } from "./store/tabStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useFile } from "./hooks/useFile";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useExternalFileSync } from "./hooks/useExternalFileSync";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import { api } from "./platform";
 import { useTranslation } from "./i18n";
@@ -40,6 +41,8 @@ export function App(): JSX.Element {
   const isDragging = useRef(false);
 
   const tab = activeTab();
+
+  useExternalFileSync();
 
   useEffect(() => {
     load();

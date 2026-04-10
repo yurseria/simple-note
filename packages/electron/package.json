@@ -1,6 +1,6 @@
 {
   "name": "@simple-note/electron",
-  "version": "0.1.0",
+  "version": "0.3.5",
   "description": "Simple Note — Electron shell",
   "main": "./out/main/index.js",
   "author": "yurseria<yurseria@gmail.com>",
@@ -10,12 +10,13 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "npm run build && electron-builder"
+    "package": "npm run build && electron-builder --publish never"
   },
   "dependencies": {
     "@simple-note/renderer": "*",
     "chardet": "^2.1.1",
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.0",
     "iconv-lite": "^0.7.2"
   },
   "devDependencies": {
@@ -38,17 +39,26 @@
     "mac": {
       "identity": null,
       "category": "public.app-category.productivity",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "build/icon.icns",
       "minimumSystemVersion": "13.0"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "build/icon.png",
       "category": "Utility;TextEditor"
     },
     "win": {
-      "target": ["nsis", "zip"],
+      "target": [
+        "nsis",
+        "zip"
+      ],
       "icon": "build/icon.png"
     },
     "fileAssociations": [
@@ -77,8 +87,15 @@
         "role": "Editor"
       }
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "yurseria",
+      "repo": "simple-note"
+    },
     "artifactName": "${productName}-Electron-${version}-${arch}.${ext}",
-    "files": ["out/**/*"],
+    "files": [
+      "out/**/*"
+    ],
     "directories": {
       "buildResources": "build",
       "output": "dist"
