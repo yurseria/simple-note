@@ -80,6 +80,16 @@ export function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle("file:read", async (_, filePath: string) => {
+    try {
+      const data = await readFileWithEncoding(filePath);
+      return data;
+    } catch (err) {
+      logger.error("file:read failed", { path: filePath, error: String(err) });
+      throw err;
+    }
+  });
+
   ipcMain.handle(
     "file:save",
     async (_, filePath: string, content: string, encoding: string) => {

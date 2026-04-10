@@ -12,8 +12,8 @@ export function useFile() {
 
     addRecentFile(result.filePath)
     const fileName = result.filePath.split('/').pop() ?? result.filePath
-    // 이미 열려 있는 탭이면 포커스만 이동
-    const existing = tabs.find((t) => t.filePath === result.filePath)
+    // 이미 열려 있는 탭이면 포커스만 이동 (클로저가 아닌 최신 상태 참조)
+    const existing = useTabStore.getState().tabs.find((t) => t.filePath === result.filePath)
     if (existing) {
       useTabStore.getState().setActive(existing.id)
       return

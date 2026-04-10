@@ -38,6 +38,10 @@ export const tauriApi: NoteAPI = {
       return { filePath: targetPath, ...data }
     },
 
+    read: async (filePath: string) => {
+      return await invoke<ReadResult>('read_file_with_encoding', { filePath })
+    },
+
     save: async (filePath: string, content: string, encoding: string) => {
       await invoke('write_file_with_encoding', { filePath, content, encoding })
       return true
