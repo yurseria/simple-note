@@ -212,6 +212,7 @@ export function getAppMenuData(t: Translations, recentFiles: string[] = []): Men
       label: t.menu.help,
       items: [
         { label: t.help.about, role: "about" },
+        { label: t.help.checkForUpdates, action: "menu:checkForUpdates" },
         { type: "separator" },
         {
           label: t.help.devTools,

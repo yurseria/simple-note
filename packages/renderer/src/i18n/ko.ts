@@ -58,6 +58,7 @@ export const ko: Translations = {
   },
   help: {
     about: "정보",
+    checkForUpdates: "업데이트 확인...",
     devTools: "개발자 도구 전환",
   },
   dialog: {

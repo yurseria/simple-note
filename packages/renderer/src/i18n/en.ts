@@ -58,6 +58,7 @@ export const en: Translations = {
   },
   help: {
     about: "About",
+    checkForUpdates: "Check for Updates...",
     devTools: "Toggle Developer Tools",
   },
   dialog: {

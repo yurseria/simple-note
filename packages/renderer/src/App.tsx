@@ -118,6 +118,8 @@ export function App(): JSX.Element {
         setZenMode(z => !z); break;
       case "menu:commandPalette":
         setCommandPaletteOpen(o => !o); break;
+      case "menu:checkForUpdates":
+        api.menu.dispatch("checkForUpdates"); break;
     }
   }, [addTab, openFile, saveFile, saveFileAs, maybeCloseTab]);
 
