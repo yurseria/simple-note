@@ -41,6 +41,10 @@
   padding: 4px;
 }
 
+.cp__list::-webkit-scrollbar {
+  width: 4px;
+}
+
 .cp__list::-webkit-scrollbar-track {
   background: var(--editor-bg);
 }

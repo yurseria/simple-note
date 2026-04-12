@@ -19,6 +19,7 @@
 
 .editor__cm .cm-scroller {
   overflow: auto;
+  scrollbar-width: thin;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -64,6 +65,10 @@
 }
 
 /* 스크롤바 track 배경 = 에디터 배경 */
+.editor__cm .cm-scroller::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
 .editor__cm .cm-scroller::-webkit-scrollbar-track,
 .editor__cm .cm-scroller::-webkit-scrollbar-corner {
   background: var(--editor-bg);
