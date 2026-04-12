@@ -1,6 +1,7 @@
 .markdown-preview {
   flex: 1;
   overflow-y: auto;
+  scrollbar-width: thin;
   padding: 24px 32px;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   font-size: 15px;
@@ -10,6 +11,9 @@
 }
 
 /* 프리뷰 세로 스크롤바 */
+.markdown-preview::-webkit-scrollbar {
+  width: 4px;
+}
 .markdown-preview::-webkit-scrollbar-track,
 .markdown-preview::-webkit-scrollbar-corner {
   background: var(--editor-bg);
@@ -20,6 +24,9 @@
 }
 
 /* 코드 블록 가로 스크롤바 */
+.markdown-preview pre::-webkit-scrollbar {
+  height: 4px;
+}
 .markdown-preview pre::-webkit-scrollbar-track,
 .markdown-preview pre::-webkit-scrollbar-corner {
   background: var(--code-bg-solid);

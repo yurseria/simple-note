@@ -1,6 +1,6 @@
 {
   "name": "@simple-note/electron",
-  "version": "0.3.5",
+  "version": "0.6.5",
   "description": "Simple Note — Electron shell",
   "main": "./out/main/index.js",
   "author": "yurseria<yurseria@gmail.com>",
