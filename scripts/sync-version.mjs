@@ -38,6 +38,7 @@ function updateToml(filepath) {
 
 const targets = [
   resolve(root, "package.json"),
+  resolve(root, "packages/electron/package.json"),
   resolve(root, "packages/tauri/package.json"),
   resolve(root, "packages/tauri/src-tauri/tauri.conf.json"),
   resolve(root, "packages/tauri/src-tauri/Cargo.toml"),
