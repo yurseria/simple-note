@@ -251,6 +251,10 @@ export function registerIpcHandlers(): void {
   });
 
   ipcMain.on("menu:trigger", (e, channel: string, ...args: unknown[]) => {
+    if (channel === "checkForUpdates") {
+      import("./updater").then(({ checkForUpdates }) => checkForUpdates());
+      return;
+    }
     const win = BrowserWindow.fromWebContents(e.sender);
     if (win) {
       win.webContents.send(channel, ...args);

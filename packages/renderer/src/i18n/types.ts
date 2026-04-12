@@ -56,6 +56,7 @@ export interface Translations {
   };
   help: {
     about: string;
+    checkForUpdates: string;
     devTools: string;
   };
   dialog: {

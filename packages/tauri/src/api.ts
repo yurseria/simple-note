@@ -118,20 +118,63 @@ export const tauriApi: NoteAPI = {
   runtime: 'tauri',
 }
 
+const REPO = 'yurseria/simple-note'
+
+/**
+ * macOS: 코드 서명이 없어서 plugin-updater 사용 불가.
+ * GitHub API로 최신 버전을 확인하고 install.sh 또는 릴리스 페이지를 안내한다.
+ */
+async function checkViaGitHubApi(): Promise<void> {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json() as { tag_name: string }
+  const latest = data.tag_name.replace(/^v/, '')
+  const current = await invoke<string>('get_app_version')
+
+  if (latest === current) {
+    await message('현재 최신 버전입니다.', { title: '업데이트 확인', kind: 'info' })
+    return
+  }
+
+  const cmd = `curl -fsSL https://raw.githubusercontent.com/${REPO}/main/scripts/install.sh | bash`
+
+  const copy = await ask(
+    `새 버전 ${latest}이 있습니다.\n터미널에서 아래 명령으로 업데이트할 수 있습니다:\n\n${cmd}`,
+    { title: '업데이트 확인', kind: 'info', okLabel: '복사 및 닫기', cancelLabel: '릴리스 페이지 열기' }
+  )
+  if (copy) {
+    await invoke('copy_to_clipboard', { text: cmd })
+  } else {
+    await invoke('open_external_url', { url: `https://github.com/${REPO}/releases/latest` })
+  }
+}
+
+/**
+ * Windows: plugin-updater로 자동 다운로드 + 설치
+ */
+async function checkViaPluginUpdater(): Promise<void> {
+  const update = await check()
+  if (update) {
+    const yes = await ask(
+      `새 버전 ${update.version}이 있습니다. 지금 업데이트하시겠습니까?`,
+      { title: '업데이트 확인', kind: 'info', okLabel: '업데이트', cancelLabel: '나중에' }
+    )
+    if (yes) {
+      await update.downloadAndInstall()
+      await relaunch()
+    }
+  } else {
+    await message('현재 최신 버전입니다.', { title: '업데이트 확인', kind: 'info' })
+  }
+}
+
 async function checkForUpdates(): Promise<void> {
   try {
-    const update = await check()
-    if (update) {
-      const yes = await ask(
-        `새 버전 ${update.version}이 있습니다. 지금 업데이트하시겠습니까?`,
-        { title: '업데이트 확인', kind: 'info', okLabel: '업데이트', cancelLabel: '나중에' }
-      )
-      if (yes) {
-        await update.downloadAndInstall()
-        await relaunch()
-      }
+    const platform = await invoke<string>('get_platform')
+    if (platform === 'darwin') {
+      await checkViaGitHubApi()
     } else {
-      await message('현재 최신 버전입니다.', { title: '업데이트 확인', kind: 'info' })
+      await checkViaPluginUpdater()
     }
   } catch (e) {
     await message(`업데이트 확인 중 오류가 발생했습니다: ${e}`, { title: '업데이트 오류', kind: 'error' })
@@ -142,12 +185,17 @@ export async function initTauriPlatform(): Promise<void> {
   const platform = await invoke<string>('get_platform')
   ;(tauriApi as { platform: string }).platform = platform
 
-  // 업데이트 확인 메뉴 이벤트 리스너
-  listen<{ action: string }>('menu-event', (event) => {
-    if (event.payload.action === 'menu:checkForUpdates') {
-      checkForUpdates()
-    }
-  })
+  // macOS: 네이티브 메뉴 이벤트로 업데이트 확인
+  // Windows/Linux: 커스텀 TitleBar의 dispatch로 업데이트 확인
+  if (platform === 'darwin') {
+    listen<{ action: string }>('menu-event', (event) => {
+      if (event.payload.action === 'menu:checkForUpdates') {
+        checkForUpdates()
+      }
+    })
+  } else {
+    window.addEventListener('checkForUpdates', () => checkForUpdates())
+  }
 
   // Tauri drag-drop 이벤트 → renderer로 전달
   const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
