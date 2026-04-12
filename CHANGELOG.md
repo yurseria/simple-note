@@ -1,3 +1,20 @@
+# v0.7.0 (Sun Apr 12 2026)
+
+#### 🚀 Enhancement
+
+- feat: platform-aware update checker with copy command support ([@yurseria](https://github.com/yurseria))
+
+#### 🐛 Bug Fix
+
+- fix: add Electron to sync-version targets and sync all to 0.6.5 ([@yurseria](https://github.com/yurseria))
+- fix: add WebKit scrollbar compatibility and reduce width to 4px ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.6.5 (Fri Apr 10 2026)
 
 #### 🐛 Bug Fix
