@@ -98,6 +98,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Sync version from release tag
+        shell: bash
+        run: node scripts/sync-version.mjs
+        env:
+          ARG_0: ${{ needs.release.outputs.tag }}
+
       - name: Package Tauri
         run: npm run package:tauri
         env:
