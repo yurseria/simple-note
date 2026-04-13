@@ -101,7 +101,7 @@ export function buildThemeExt(
   const fontStack = `"${fontFamily}", ui-monospace, Menlo, "Apple SD Gothic Neo", "Malgun Gothic", monospace`
   return EditorView.theme({
     '&': { fontSize: `${fontSize}px`, height: '100%' },
-    '.cm-scroller': { overflow: 'auto', scrollbarColor: 'var(--border-color) var(--editor-bg)' },
+    '.cm-scroller': { overflow: 'auto' },
     '.cm-content': {
       fontFamily: fontStack,
       caretColor: 'auto'

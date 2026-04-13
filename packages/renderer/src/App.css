@@ -22,7 +22,7 @@
   --close-btn-hover: rgba(255, 255, 255, 0.12);
   --code-bg: rgba(255, 255, 255, 0.06);
   --code-bg-solid: #2c313a;
-  --scrollbar-thumb: #3e4451;
+  --scrollbar-thumb: #565c68;
 }
 
 /* ── Light 테마 ── */
@@ -39,7 +39,7 @@
   --close-btn-hover: rgba(0, 0, 0, 0.08);
   --code-bg: rgba(0, 0, 0, 0.05);
   --code-bg-solid: #eaecf0;
-  --scrollbar-thumb: #cdcdcd;
+  --scrollbar-thumb: #b0b0b0;
 }
 
 /* ── 전역 리셋 ── */
@@ -131,7 +131,6 @@ body,
 }
 
 .app__editor-pane--split > .markdown-preview {
-  scrollbar-color: var(--border-color) var(--editor-bg);
   flex: 1;
   min-width: 0;
 }
