@@ -1,3 +1,24 @@
+# v0.8.0 (Mon Apr 13 2026)
+
+#### 🚀 Enhancement
+
+- feat: add missing menu items to Windows CustomMenu ([@yurseria](https://github.com/yurseria))
+
+#### 🐛 Bug Fix
+
+- fix: use opaque hex for scrollbar-thumb to fix WebKit rendering ([@yurseria](https://github.com/yurseria))
+- fix: sync package versions from release tag before build ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- docs: add DESIGN.md with macOS Tauri baseline UI spec ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.7.0 (Sun Apr 12 2026)
 
 #### 🚀 Enhancement
