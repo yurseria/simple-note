@@ -194,6 +194,17 @@ export function getAppMenuData(t: Translations, recentFiles: string[] = []): Men
           accelerator: "Ctrl+E",
           action: "menu:toggleZenMode",
         },
+        { type: "separator" },
+        {
+          label: t.view.toggleMarkdownPreview,
+          accelerator: "Ctrl+Shift+M",
+          action: "menu:toggleMarkdownPreview",
+        },
+        {
+          label: t.view.commandPalette,
+          accelerator: "Ctrl+Shift+P",
+          action: "menu:commandPalette",
+        },
       ],
     },
     {
