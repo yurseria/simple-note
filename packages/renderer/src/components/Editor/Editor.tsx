@@ -290,7 +290,8 @@ export function Editor({
           if (!relativePath) return;
 
           const pos = view.state.selection.main.head;
-          const insert = `![](${relativePath})`;
+          const imgName = relativePath.split('/').pop()?.replace(/\.[^.]+$/, '') ?? 'image';
+          const insert = `![${imgName}](${relativePath})`;
           view.dispatch({
             changes: { from: pos, insert },
           });

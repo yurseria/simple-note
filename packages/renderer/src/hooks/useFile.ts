@@ -2,6 +2,14 @@ import { api } from '../platform'
 import { useTabStore, inferLanguage } from '../store/tabStore'
 import { useSettingsStore } from '../store/settingsStore'
 
+function defaultFileName(tab: { fileName: string; language: string }): string {
+  // 이미 확장자가 있으면 그대로
+  if (tab.fileName.includes('.')) return tab.fileName
+  // 언어 모드에 따라 확장자 추가
+  if (tab.language === 'markdown') return `${tab.fileName}.md`
+  return `${tab.fileName}.txt`
+}
+
 export function useFile() {
   const { tabs, activeTab, addTab, markSaved, closeTab } = useTabStore()
   const { addRecentFile } = useSettingsStore()
@@ -28,7 +36,13 @@ export function useFile() {
       useTabStore.setState((s) => ({
         tabs: s.tabs.map((t) =>
           t.id === current.id
-            ? { ...t, content: result.content, encoding: result.encoding, language: detectedLanguage }
+            ? {
+                ...t,
+                content: result.content,
+                encoding: result.encoding,
+                language: detectedLanguage,
+                showPreview: detectedLanguage === 'markdown',
+              }
             : t
         )
       }))
@@ -59,7 +73,7 @@ export function useFile() {
   async function saveFileAs() {
     const tab = activeTab()
     if (!tab) return
-    const saved = await api.file.saveAs(tab.content, tab.encoding, tab.fileName)
+    const saved = await api.file.saveAs(tab.content, tab.encoding, defaultFileName(tab))
     if (saved) {
       markSaved(tab.id, saved)
       addRecentFile(saved)
@@ -78,7 +92,7 @@ export function useFile() {
         if (tab.filePath) {
           await api.file.save(tab.filePath, tab.content, tab.encoding)
         } else {
-          const saved = await api.file.saveAs(tab.content, tab.encoding, tab.fileName)
+          const saved = await api.file.saveAs(tab.content, tab.encoding, defaultFileName(tab))
           if (!saved) return
         }
       }
