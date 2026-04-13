@@ -27,6 +27,7 @@
 
 .tabbar__add {
   -webkit-app-region: no-drag;
+  align-self: center;
   flex-shrink: 0;
   width: 26px;
   height: 26px;
