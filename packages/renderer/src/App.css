@@ -22,7 +22,7 @@
   --close-btn-hover: rgba(255, 255, 255, 0.12);
   --code-bg: rgba(255, 255, 255, 0.06);
   --code-bg-solid: #2c313a;
-  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb: #3e4451;
 }
 
 /* ── Light 테마 ── */
@@ -39,7 +39,7 @@
   --close-btn-hover: rgba(0, 0, 0, 0.08);
   --code-bg: rgba(0, 0, 0, 0.05);
   --code-bg-solid: #eaecf0;
-  --scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --scrollbar-thumb: #cdcdcd;
 }
 
 /* ── 전역 리셋 ── */
