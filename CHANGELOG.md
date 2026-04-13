@@ -1,3 +1,15 @@
+# v0.8.1 (Mon Apr 13 2026)
+
+#### 🐛 Bug Fix
+
+- fix: remove scrollbar-color/scrollbar-width, use webkit-scrollbar only ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.8.0 (Mon Apr 13 2026)
 
 #### 🚀 Enhancement
