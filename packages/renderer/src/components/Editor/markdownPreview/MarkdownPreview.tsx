@@ -91,18 +91,29 @@ interface Props {
   content: string;
   topLine?: number;
   theme?: string;
+  basePath?: string | null;
 }
 
 export function MarkdownPreview({
   content,
   topLine,
   theme = "dark",
+  basePath,
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
     const withLines = addSourceLines(content, raw);
-    return DOMPurify.sanitize(withLines);
-  }, [content]);
+    let sanitized = DOMPurify.sanitize(withLines);
+    // 상대 경로 이미지를 절대 경로(asset://)로 변환 — Tauri에서 로컬 파일 접근용
+    if (basePath) {
+      const dir = basePath.replace(/[\\/][^\\/]+$/, "");
+      sanitized = sanitized.replace(
+        /(<img\s[^>]*src=")(?!https?:\/\/|data:|asset:\/\/)([^"]+)(")/g,
+        (_, pre, src, post) => `${pre}asset://localhost/${dir}/${src}${post}`,
+      );
+    }
+    return sanitized;
+  }, [content, basePath]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

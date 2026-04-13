@@ -346,6 +346,7 @@ export function App(): JSX.Element {
                     content={tab.content}
                     topLine={previewTopLine}
                     theme={settings.editor.theme}
+                    basePath={tab.filePath}
                   />
                 </>
               )}
