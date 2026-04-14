@@ -140,7 +140,7 @@
 
 .markdown-preview hr {
   border: none;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--text-muted);
   margin: 1.5em 0;
 }
 

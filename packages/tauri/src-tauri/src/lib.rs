@@ -21,6 +21,7 @@ pub fn run() {
             commands::get_platform,
             commands::get_app_version,
             commands::open_external_url,
+            commands::read_file_as_data_url,
             commands::copy_to_clipboard,
             commands::get_locale,
             commands::rebuild_menu,

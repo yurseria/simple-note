@@ -114,6 +114,8 @@ export const tauriApi: NoteAPI = {
     close: () => getCurrentWindow().close(),
   },
 
+  convertFileSrc: (filePath: string) => `asset://localhost${filePath.startsWith('/') ? '' : '/'}${filePath}`,
+
   platform: 'darwin',
   runtime: 'tauri',
 }

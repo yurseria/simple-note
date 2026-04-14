@@ -271,6 +271,25 @@ pub fn copy_to_clipboard(text: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn read_file_as_data_url(file_path: String) -> Result<String, String> {
+    use std::fs;
+    let data = fs::read(&file_path).map_err(|e| e.to_string())?;
+    let mime = match file_path.rsplit('.').next().unwrap_or("").to_lowercase().as_str() {
+        "svg" => "image/svg+xml",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "bmp" => "image/bmp",
+        "ico" => "image/x-icon",
+        _ => "application/octet-stream",
+    };
+    use base64::Engine;
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
+    Ok(format!("data:{};base64,{}", mime, b64))
+}
+
+#[tauri::command]
 pub fn get_locale() -> String {
     sys_locale::get_locale().unwrap_or_else(|| "en".to_string())
 }

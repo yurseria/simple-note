@@ -30,3 +30,4 @@ arboard = "3"
 image = { version = "0.25", default-features = false, features = ["png"] }
 chrono = "0.4"
 rfd = "0.15"
+base64 = "0.22"
