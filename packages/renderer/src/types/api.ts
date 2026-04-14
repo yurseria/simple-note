@@ -45,6 +45,9 @@ export interface NoteAPI {
     close(): void
   }
 
+  /** 로컬 파일 경로를 웹뷰에서 접근 가능한 URL로 변환 */
+  convertFileSrc?(filePath: string): string
+
   platform: string
   runtime: 'electron' | 'tauri'
 }

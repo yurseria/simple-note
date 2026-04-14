@@ -92,6 +92,7 @@ interface Props {
   topLine?: number;
   theme?: string;
   basePath?: string | null;
+  convertFileSrc?: (filePath: string) => string;
 }
 
 export function MarkdownPreview({
@@ -99,21 +100,26 @@ export function MarkdownPreview({
   topLine,
   theme = "dark",
   basePath,
+  convertFileSrc,
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
     const withLines = addSourceLines(content, raw);
     let sanitized = DOMPurify.sanitize(withLines);
-    // 상대 경로 이미지를 절대 경로(asset://)로 변환 — Tauri에서 로컬 파일 접근용
-    if (basePath) {
+    // 상대 경로 이미지를 asset:// URL로 변환
+    if (basePath && convertFileSrc) {
       const dir = basePath.replace(/[\\/][^\\/]+$/, "");
       sanitized = sanitized.replace(
         /(<img\s[^>]*src=")(?!https?:\/\/|data:|asset:\/\/)([^"]+)(")/g,
-        (_, pre, src, post) => `${pre}asset://localhost/${dir}/${src}${post}`,
+        (_, pre, src, post) => {
+          let absPath = src.startsWith("/") ? src : `${dir}/${src}`;
+          absPath = absPath.replace(/\/\.\//g, "/").replace(/[^/]+\/\.\.\//g, "");
+          return `${pre}${convertFileSrc(absPath)}${post}`;
+        },
       );
     }
     return sanitized;
-  }, [content, basePath]);
+  }, [content, basePath, convertFileSrc]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

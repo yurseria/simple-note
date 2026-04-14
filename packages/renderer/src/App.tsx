@@ -347,6 +347,7 @@ export function App(): JSX.Element {
                     topLine={previewTopLine}
                     theme={settings.editor.theme}
                     basePath={tab.filePath}
+                    convertFileSrc={api.convertFileSrc}
                   />
                 </>
               )}

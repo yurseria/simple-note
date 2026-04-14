@@ -3949,6 +3949,7 @@ name = "simple-note-tauri"
 version = "0.6.5"
 dependencies = [
  "arboard",
+ "base64 0.22.1",
  "chardetng",
  "chrono",
  "encoding_rs",
