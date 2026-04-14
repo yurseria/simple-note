@@ -38,7 +38,8 @@ import {
 } from '@codemirror/search'
 
 import type { Command } from '@codemirror/view'
-import { indentUnit, syntaxHighlighting, defaultHighlightStyle, LanguageDescription } from '@codemirror/language'
+import { indentUnit, syntaxHighlighting, defaultHighlightStyle, HighlightStyle, LanguageDescription } from '@codemirror/language'
+import { tags } from '@lezer/highlight'
 import type { LanguageMode } from '../../types/tab'
 import type { Settings } from '../../types/settings'
 import { wrapSelection, toggleLinePrefix, insertCodeBlock, insertLink } from './markdownActions'
@@ -250,6 +251,11 @@ export function buildBaseExtensions(
     EditorState.allowMultipleSelections.of(true),
     highlightActiveLine(),
     highlightActiveLineGutter(),
+    // contentSeparator (---) 색상을 defaultHighlightStyle보다 먼저 등록
+    // defaultHighlightStyle은 fallback: true이므로, non-fallback이 우선함
+    syntaxHighlighting(HighlightStyle.define([
+      { tag: tags.contentSeparator, color: '#66B5FF' },
+    ])),
     syntaxHighlighting(defaultHighlightStyle),
     // 선택 텍스트의 나머지 미선택 항목 하이라이트 (멀티커서 중에도 유지)
     remainingMatchPlugin,
