@@ -1,3 +1,19 @@
+# v0.10.0 (Tue Apr 14 2026)
+
+#### 🚀 Enhancement
+
+- feat: render local images in markdown preview via asset protocol ([@yurseria](https://github.com/yurseria))
+
+#### 🐛 Bug Fix
+
+- fix: override contentSeparator (---) color in editor ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.9.0 (Mon Apr 13 2026)
 
 #### 🚀 Enhancement
