@@ -213,3 +213,32 @@ jobs:
             artifacts/tauri-windows/*
             artifacts/tauri-linux/*
             artifacts/latest.json
+
+  # ── 4. main 브랜치에 버전 동기화 ──────────────────────────
+  sync-main-version:
+    needs: [release, upload-assets]
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GH_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sync version to main
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          ARG_0="$TAG" node scripts/sync-version.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No version changes to commit"
+          else
+            git commit -m "chore: sync version to ${TAG} [skip ci]"
+            git push origin main
+          fi
