@@ -348,6 +348,7 @@ export function App(): JSX.Element {
                     theme={settings.editor.theme}
                     basePath={tab.filePath}
                     convertFileSrc={api.convertFileSrc}
+                    onOpenFile={openFile}
                   />
                 </>
               )}

@@ -93,6 +93,7 @@ interface Props {
   theme?: string;
   basePath?: string | null;
   convertFileSrc?: (filePath: string) => string;
+  onOpenFile?: (filePath: string) => void;
 }
 
 export function MarkdownPreview({
@@ -101,6 +102,7 @@ export function MarkdownPreview({
   theme = "dark",
   basePath,
   convertFileSrc,
+  onOpenFile,
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
@@ -183,6 +185,31 @@ export function MarkdownPreview({
     const elementTop = closest.getBoundingClientRect().top;
     el.scrollTop += elementTop - containerTop;
   }, [topLine]);
+
+  useEffect(() => {
+    if (!onOpenFile) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as Element).closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+      // 외부 URL, 앵커, 특수 스킴은 무시
+      if (/^(https?|mailto|data|asset):\/\//i.test(href) || href.startsWith("#")) return;
+      // .md / .markdown / .txt 파일만 처리
+      if (!/\.(md|markdown|txt)$/i.test(href.split("?")[0].split("#")[0])) return;
+
+      e.preventDefault();
+      const dir = basePath ? basePath.replace(/[\\/][^\\/]+$/, "") : "";
+      const absPath = href.startsWith("/") ? href : `${dir}/${href}`;
+      onOpenFile(absPath);
+    };
+
+    el.addEventListener("click", handleClick);
+    return () => el.removeEventListener("click", handleClick);
+  }, [onOpenFile, basePath]);
 
   useEffect(() => {
     const el = containerRef.current;
