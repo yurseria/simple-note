@@ -6,6 +6,7 @@ import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import type { NoteAPI, ReadResult } from '@simple-note/renderer/types/api'
 import type { Settings } from '@simple-note/renderer/types/settings'
+import { buildTauriCloudAPI } from './cloudApi'
 
 const TEXT_EXTENSIONS = [
   'txt', 'md', 'markdown', 'log', 'csv', 'json', 'jsonc',
@@ -115,6 +116,11 @@ export const tauriApi: NoteAPI = {
   },
 
   convertFileSrc: (filePath: string) => `asset://localhost${filePath.startsWith('/') ? '' : '/'}${filePath}`,
+
+  cloud: (() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
+    return clientId ? buildTauriCloudAPI(clientId) : undefined
+  })(),
 
   platform: 'darwin',
   runtime: 'tauri',

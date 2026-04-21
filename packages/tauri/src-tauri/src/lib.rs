@@ -1,3 +1,4 @@
+mod cloud;
 mod commands;
 mod menu;
 
@@ -29,6 +30,7 @@ pub fn run() {
             commands::toggle_fullscreen,
             commands::confirm_close_dialog,
             commands::save_clipboard_image,
+            cloud::cloud_start_auth_server,
         ])
         .setup(|app| {
             // Initialize settings store

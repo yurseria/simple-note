@@ -72,6 +72,21 @@
   }
 }
 
+.titlebar__cloud-area {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+  -webkit-app-region: no-drag;
+  z-index: 2;
+}
+
+/* Mac: cloud area sits left of the traffic lights area */
+.titlebar.mac .titlebar__cloud-area {
+  position: absolute;
+  right: 8px;
+}
+
 .titlebar__window-controls {
   margin-left: auto;
   display: flex;

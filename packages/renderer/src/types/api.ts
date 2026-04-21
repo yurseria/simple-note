@@ -45,9 +45,36 @@ export interface NoteAPI {
     close(): void
   }
 
+  cloud?: CloudAPI
+
   /** 로컬 파일 경로를 웹뷰에서 접근 가능한 URL로 변환 */
   convertFileSrc?(filePath: string): string
 
   platform: string
   runtime: 'electron' | 'tauri'
+}
+
+export interface CloudUser {
+  id: string
+  name: string
+  email: string
+  picture?: string
+}
+
+export interface DriveFile {
+  id: string
+  name: string
+  mimeType: string
+  modifiedTime: string
+}
+
+export interface CloudAPI {
+  isAvailable(): boolean
+  getUser(): CloudUser | null
+  login(): Promise<CloudUser>
+  logout(): Promise<void>
+  listFiles(): Promise<DriveFile[]>
+  readFile(fileId: string): Promise<string>
+  saveFile(name: string, content: string, fileId?: string): Promise<string>
+  deleteFile(fileId: string): Promise<void>
 }
