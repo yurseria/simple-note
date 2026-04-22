@@ -1,0 +1,174 @@
+/* Design Ref: DESIGN.md §2 색상, §5.4 Files List Mobile/Desktop */
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.file-list__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 14px;
+  padding: 9px 13px;
+  background: var(--tab-active-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.file-list__search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.file-list__search input::placeholder {
+  color: var(--text-muted);
+}
+
+.file-list__search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.file-list__items {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 4px;
+}
+
+.file-list__empty {
+  padding: 24px 18px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}
+
+.file-list__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color 0.12s;
+}
+
+.file-list__row:hover,
+.file-list__row:focus-visible {
+  background: var(--tab-hover-bg);
+  outline: none;
+}
+
+.file-list__ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.file-list__ic.is-md {
+  background: color-mix(in srgb, var(--accent-color) 15%, transparent);
+  color: var(--accent-color);
+}
+
+.file-list__ic.is-txt {
+  background: var(--tab-active-bg);
+  color: var(--text-muted);
+}
+
+.file-list__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-list__name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-list__meta {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.file-list__time {
+  letter-spacing: 0.1px;
+}
+
+.file-list__chevron {
+  color: var(--text-muted);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.file-list__footer-notice {
+  padding: 11px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.file-list__row.is-conflict {
+  background: color-mix(in srgb, #e06c75 6%, transparent);
+}
+
+.file-list__row.is-blocked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.file-list__row.is-blocked:hover {
+  background: transparent;
+}
+
+.file-list__lock {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.file-list__sync {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+}
+
+.file-list__sync.is-pending {
+  color: #e5c07b;
+  background: color-mix(in srgb, #e5c07b 15%, transparent);
+}
+
+.file-list__sync.is-syncing {
+  color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-color) 15%, transparent);
+}
+
+.file-list__sync.is-conflict {
+  color: #e06c75;
+  background: color-mix(in srgb, #e06c75 15%, transparent);
+}

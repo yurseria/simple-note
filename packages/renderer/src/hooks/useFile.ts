@@ -1,13 +1,32 @@
 import { api } from '../platform'
 import { useTabStore, inferLanguage } from '../store/tabStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { deriveFilenameFromContent } from '../domain/filename'
 
-function defaultFileName(tab: { fileName: string; language: string }): string {
-  // 이미 확장자가 있으면 그대로
+/**
+ * saveAs 다이얼로그의 기본 파일명 도출.
+ * - 사용자가 명시적으로 rename 했으면(tabNameOverridden) 그 이름 사용
+ * - 마크다운 이면 본문 H1 자동 추출 (FR-29, 데스크탑/PWA 공통 정책)
+ * - H1 이 없거나 plaintext 이면 "Untitled-N" 탭 이름 + 확장자
+ */
+function defaultFileName(tab: {
+  fileName: string
+  language: string
+  content: string
+  tabNameOverridden?: boolean
+}): string {
+  // 이미 확장자가 있으면 그대로 사용
   if (tab.fileName.includes('.')) return tab.fileName
-  // 언어 모드에 따라 확장자 추가
-  if (tab.language === 'markdown') return `${tab.fileName}.md`
-  return `${tab.fileName}.txt`
+
+  // 사용자가 명시적으로 rename 한 탭은 H1 자동 변환을 건너뜀
+  if (!tab.tabNameOverridden && tab.language === 'markdown') {
+    const derived = deriveFilenameFromContent(tab.content, 'md')
+    // '제목 없음.md' 가 되는 경우는 fallback — 탭 이름을 우선 시도
+    if (!derived.startsWith('제목 없음')) return derived
+  }
+
+  const ext = tab.language === 'markdown' ? 'md' : 'txt'
+  return `${tab.fileName}.${ext}`
 }
 
 export function useFile() {

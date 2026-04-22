@@ -86,3 +86,27 @@
   background: var(--tab-hover-bg);
   color: var(--text-primary);
 }
+
+/* Cloud/Local 위치 뱃지 — Design Ref: FR-09 */
+.infobar__location {
+  font-size: inherit;
+  line-height: 1;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
+
+.infobar--hud .infobar__location.is-cloud {
+  color: #cfe5fb;
+}
+
+.infobar--hud .infobar__location.is-local {
+  opacity: 0.8;
+}
+
+.infobar--status .infobar__location.is-cloud {
+  color: var(--accent-color);
+}
+
+.infobar--status .infobar__location.is-local {
+  color: var(--text-muted);
+}

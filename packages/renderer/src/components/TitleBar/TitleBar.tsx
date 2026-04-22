@@ -1,7 +1,9 @@
+// Design Ref: §5.1 — TitleBar (CloudButton은 TabBar 우측으로 이동)
+// Plan SC: FR-03 (CloudButton 탭바 우측으로 위치 이동)
+
 import { useState } from 'react'
 import { api } from '../../platform'
 import { CustomMenu } from './CustomMenu'
-import { CloudButton } from './CloudButton'
 import './TitleBar.css'
 
 interface Props {
@@ -32,10 +34,6 @@ export function TitleBar({ title, isEdited }: Props): JSX.Element {
           {title}
           {isEdited && <span className="titlebar__edited" {...dragProps}> — Edited</span>}
         </span>
-      </div>
-
-      <div className="titlebar__cloud-area">
-        <CloudButton />
       </div>
 
       {!isMac && api.runtime === 'tauri' && (

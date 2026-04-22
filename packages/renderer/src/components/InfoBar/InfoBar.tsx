@@ -11,6 +11,10 @@ interface Props {
   language: LanguageMode;
   countWhitespaces: boolean;
   onLanguageClick: () => void;
+  /** 현재 탭이 클라우드 파일이면 true. Design Ref: FR-09 */
+  isCloud?: boolean;
+  /** 로컬 파일 경로 또는 클라우드 ID 중 하나라도 있으면 true (저장된 상태) */
+  hasLocation?: boolean;
 }
 
 function computeStats(content: string, countWhitespaces: boolean) {
@@ -48,6 +52,24 @@ function LanguageBadge({
   );
 }
 
+function LocationBadge({
+  isCloud,
+  hasLocation,
+}: {
+  isCloud: boolean;
+  hasLocation: boolean;
+}) {
+  if (!hasLocation) return null;
+  return (
+    <span
+      className={`infobar__location ${isCloud ? "is-cloud" : "is-local"}`}
+      title={isCloud ? "클라우드 파일" : "로컬 파일"}
+    >
+      {isCloud ? "☁ 클라우드" : "로컬"}
+    </span>
+  );
+}
+
 export function InfoBar({
   content,
   encoding,
@@ -55,6 +77,8 @@ export function InfoBar({
   language,
   countWhitespaces,
   onLanguageClick,
+  isCloud = false,
+  hasLocation = false,
 }: Props): JSX.Element | null {
   const t = useTranslation();
   const { chars, words, lines } = useMemo(
@@ -82,6 +106,12 @@ export function InfoBar({
           onClick={onLanguageClick}
           tip={t.infobar.langToggleTip}
         />
+        {hasLocation && (
+          <>
+            <span className="infobar__sep">·</span>
+            <LocationBadge isCloud={isCloud} hasLocation={hasLocation} />
+          </>
+        )}
       </div>
     );
   }
@@ -97,6 +127,12 @@ export function InfoBar({
         />
         <span className="infobar__sep">·</span>
         <span className="infobar__encoding">{encoding}</span>
+        {hasLocation && (
+          <>
+            <span className="infobar__sep">·</span>
+            <LocationBadge isCloud={isCloud} hasLocation={hasLocation} />
+          </>
+        )}
       </div>
     </div>
   );

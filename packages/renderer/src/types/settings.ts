@@ -22,4 +22,9 @@ export interface Settings {
     keepIndentOnNewLines: boolean;
   };
   language?: UILanguage;
+  /** UI 상태 (사이드바 등) — cloud-sync-ui FR-08 */
+  ui?: {
+    sidebarOpen: boolean;
+    sidebarWidth: number;
+  };
 }

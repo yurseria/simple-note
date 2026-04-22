@@ -6,7 +6,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./platform": "./src/platform.ts",
-    "./types/*": "./src/types/*"
+    "./types/*": "./src/types/*",
+    "./domain/*": "./src/domain/*",
+    "./store/*": "./src/store/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.0.0",
@@ -23,6 +29,7 @@
     "marked": "^17.0.4",
     "marked-highlight": "^2.2.3",
     "mermaid": "^11.13.0",
+    "node-diff3": "^3.2.0",
     "zustand": "^5.0.11"
   },
   "peerDependencies": {
@@ -33,6 +40,7 @@
     "@types/dompurify": "^3.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.9"
   }
 }

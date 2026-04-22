@@ -81,3 +81,33 @@
   font-family: inherit;
   outline: none;
 }
+
+/* Rename 검증 실패 시 인라인 에러 — FR-31 */
+.tab__rename-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 1;
+  min-width: 40px;
+  max-width: 160px;
+}
+
+.tab__rename-input--error {
+  border-color: #e06c75;
+}
+
+.tab__rename-error {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  padding: 4px 8px;
+  background: #e06c75;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}

@@ -1,6 +1,18 @@
+// Design Ref: §2.2 Flow C, §4.1 Drive API, §7.4 Drive 저장 구조
+// Plan SC: FR-26 (폴더 부트스트랩), FR-27 (flat 구조), FR-28 (drive.file scope),
+//          FR-29 (H1 자동 파일명), FR-30 (중복 자동 suffix), FR-31 (rename 중복 차단)
+
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
+import { ask } from '@tauri-apps/plugin-dialog'
 import type { CloudAPI, CloudUser, DriveFile } from '@simple-note/renderer/types/api'
+import {
+  DRIVE_MIME,
+  OAUTH_SCOPES,
+  SIMPLE_NOTE_FOLDER_NAME,
+} from '@simple-note/renderer/domain/driveFolder'
+import { planFolderMigration } from '@simple-note/renderer/domain/migration'
+import { resolveUniqueName } from '@simple-note/renderer/domain/filename'
 
 function base64urlEncode(buf: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buf)))
@@ -14,16 +26,7 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
   return base64urlEncode(digest)
 }
 
-const SCOPES = [
-  'https://www.googleapis.com/auth/drive.file',
-  'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/userinfo.email',
-].join(' ')
-
-const DRIVE_FOLDER_NAME = 'Note App'
-const MIME_MD = 'text/markdown'
-const MIME_TXT = 'text/plain'
-const MIME_FOLDER = 'application/vnd.google-apps.folder'
+const SCOPES = OAUTH_SCOPES.join(' ')
 
 interface TokenData {
   access_token: string
@@ -33,6 +36,8 @@ interface TokenData {
 
 let _tokenData: TokenData | null = null
 let _user: CloudUser | null = null
+/** 해결된 'Simple Note' 폴더 ID 캐시 */
+let _folderId: string | null = null
 
 const TOKEN_KEY = 'cloud.token'
 const USER_KEY = 'cloud.user'
@@ -101,22 +106,119 @@ async function getValidToken(clientId: string): Promise<string> {
   return _tokenData.access_token
 }
 
-async function ensureDriveFolder(token: string): Promise<string> {
+// ── Drive helpers ──────────────────────────────────────────────────
+
+async function driveFindFolderByName(
+  token: string,
+  name: string
+): Promise<{ id: string } | null> {
+  const q = `name='${escapeQ(name)}' and mimeType='${DRIVE_MIME.FOLDER}' and 'root' in parents and trashed=false`
   const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FOLDER_NAME}' and mimeType='${MIME_FOLDER}' and trashed=false&fields=files(id)`,
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
   const data = await res.json()
-  if (data.files?.length > 0) return data.files[0].id
-
-  const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: MIME_FOLDER }),
-  })
-  const folder = await createRes.json()
-  return folder.id
+  const files = data.files as Array<{ id: string }> | undefined
+  return files && files.length > 0 ? { id: files[0].id } : null
 }
+
+async function driveCreateFolder(token: string, name: string): Promise<string> {
+  const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, mimeType: DRIVE_MIME.FOLDER }),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data?.error?.message ?? 'Failed to create folder')
+  }
+  return data.id
+}
+
+async function driveRenameFile(
+  token: string,
+  fileId: string,
+  newName: string
+): Promise<void> {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: newName }),
+    }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data?.error?.message ?? 'Failed to rename')
+  }
+}
+
+async function driveListNamesInFolder(
+  token: string,
+  folderId: string
+): Promise<string[]> {
+  const q = `'${folderId}' in parents and trashed=false`
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(name)`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  const data = await res.json()
+  const files = (data.files as Array<{ name: string }> | undefined) ?? []
+  return files.map((f) => f.name)
+}
+
+function escapeQ(s: string): string {
+  return s.replace(/'/g, "\\'")
+}
+
+/**
+ * 'Simple Note' 폴더를 확보한다.
+ * - 이미 있으면 그대로 사용
+ * - 레거시 'Note App' 폴더만 있으면 사용자에게 확인 후 rename (계획: FR-26)
+ * - 아무것도 없으면 새로 생성
+ *
+ * 결과는 모듈 내 `_folderId` 에 캐시된다.
+ */
+async function ensureDriveFolder(token: string): Promise<string> {
+  if (_folderId) return _folderId
+
+  const plan = await planFolderMigration({
+    findFolderByName: async (name) => driveFindFolderByName(token, name),
+  })
+
+  if (plan.action === 'rename' && plan.legacyFolderId && plan.legacyName) {
+    const confirmed = await ask(
+      `기존 '${plan.legacyName}' 폴더를 '${SIMPLE_NOTE_FOLDER_NAME}' 로 변경합니다.\n` +
+        '폴더 내부 파일은 그대로 유지됩니다. 진행할까요?',
+      { title: '폴더 마이그레이션', kind: 'info', okLabel: '변경', cancelLabel: '취소' }
+    )
+    if (confirmed) {
+      await driveRenameFile(token, plan.legacyFolderId, SIMPLE_NOTE_FOLDER_NAME)
+      _folderId = plan.legacyFolderId
+      return _folderId
+    }
+    // 사용자가 거부: fallthrough 해서 새 폴더 생성
+  }
+
+  // 재확인: 동시에 다른 기기에서 만들었을 수도 있음
+  const existing = await driveFindFolderByName(token, SIMPLE_NOTE_FOLDER_NAME)
+  if (existing) {
+    _folderId = existing.id
+    return _folderId
+  }
+
+  _folderId = await driveCreateFolder(token, SIMPLE_NOTE_FOLDER_NAME)
+  return _folderId
+}
+
+// ── Public API ─────────────────────────────────────────────────────
 
 export function buildTauriCloudAPI(clientId: string): CloudAPI {
   loadPersisted()
@@ -184,6 +286,12 @@ export function buildTauriCloudAPI(clientId: string): CloudAPI {
       _user = { id: userInfo.sub, name: userInfo.name, email: userInfo.email, picture: userInfo.picture }
 
       await persist()
+
+      // 로그인 직후 폴더 부트스트랩 (마이그레이션 포함). 실패해도 로그인 자체는 성공으로 처리.
+      ensureDriveFolder(_tokenData.access_token).catch((err) => {
+        console.warn('[cloud] ensureDriveFolder failed:', err)
+      })
+
       return _user
     },
 
@@ -193,18 +301,20 @@ export function buildTauriCloudAPI(clientId: string): CloudAPI {
       }
       _tokenData = null
       _user = null
+      _folderId = null
       await persist()
     },
 
     listFiles: async () => {
       const token = await getValidToken(clientId)
       const folderId = await ensureDriveFolder(token)
+      const q = `'${folderId}' in parents and trashed=false`
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and trashed=false&fields=files(id,name,mimeType,modifiedTime)&orderBy=modifiedTime desc`,
+        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime)&orderBy=modifiedTime desc`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       const data = await res.json()
-      return data.files ?? []
+      return (data.files as DriveFile[]) ?? []
     },
 
     readFile: async (fileId: string) => {
@@ -217,30 +327,50 @@ export function buildTauriCloudAPI(clientId: string): CloudAPI {
 
     saveFile: async (name: string, content: string, fileId?: string) => {
       const token = await getValidToken(clientId)
-      const mimeType = name.endsWith('.md') || name.endsWith('.markdown') ? MIME_MD : MIME_TXT
+      const mimeType =
+        name.endsWith('.md') || name.endsWith('.markdown')
+          ? DRIVE_MIME.MD
+          : DRIVE_MIME.TXT
 
       if (fileId) {
-        const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': mimeType },
-          body: content,
-        })
+        // 기존 파일 업데이트 — 이름은 건드리지 않음 (rename은 별도 API 호출)
+        const res = await fetch(
+          `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+          {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': mimeType },
+            body: content,
+          }
+        )
         const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data?.error?.message ?? 'Failed to update file')
+        }
         return data.id
       }
 
+      // 신규 업로드: 폴더 내 동일 이름이 있으면 FR-30 에 따라 자동 suffix
       const folderId = await ensureDriveFolder(token)
-      const metadata = { name, mimeType, parents: [folderId] }
+      const existingNames = await driveListNamesInFolder(token, folderId)
+      const { name: finalName } = resolveUniqueName(name, existingNames)
+
+      const metadata = { name: finalName, mimeType, parents: [folderId] }
       const form = new FormData()
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
       form.append('file', new Blob([content], { type: mimeType }))
 
-      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      })
+      const res = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        }
+      )
       const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data?.error?.message ?? 'Failed to upload file')
+      }
       return data.id
     },
 

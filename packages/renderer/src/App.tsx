@@ -1,11 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
+import { CloudSidebar } from "./components/TitleBar/CloudSidebar";
 import { Editor } from "./components/Editor/Editor";
 import { MarkdownPreview } from "./components/Editor/markdownPreview/MarkdownPreview";
 import { InfoBar } from "./components/InfoBar/InfoBar";
 import { useTabStore, inferLanguage } from "./store/tabStore";
 import { useSettingsStore } from "./store/settingsStore";
+import { useUIStore } from "./store/uiStore";
 import { useFile } from "./hooks/useFile";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useExternalFileSync } from "./hooks/useExternalFileSync";
@@ -27,6 +29,9 @@ export function App(): JSX.Element {
     togglePreview,
   } = useTabStore();
   const { settings, loaded, load } = useSettingsStore();
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const sidebarWidth = useUIStore((s) => s.sidebarWidth);
+  const hydrateUI = useUIStore((s) => s.hydrateFromSettings);
   const { openFile, saveFile, saveFileAs, maybeCloseTab } = useFile();
   const t = useTranslation();
 
@@ -47,6 +52,26 @@ export function App(): JSX.Element {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Settings 가 로드되면 uiStore 를 초기값으로 hydrate (FR-08)
+  useEffect(() => {
+    if (loaded && settings.ui) {
+      hydrateUI(settings.ui);
+    }
+  }, [loaded, settings.ui, hydrateUI]);
+
+  // uiStore 변경 시 settings 반영 (debounced write)
+  useEffect(() => {
+    if (!loaded) return;
+    const prev = settings.ui;
+    if (prev?.sidebarOpen === sidebarOpen && prev?.sidebarWidth === sidebarWidth) {
+      return;
+    }
+    const handle = setTimeout(() => {
+      useSettingsStore.getState().updateUI({ sidebarOpen, sidebarWidth });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [loaded, sidebarOpen, sidebarWidth, settings.ui]);
 
   const handleNewTab = useCallback(() => addTab(), [addTab]);
 
@@ -307,9 +332,11 @@ export function App(): JSX.Element {
         </div>
       )}
 
-      <div
-        className={`app__body${settings.editor.infoBarMode === "hud" ? " app__body--hud" : ""}`}
-      >
+      <div className="app__main">
+        {!zenMode && <CloudSidebar />}
+        <div
+          className={`app__body${settings.editor.infoBarMode === "hud" ? " app__body--hud" : ""}`}
+        >
         {tab && (
           <>
             <div
@@ -361,10 +388,13 @@ export function App(): JSX.Element {
                 language={tab.language}
                 countWhitespaces={settings.editor.countWhitespacesInChars}
                 onLanguageClick={handleLanguageToggle}
+                isCloud={Boolean(tab.cloudFileId)}
+                hasLocation={Boolean(tab.filePath) || Boolean(tab.cloudFileId)}
               />
             )}
           </>
         )}
+        </div>
       </div>
 
       {gotoLineVisible && (

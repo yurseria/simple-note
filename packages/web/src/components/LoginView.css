@@ -1,0 +1,56 @@
+/* Design Ref: §5.1 Screen Layout — 모바일 LoginView */
+
+.login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px;
+  min-height: 100dvh;
+}
+
+.login__icon {
+  width: 76px;
+  height: 76px;
+  background: var(--tab-active-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: var(--accent-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.login__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.login__sub {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 52px;
+}
+
+.login__google {
+  width: 100%;
+  max-width: 360px;
+}
+
+.login__error {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, #e06c75 15%, transparent);
+  color: #e06c75;
+  border-radius: 8px;
+  font-size: 13px;
+  max-width: 360px;
+  text-align: center;
+}

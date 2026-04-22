@@ -1,0 +1,23 @@
+.sync-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.sync-badge--pending {
+  color: #e5c07b;
+  background: color-mix(in srgb, #e5c07b 15%, transparent);
+}
+
+.sync-badge--syncing {
+  color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-color) 15%, transparent);
+}
+
+.sync-badge--conflict {
+  color: #e06c75;
+  background: color-mix(in srgb, #e06c75 15%, transparent);
+}

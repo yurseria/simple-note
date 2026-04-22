@@ -1,0 +1,192 @@
+/* Design Ref: DESIGN.md §4 CloudSidebar, §5 스크롤바 규칙 준수 */
+
+.cloud-sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  min-width: 0;
+  background-color: var(--gutter-bg);
+  border-right: 1px solid var(--border-color);
+  transition: width 0.2s ease;
+  overflow: hidden;
+}
+
+.cloud-sidebar--closed {
+  width: 0 !important;
+  border-right-width: 0;
+}
+
+.cloud-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.cloud-sidebar__header-title {
+  font-weight: 600;
+}
+
+.cloud-sidebar__add {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--accent-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.cloud-sidebar__add:hover {
+  background-color: var(--close-btn-hover);
+}
+
+.cloud-sidebar__search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 10px;
+  padding: 6px 10px;
+  background-color: var(--editor-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.cloud-sidebar__search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.cloud-sidebar__search input::placeholder {
+  color: var(--text-muted);
+}
+
+/* input[type=search] clear button 제거 */
+.cloud-sidebar__search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.cloud-sidebar__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  /* DESIGN.md §5 스크롤바 */
+  scrollbar-width: thin;
+}
+
+.cloud-sidebar__list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cloud-sidebar__list::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 2px;
+}
+
+.cloud-sidebar__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cloud-sidebar__sec {
+  padding: 8px 14px 4px;
+  font-size: 10px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cloud-sidebar__sec--second {
+  margin-top: 4px;
+}
+
+.cloud-sidebar__empty {
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.cloud-sidebar__file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 8px);
+  margin: 0 4px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.12s;
+}
+
+.cloud-sidebar__file:hover:not(:disabled) {
+  background-color: var(--tab-hover-bg);
+}
+
+.cloud-sidebar__file:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.cloud-sidebar__file.is-active {
+  background-color: var(--tab-active-bg);
+  color: var(--text-primary);
+}
+
+.cloud-sidebar__file-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.cloud-sidebar__file-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cloud-sidebar__file-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* CSS var 는 color-mix 를 쓰지 않고 DESIGN.md accent 그대로 활용 */
+.cloud-sidebar__file-badge--cloud {
+  color: var(--accent-color);
+  padding: 1px;
+}
+
+.cloud-sidebar__file-badge--local {
+  background-color: var(--tab-active-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}

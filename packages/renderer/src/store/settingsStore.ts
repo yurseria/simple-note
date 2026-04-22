@@ -8,6 +8,7 @@ interface SettingsStore {
   load: () => Promise<void>
   update: <K extends keyof Settings>(key: K, value: Settings[K]) => void
   updateEditor: (patch: Partial<Settings['editor']>) => void
+  updateUI: (patch: Partial<NonNullable<Settings['ui']>>) => void
   addRecentFile: (filePath: string) => void
 }
 
@@ -26,6 +27,10 @@ const defaultSettings: Settings = {
     tabSize: 4,
     countWhitespacesInChars: false,
     keepIndentOnNewLines: true
+  },
+  ui: {
+    sidebarOpen: true,
+    sidebarWidth: 220
   }
 }
 
@@ -54,6 +59,13 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const next = { ...get().settings.editor, ...patch }
     set((s) => ({ settings: { ...s.settings, editor: next } }))
     api.settings.set('editor', next)
+  },
+
+  updateUI: (patch) => {
+    const prev = get().settings.ui ?? { sidebarOpen: true, sidebarWidth: 220 }
+    const next = { ...prev, ...patch }
+    set((s) => ({ settings: { ...s.settings, ui: next } }))
+    api.settings.set('ui', next)
   },
 
   addRecentFile: (filePath) => {
