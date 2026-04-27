@@ -66,6 +66,7 @@ export interface DriveFile {
   name: string
   mimeType: string
   modifiedTime: string
+  parentId?: string
 }
 
 export interface CloudAPI {

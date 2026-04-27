@@ -3,19 +3,23 @@
 
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
-import DOMPurify from 'dompurify'
-import { marked } from 'marked'
+import { useEffect, useRef, useState } from 'react'
+import type { EditorView } from '@codemirror/view'
+import { EditorSelection } from '@codemirror/state'
+import { MarkdownPreview } from '@simple-note/renderer/components/MarkdownPreview'
+import { CodeMirrorEditor } from './CodeMirrorEditor'
+import { MarkdownToolbar } from './MarkdownToolbar'
+import { useT } from '../lib/i18n'
 import './Editor.css'
 
-export type EditorView = 'preview' | 'edit' | 'split'
+export type EditorViewMode = 'preview' | 'edit' | 'split'
 
 interface Props {
   name: string
   content: string
   onChange: (next: string) => void
   isMarkdown: boolean
-  view: EditorView
+  view: EditorViewMode
   readOnly?: boolean
 }
 
@@ -27,47 +31,143 @@ export function Editor({
   view,
   readOnly,
 }: Props): JSX.Element {
-  const taRef = useRef<HTMLTextAreaElement | null>(null)
+  const t = useT()
+  const cmViewRef = useRef<EditorView | null>(null)
+  const taRef = useRef<HTMLTextAreaElement>(null)
+  const panesRef = useRef<HTMLDivElement>(null)
+  const [splitRatio, setSplitRatio] = useState(0.5)
+  const [theme, setTheme] = useState<string>('light')
+  const [isMobile, setIsMobile] = useState(false)
 
-  const html = useMemo(() => {
-    if (!isMarkdown) return null
-    const raw = marked.parse(content, { async: false }) as string
-    return DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } })
-  }, [content, isMarkdown])
-
-  // edit 탭으로 전환되면 textarea focus (모바일 UX)
   useEffect(() => {
-    if (view === 'edit' && taRef.current) {
-      taRef.current.focus()
+    setTheme(document.documentElement.dataset.theme ?? 'light')
+    const observer = new MutationObserver(() => {
+      setTheme(document.documentElement.dataset.theme ?? 'light')
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (view === 'edit' && cmViewRef.current) {
+      cmViewRef.current.focus()
     }
   }, [view])
+
+  function handleDividerMouseDown(e: React.MouseEvent<HTMLDivElement>): void {
+    e.preventDefault()
+    const panes = panesRef.current
+    if (!panes) return
+    function onMove(ev: MouseEvent): void {
+      const rect = panes!.getBoundingClientRect()
+      setSplitRatio(Math.min(0.8, Math.max(0.2, (ev.clientX - rect.left) / rect.width)))
+    }
+    function onUp(): void {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
+
+  function applyToolbarOp(fn: (value: string, s: number, e: number) => [string, number, number]): void {
+    // Desktop: CodeMirror
+    if (cmViewRef.current) {
+      const cmView = cmViewRef.current
+      const { state } = cmView
+      const { from, to } = state.selection.main
+      const value = state.doc.toString()
+      const [newVal, newFrom, newTo] = fn(value, from, to)
+      cmView.dispatch({
+        ...(newVal !== value && { changes: { from: 0, to: value.length, insert: newVal } }),
+        selection: EditorSelection.range(newFrom, newTo),
+        scrollIntoView: true,
+      })
+      cmView.focus()
+      return
+    }
+    // Mobile: textarea
+    const ta = taRef.current
+    if (!ta) return
+    const s = ta.selectionStart ?? 0
+    const e = ta.selectionEnd ?? 0
+    const [newVal, newFrom, newTo] = fn(ta.value, s, e)
+    onChange(newVal)
+    requestAnimationFrame(() => {
+      ta.focus()
+      ta.setSelectionRange(newFrom, newTo)
+    })
+  }
 
   const showEdit = view === 'edit' || view === 'split'
   const showPreview = view === 'preview' || view === 'split'
 
   return (
-    <div className={`editor editor--${view}`}>
-      {showEdit && (
-        <textarea
-          ref={taRef}
-          className="editor__ta"
-          value={content}
-          onChange={(e) => onChange(e.target.value)}
-          readOnly={readOnly}
-          placeholder={isMarkdown ? '# 제목을 입력하세요\n\n내용...' : ''}
-          spellCheck={false}
-          aria-label={name}
-        />
+    <div className="editor">
+      {isMarkdown && showEdit && (
+        <MarkdownToolbar onApply={applyToolbarOp} />
       )}
-      {showPreview && (
-        <div className="editor__preview">
-          {isMarkdown ? (
-            <div
-              className="editor__md"
-              dangerouslySetInnerHTML={{ __html: html ?? '' }}
+      {view === 'split' ? (
+        <div className="editor__panes editor__panes--split" ref={panesRef}>
+          <div className="cm-host" style={{ width: `${splitRatio * 100}%`, flexShrink: 0 }}>
+            <CodeMirrorEditor
+              content={content}
+              onChange={onChange}
+              isMarkdown={isMarkdown}
+              readOnly={readOnly}
+              theme={theme}
+              editorRef={cmViewRef}
             />
-          ) : (
-            <pre className="editor__plain">{content}</pre>
+          </div>
+          <div className="editor__divider" onMouseDown={handleDividerMouseDown} />
+          <MarkdownPreview content={content} theme={theme} assetProtocol={false} />
+        </div>
+      ) : (
+        <div className="editor__panes">
+          {showEdit && (
+            isMobile ? (
+              <textarea
+                ref={taRef}
+                className="editor__ta"
+                value={content}
+                onChange={(e) => onChange(e.target.value)}
+                spellCheck={false}
+                autoCorrect="off"
+                autoCapitalize="sentences"
+                autoComplete="off"
+                readOnly={readOnly}
+              />
+            ) : (
+              <CodeMirrorEditor
+                content={content}
+                onChange={onChange}
+                isMarkdown={isMarkdown}
+                readOnly={readOnly}
+                theme={theme}
+                editorRef={cmViewRef}
+              />
+            )
+          )}
+          {showPreview && (
+            isMarkdown ? (
+              <MarkdownPreview content={content} theme={theme} assetProtocol={false} />
+            ) : (
+              <div className="editor__preview">
+                <pre className="editor__plain">{content}</pre>
+              </div>
+            )
           )}
         </div>
       )}

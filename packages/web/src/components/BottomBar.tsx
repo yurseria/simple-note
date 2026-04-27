@@ -3,10 +3,9 @@
 
 'use client'
 
+import { Download } from 'lucide-react'
+import { useT } from '../lib/i18n'
 import './BottomBar.css'
-
-const ICON_DOWNLOAD =
-  'M13 10h5l-6 6-6-6h5V3h2v7zm-9 9h16v2H4v-2z'
 
 interface Props {
   statusText: string
@@ -15,6 +14,8 @@ interface Props {
   onSave: () => void
   onDownload: () => void
   saveDisabled?: boolean
+  content: string
+  isMarkdown: boolean
 }
 
 export function BottomBar({
@@ -24,26 +25,33 @@ export function BottomBar({
   onSave,
   onDownload,
   saveDisabled,
+  content,
+  isMarkdown,
 }: Props): JSX.Element {
+  const t = useT()
+  const chars = content.length
+  const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length
+  const lines = content === '' ? 0 : content.split('\n').length
+  const stats = [t.hudChar(chars), t.hudWord(words), t.hudLine(lines)].join(' · ')
   return (
     <div className="bottom-bar">
-      <div className="bottom-bar__info">{statusText}</div>
+      <div className="bottom-bar__stats">{stats}</div>
+      <div className="bottom-bar__info">
+        <span>{isMarkdown ? 'Markdown' : t.plainText}</span>
+        <span className="bottom-bar__sep">·</span>
+        <span>UTF-8</span>
+        <span className="bottom-bar__sep">·</span>
+        <span>{statusText}</span>
+      </div>
       <div className="bottom-bar__actions">
         <button
           type="button"
           className="sn-icon-btn bottom-bar__dl"
           onClick={onDownload}
-          title="다운로드"
-          aria-label="다운로드"
+          title={t.download}
+          aria-label={t.download}
         >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            fill="currentColor"
-          >
-            <path d={ICON_DOWNLOAD} />
-          </svg>
+          <Download size={18} />
         </button>
         <button
           type="button"
@@ -51,7 +59,7 @@ export function BottomBar({
           onClick={onSave}
           disabled={saveDisabled || saving || !isDirty}
         >
-          {saving ? '저장 중...' : '저장'}
+          {saving ? t.saving : t.save}
         </button>
       </div>
     </div>

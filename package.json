@@ -18,10 +18,14 @@
     "package": "node scripts/choose-target.mjs package",
     "package:electron": "npm run build:electron && npm run --workspace=@simple-note/electron package",
     "package:tauri": "npm run --workspace=@simple-note/tauri package",
+    "dev:web": "npm run --workspace=@simple-note/web dev",
     "clean": "npm run --workspace=@simple-note/tauri clean"
   },
   "packageManager": "npm@11.5.1",
   "devDependencies": {
     "turbo": "^2.0.0"
+  },
+  "dependencies": {
+    "@remixicon/react": "^4.9.0"
   }
 }

@@ -1,9 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#282c34"/>
-  <g transform="translate(128,104) scale(12)" fill="none" stroke="#61afef" stroke-width="2" stroke-linecap="round">
-    <rect x="1" y="1" width="22" height="24" rx="2.5"/>
-    <line x1="5" y1="7" x2="19" y2="7"/>
-    <line x1="5" y1="12" x2="19" y2="12"/>
-    <line x1="5" y1="17" x2="14" y2="17"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#232840"/>
+      <stop offset="100%" stop-color="#181c2d"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="102" fill="url(#bg)"/>
+  <g transform="translate(64, 64) scale(0.75)">
+    <!-- Paper shadow -->
+    <rect x="110" y="80" width="283" height="352" rx="27" fill="rgba(0,0,0,0.28)"/>
+    <!-- Paper -->
+    <rect x="101" y="72" width="283" height="352" rx="27" fill="#f0ebe0"/>
+    <!-- Dog-ear corner fold -->
+    <path d="M326 72 L384 130 L326 130 Z" fill="#ddd5c5"/>
+    <!-- Text lines -->
+    <rect x="142" y="168" width="192" height="21" rx="10" fill="#bcb4a4"/>
+    <rect x="142" y="211" width="192" height="21" rx="10" fill="#bcb4a4"/>
+    <rect x="142" y="254" width="192" height="21" rx="10" fill="#bcb4a4"/>
+    <rect x="142" y="297" width="139" height="21" rx="10" fill="#bcb4a4"/>
+    <!-- Golden pen: translate(235,421) rotate(45) -->
+    <g transform="translate(235,421) rotate(45)">
+      <!-- Pen body -->
+      <rect x="-19" y="-320" width="37" height="320" rx="8" fill="#c4880c"/>
+      <!-- Highlight strip -->
+      <rect x="-8" y="-315" width="13" height="304" rx="5" fill="#f0b020" opacity="0.45"/>
+      <!-- Cap / ferrule -->
+      <rect x="-19" y="-320" width="37" height="40" rx="8" fill="#926010"/>
+      <!-- Grip band -->
+      <rect x="-19" y="-21" width="37" height="16" rx="3" fill="#a07018"/>
+      <!-- Tip section -->
+      <rect x="-13" y="-5" width="26" height="27" fill="#b08018"/>
+      <!-- Nib -->
+      <polygon points="-13,22 13,22 0,53" fill="#d4a020"/>
+      <!-- Ink point -->
+      <circle cx="0" cy="51" r="5" fill="#1a1510"/>
+    </g>
   </g>
 </svg>

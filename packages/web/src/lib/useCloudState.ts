@@ -5,6 +5,17 @@ import { create } from 'zustand'
 import type { DriveFile } from '@simple-note/renderer/types/api'
 import type { StoredUser } from './token'
 
+function getInitialFiles(): DriveFile[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = sessionStorage.getItem('sn_files_cache')
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as { files: DriveFile[]; ts: number }
+    if (Date.now() - parsed.ts > 5 * 60 * 1000) return []
+    return parsed.files
+  } catch { return [] }
+}
+
 interface CloudState {
   user: StoredUser | null
   files: DriveFile[]
@@ -25,10 +36,10 @@ interface CloudState {
 
 export const useCloudState = create<CloudState>((set) => ({
   user: null,
-  files: [],
+  files: getInitialFiles(),
   loading: false,
   error: null,
-  online: typeof navigator === 'undefined' ? true : navigator.onLine,
+  online: true,
   setUser: (user) => set({ user }),
   setFiles: (files) => set({ files }),
   setLoading: (loading) => set({ loading }),

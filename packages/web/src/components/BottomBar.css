@@ -1,22 +1,38 @@
 .bottom-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
+  padding: 4px 16px;
+  min-height: 36px;
   border-top: 1px solid var(--border-color);
   background: var(--editor-bg);
   flex-shrink: 0;
-  gap: 12px;
+  gap: 0;
+}
+
+.bottom-bar__stats {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .bottom-bar__info {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
   flex: 1;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.bottom-bar__sep {
+  opacity: 0.4;
 }
 
 .bottom-bar__actions {
@@ -46,4 +62,14 @@
 .bottom-bar__save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .bottom-bar__stats {
+    display: none;
+  }
+
+  .bottom-bar {
+    padding: 4px 10px;
+  }
 }

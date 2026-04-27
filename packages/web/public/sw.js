@@ -3,12 +3,13 @@
 // Strategy: app shell (offline page, manifest, icons) precache + network-first for nav/HTML.
 // Static Next.js assets are cached on-demand (stale-while-revalidate).
 
-const CACHE_VERSION = 'sn-v1'
+const CACHE_VERSION = 'sn-v3'
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 
 const APP_SHELL_URLS = [
   '/',
+  '/files',
   '/manifest.json',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg',
@@ -80,11 +81,13 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached
-        return fetch(req).then((res) => {
-          const clone = res.clone()
-          caches.open(RUNTIME_CACHE).then((c) => c.put(req, clone))
-          return res
-        })
+        return fetch(req)
+          .then((res) => {
+            const clone = res.clone()
+            caches.open(RUNTIME_CACHE).then((c) => c.put(req, clone))
+            return res
+          })
+          .catch(() => new Response('', { status: 503 }))
       })
     )
     return

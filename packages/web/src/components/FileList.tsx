@@ -3,58 +3,53 @@
 
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  RiMarkdownLine,
+  RiFileTextLine,
+  RiSearchLine,
+  RiArrowRightSLine,
+  RiLockLine,
+  RiFolderLine,
+  RiFolderOpenLine,
+  RiDeleteBinLine,
+} from '@remixicon/react'
 import type { DriveFile } from '@simple-note/renderer/types/api'
+import type { DriveFolder } from '../lib/cloudApi'
 import type { SyncStatus } from '../lib/offlineCache'
+import { useT, relativeTime } from '../lib/i18n'
 import { SyncStatusBadge } from './SyncStatusBadge'
 import './FileList.css'
 
-const ICON_FILE_TEXT =
-  'M21 8v12.993A1 1 0 0 1 20.007 22H3.993A.993.993 0 0 1 3 21.008V2.992C3 2.444 3.445 2 3.993 2H14v7h7zm-2 0h-5V3H5v16h14V8zM8 12h8v2H8v-2zm0 4h8v2H8v-2zm0-8h3v2H8V8z'
-const ICON_FILE =
-  'M21 8v12.993A1 1 0 0 1 20.007 22H3.993A.993.993 0 0 1 3 21.008V2.992C3 2.444 3.445 2 3.993 2H14v7h7zm-2 0h-5V3H5v16h14V8z'
-const ICON_SEARCH =
-  'M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.867-3.133-7-7-7-3.867 0-7 3.133-7 7 0 3.867 3.133 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z'
-const ICON_CHEVRON =
-  'M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'
-const ICON_LOCK =
-  'M6 8V7a6 6 0 1 1 12 0v1h3v14H3V8h3zm2 0h8V7a4 4 0 1 0-8 0v1zm3 7v3h2v-3h-2z'
+const FOLDER_MIME = 'application/vnd.google-apps.folder'
 
 function isMd(name: string): boolean {
   const l = name.toLowerCase()
   return l.endsWith('.md') || l.endsWith('.markdown')
 }
 
-function relativeTime(iso: string): string {
-  const t = new Date(iso).getTime()
-  if (Number.isNaN(t)) return ''
-  const diff = Date.now() - t
-  const m = Math.floor(diff / 60_000)
-  if (m < 1) return '방금 전'
-  if (m < 60) return `${m}분 전`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}시간 전`
-  const d = Math.floor(h / 24)
-  if (d < 7) return `${d}일 전`
-  return new Date(iso).toLocaleDateString('ko-KR')
-}
-
 function isConflictName(name: string): boolean {
   return /\.conflict(?:-\d+)?\.(md|markdown|txt)$/i.test(name)
+}
+
+interface CtxMenu {
+  file: DriveFile
+  x: number
+  y: number
 }
 
 interface Props {
   files: DriveFile[]
   loading?: boolean
   emptyMessage?: string
-  /** 오프라인 상태에서 열람 가능한 파일 ID 집합 */
   cachedIds?: Set<string>
   online?: boolean
-  /** 오프라인 + 미캐시 파일 클릭 시 호출 */
   onBlockedClick?: (file: DriveFile) => void
-  /** 파일별 sync 상태 */
   syncStatuses?: Record<string, SyncStatus | undefined>
+  onDelete?: (file: DriveFile) => void
+  onMoveToFolder?: (file: DriveFile, folder: DriveFolder) => void
+  loadFolders?: () => Promise<DriveFolder[]>
 }
 
 export function FileList({
@@ -65,39 +60,205 @@ export function FileList({
   online = true,
   onBlockedClick,
   syncStatuses,
+  onDelete,
+  onMoveToFolder,
+  loadFolders,
 }: Props): JSX.Element {
+  const t = useT()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const q = query.trim().toLowerCase()
-  const filtered = useMemo(
-    () => (q ? files.filter((f) => f.name.toLowerCase().includes(q)) : files),
+
+  const driveFolders = useMemo(() => files.filter((f) => f.mimeType === FOLDER_MIME), [files])
+  const rootFiles = useMemo(
+    () => files.filter((f) => f.mimeType !== FOLDER_MIME && !f.parentId),
+    [files]
+  )
+  const subfilesByFolder = useMemo(() => {
+    const map: Record<string, DriveFile[]> = {}
+    files
+      .filter((f) => f.mimeType !== FOLDER_MIME && !!f.parentId)
+      .forEach((f) => {
+        const pid = f.parentId!
+        if (!map[pid]) map[pid] = []
+        map[pid].push(f)
+      })
+    return map
+  }, [files])
+
+  // 검색 시: 폴더 구조 무시하고 파일만 flat으로 표시
+  const searchResults = useMemo(
+    () =>
+      q
+        ? files.filter((f) => f.mimeType !== FOLDER_MIME && f.name.toLowerCase().includes(q))
+        : [],
     [files, q]
   )
 
-  function isBlocked(id: string): boolean {
-    if (online) return false
-    if (!cachedIds) return true
-    return !cachedIds.has(id)
+  const isEmpty = !loading && driveFolders.length === 0 && rootFiles.length === 0
+  const isSearchEmpty = q !== '' && searchResults.length === 0
+
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [ctx, setCtx] = useState<CtxMenu | null>(null)
+  const [folderPicker, setFolderPicker] = useState<DriveFile | null>(null)
+  const [folderPickerList, setFolderPickerList] = useState<DriveFolder[] | null>(null)
+  const [foldersLoading, setFoldersLoading] = useState(false)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressFired = useRef(false)
+
+  const showActions = Boolean(onDelete || (onMoveToFolder && loadFolders))
+
+  function toggleFolder(id: string): void {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
-  function handleClick(e: React.MouseEvent, file: DriveFile) {
-    if (isBlocked(file.id)) {
+  function clearLongPress(): void {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  function handleTouchStart(e: React.TouchEvent, file: DriveFile): void {
+    const touch = e.touches[0]
+    const x = touch.clientX
+    const y = touch.clientY
+    longPressFired.current = false
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null
+      longPressFired.current = true
+      setCtx({ file, x, y })
+    }, 500)
+  }
+
+  function handleTouchEnd(e: React.TouchEvent): void {
+    const fired = longPressFired.current
+    clearLongPress()
+    longPressFired.current = false
+    if (fired) {
       e.preventDefault()
+    }
+  }
+
+  function handleContextMenu(e: React.MouseEvent, file: DriveFile): void {
+    e.preventDefault()
+    setCtx({ file, x: e.clientX, y: e.clientY })
+  }
+
+  function menuStyle(x: number, y: number): React.CSSProperties {
+    const menuW = 192
+    const menuH = 130
+    return {
+      left: Math.max(8, Math.min(x, window.innerWidth - menuW - 8)),
+      top: Math.max(8, Math.min(y, window.innerHeight - menuH - 8)),
+    }
+  }
+
+  async function handleMoveClick(): Promise<void> {
+    if (!ctx || !loadFolders) return
+    const file = ctx.file
+    setCtx(null)
+    setFolderPicker(file)
+    setFolderPickerList(null)
+    setFoldersLoading(true)
+    try {
+      setFolderPickerList(await loadFolders())
+    } finally {
+      setFoldersLoading(false)
+    }
+  }
+
+  function handleDeleteClick(): void {
+    if (!ctx) return
+    const file = ctx.file
+    setCtx(null)
+    onDelete?.(file)
+  }
+
+  function handleFolderSelect(folder: DriveFolder): void {
+    if (!folderPicker) return
+    onMoveToFolder?.(folderPicker, folder)
+    setFolderPicker(null)
+    setFolderPickerList(null)
+  }
+
+  useEffect(() => {
+    if (!ctx) return
+    const handler = (): void => setCtx(null)
+    window.addEventListener('scroll', handler, { passive: true, capture: true })
+    return () => window.removeEventListener('scroll', handler, { capture: true })
+  }, [ctx])
+
+  function isBlocked(id: string): boolean {
+    if (online) return false
+    return !(cachedIds?.has(id) ?? false)
+  }
+
+  function handleClick(e: React.MouseEvent, file: DriveFile): void {
+    e.preventDefault()
+    if (isBlocked(file.id)) {
       onBlockedClick?.(file)
       return
     }
     router.push(`/editor/${file.id}`)
   }
 
+  function renderFileRow(f: DriveFile, indented = false): JSX.Element {
+    const blocked = isBlocked(f.id)
+    const conflict = isConflictName(f.name)
+    const sync = syncStatuses?.[f.id]
+    return (
+      <a
+        key={f.id}
+        href={`/editor/${f.id}`}
+        onClick={(e) => handleClick(e, f)}
+        onContextMenu={showActions ? (e) => handleContextMenu(e, f) : undefined}
+        onTouchStart={showActions ? (e) => handleTouchStart(e, f) : undefined}
+        onTouchEnd={showActions ? handleTouchEnd : undefined}
+        onTouchMove={showActions ? clearLongPress : undefined}
+        className={
+          'file-list__row' +
+          (indented ? ' file-list__row--indented' : '') +
+          (conflict ? ' is-conflict' : '') +
+          (blocked ? ' is-blocked' : '')
+        }
+        aria-disabled={blocked || undefined}
+      >
+        <div className={`file-list__ic ${isMd(f.name) ? 'is-md' : 'is-txt'}`} aria-hidden>
+          {isMd(f.name) ? <RiMarkdownLine size={18} /> : <RiFileTextLine size={18} />}
+        </div>
+        <div className="file-list__info">
+          <div className="file-list__name">{f.name}</div>
+          <div className="file-list__meta">
+            <span className="sn-badge sn-badge--cloud">{t.cloudBadge}</span>
+            {conflict && (
+              <span className="sn-badge sn-badge--conflict">{t.conflictBadge}</span>
+            )}
+            <SyncStatusBadge status={sync} />
+            <span className="file-list__time">{relativeTime(f.modifiedTime, t)}</span>
+          </div>
+        </div>
+        {blocked ? (
+          <RiLockLine size={16} className="file-list__lock" aria-label={t.offlineBlocked} />
+        ) : (
+          <RiArrowRightSLine size={14} className="file-list__chevron" aria-hidden />
+        )}
+      </a>
+    )
+  }
+
   return (
     <div className="file-list">
       <div className="file-list__search">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-          <path d={ICON_SEARCH} />
-        </svg>
+        <RiSearchLine size={14} />
         <input
           type="search"
-          placeholder="검색"
+          placeholder={t.search}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           spellCheck={false}
@@ -105,87 +266,102 @@ export function FileList({
       </div>
 
       <div className="file-list__items">
-        {loading && filtered.length === 0 && (
-          <div className="file-list__empty">로딩 중...</div>
+        {loading && files.length === 0 && (
+          <div className="file-list__empty">{t.loading}</div>
         )}
-        {!loading && filtered.length === 0 && (
-          <div className="file-list__empty">
-            {q ? '검색 결과 없음' : (emptyMessage ?? '파일 없음')}
-          </div>
+        {isEmpty && !q && (
+          <div className="file-list__empty">{emptyMessage ?? t.empty}</div>
         )}
-        {filtered.map((f) => {
-          const blocked = isBlocked(f.id)
-          const conflict = isConflictName(f.name)
-          const sync = syncStatuses?.[f.id]
-          return (
-            <a
-              key={f.id}
-              href={`/editor/${f.id}`}
-              onClick={(e) => handleClick(e, f)}
-              className={
-                'file-list__row' +
-                (conflict ? ' is-conflict' : '') +
-                (blocked ? ' is-blocked' : '')
-              }
-              aria-disabled={blocked || undefined}
-            >
-              <div
-                className={`file-list__ic ${isMd(f.name) ? 'is-md' : 'is-txt'}`}
-                aria-hidden
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="currentColor"
-                >
-                  <path d={isMd(f.name) ? ICON_FILE_TEXT : ICON_FILE} />
-                </svg>
-              </div>
-              <div className="file-list__info">
-                <div className="file-list__name">{f.name}</div>
-                <div className="file-list__meta">
-                  <span className="sn-badge sn-badge--cloud">클라우드</span>
-                  {conflict && (
-                    <span className="sn-badge sn-badge--conflict">⚠️ 충돌</span>
-                  )}
-                  <SyncStatusBadge status={sync} />
-                  <span className="file-list__time">
-                    {relativeTime(f.modifiedTime)}
-                  </span>
+        {isSearchEmpty && (
+          <div className="file-list__empty">{t.noResults}</div>
+        )}
+
+        {q ? (
+          searchResults.map((f) => renderFileRow(f))
+        ) : (
+          <>
+            {driveFolders.map((folder) => {
+              const isExpanded = expandedFolders.has(folder.id)
+              const subfiles = subfilesByFolder[folder.id] ?? []
+              return (
+                <div key={folder.id}>
+                  <button
+                    type="button"
+                    className="file-list__folder-row"
+                    onClick={() => toggleFolder(folder.id)}
+                  >
+                    <div className="file-list__ic file-list__ic--folder" aria-hidden>
+                      {isExpanded ? <RiFolderOpenLine size={18} /> : <RiFolderLine size={18} />}
+                    </div>
+                    <div className="file-list__info">
+                      <div className="file-list__name">{folder.name}</div>
+                    </div>
+                    <RiArrowRightSLine
+                      size={14}
+                      className={`file-list__chevron${isExpanded ? ' is-expanded' : ''}`}
+                      aria-hidden
+                    />
+                  </button>
+                  {isExpanded && subfiles.map((f) => renderFileRow(f, true))}
                 </div>
-              </div>
-              {blocked ? (
-                <svg
-                  className="file-list__lock"
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  aria-label="오프라인 — 열 수 없음"
-                >
-                  <path d={ICON_LOCK} />
-                </svg>
-              ) : (
-                <svg
-                  className="file-list__chevron"
-                  viewBox="0 0 24 24"
-                  width="14"
-                  height="14"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d={ICON_CHEVRON} />
-                </svg>
-              )}
-            </a>
-          )
-        })}
+              )
+            })}
+            {rootFiles.map((f) => renderFileRow(f))}
+          </>
+        )}
       </div>
 
       <div className="file-list__footer-notice">
-        로컬 파일은 데스크탑 앱에서만 지원됩니다
+        {t.localOnly.split('\n').map((line, i) => (
+          <span key={i}>{line}{i === 0 ? <br /> : null}</span>
+        ))}
       </div>
+
+      {/* 컨텍스트 메뉴 */}
+      {ctx && (
+        <>
+          <div className="file-list__ctx-overlay" onClick={() => setCtx(null)} />
+          <div className="file-list__ctx-menu" style={menuStyle(ctx.x, ctx.y)}>
+            {onMoveToFolder && loadFolders && (
+              <button type="button" className="file-list__ctx-item" onClick={() => void handleMoveClick()}>
+                <RiFolderLine size={16} />
+                폴더로 이동
+              </button>
+            )}
+            {onDelete && onMoveToFolder && loadFolders && <div className="file-list__ctx-sep" />}
+            {onDelete && (
+              <button type="button" className="file-list__ctx-item is-danger" onClick={handleDeleteClick}>
+                <RiDeleteBinLine size={16} />
+                삭제
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* 폴더 이동 피커 */}
+      {folderPicker && (
+        <div className="file-list__modal-overlay" onClick={() => setFolderPicker(null)}>
+          <div className="file-list__modal" onClick={(e) => e.stopPropagation()}>
+            <div className="file-list__modal-header">
+              <span className="file-list__modal-title">폴더로 이동</span>
+              <button type="button" className="file-list__modal-close" onClick={() => setFolderPicker(null)}>×</button>
+            </div>
+            <div className="file-list__modal-list">
+              {foldersLoading && <div className="file-list__modal-loading">폴더 불러오는 중…</div>}
+              {!foldersLoading && folderPickerList?.length === 0 && (
+                <div className="file-list__modal-empty">폴더가 없습니다</div>
+              )}
+              {folderPickerList?.map((folder) => (
+                <button key={folder.id} type="button" className="file-list__modal-item" onClick={() => handleFolderSelect(folder)}>
+                  <RiFolderLine size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                  {folder.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -15,6 +15,8 @@ interface Props {
   isCloud?: boolean;
   /** 로컬 파일 경로 또는 클라우드 ID 중 하나라도 있으면 true (저장된 상태) */
   hasLocation?: boolean;
+  /** 번역 언어 오버라이드 — settingsStore 대신 이 값 사용 */
+  lang?: 'ko' | 'en';
 }
 
 function computeStats(content: string, countWhitespaces: boolean) {
@@ -79,8 +81,9 @@ export function InfoBar({
   onLanguageClick,
   isCloud = false,
   hasLocation = false,
+  lang,
 }: Props): JSX.Element | null {
-  const t = useTranslation();
+  const t = useTranslation(lang);
   const { chars, words, lines } = useMemo(
     () => computeStats(content, countWhitespaces),
     [content, countWhitespaces],

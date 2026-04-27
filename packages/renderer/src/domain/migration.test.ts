@@ -8,7 +8,7 @@ describe('planFolderMigration', () => {
       name === 'Simple Note' ? { id: 'sn-id' } : null
     )
     const plan = await planFolderMigration({ findFolderByName })
-    expect(plan).toEqual({ action: 'none', targetName: 'Simple Note' })
+    expect(plan).toEqual({ action: 'none', currentFolderId: 'sn-id', targetName: 'Simple Note' })
     // Simple Note 존재 시 레거시 조회는 하지 않아야 함 (최적화)
     expect(findFolderByName).toHaveBeenCalledTimes(1)
   })
@@ -42,6 +42,7 @@ describe('planFolderMigration', () => {
     })
     const plan = await planFolderMigration({ findFolderByName })
     expect(plan.action).toBe('none')
+    expect(plan.currentFolderId).toBe('new-id')
     expect(plan.targetName).toBe('Simple Note')
   })
 })

@@ -5,17 +5,19 @@
 
 import { useCloudState } from '../lib/useCloudState'
 import { useNetworkStatus } from '../lib/useNetworkStatus'
+import { useT } from '../lib/i18n'
 import './OfflineBanner.css'
 
 export function OfflineBanner(): JSX.Element | null {
   // 전역 online 상태 subscribe + 이벤트 리스너 설치
   useNetworkStatus()
+  const t = useT()
   const online = useCloudState((s) => s.online)
   if (online) return null
   return (
     <div className="offline-banner" role="status" aria-live="polite">
       <span className="offline-banner__dot" aria-hidden />
-      <span>오프라인 — 캐시된 파일만 읽을 수 있고 편집은 저장 대기열에 추가됩니다</span>
+      <span>{t.offlineBanner}</span>
     </div>
   )
 }

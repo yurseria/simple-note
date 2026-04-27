@@ -2,7 +2,14 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 100dvh;
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  /* 데스크탑에서 /files 는 사이드바가 파일 목록을 담당 → 본문 숨김 */
+  .files {
+    display: none;
+  }
 }
 
 .files__nav {
@@ -129,4 +136,21 @@
   pointer-events: none;
   max-width: calc(100% - 32px);
   text-align: center;
+}
+
+.files__new-folder {
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--tab-active-bg);
+}
+
+.files__new-folder-input {
+  width: 100%;
+  background: var(--editor-bg);
+  border: 1px solid var(--accent-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
 }

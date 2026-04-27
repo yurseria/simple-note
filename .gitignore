@@ -38,3 +38,10 @@ vite.config.ts.timestamp-*
 .zed
 .superset
 .bkit
+.vercel
+
+# One-off pages (not tracked in repo)
+packages/web/src/app/privacy/
+
+# Google Search Console verification
+packages/web/public/google*.html

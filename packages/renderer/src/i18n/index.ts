@@ -6,9 +6,9 @@ import { en } from './en'
 export type { Translations }
 export type { UILanguage } from '../types/settings'
 
-export function useTranslation(): Translations {
-  const language = useSettingsStore((s) => s.settings.language ?? 'en')
-  return language === 'ko' ? ko : en
+export function useTranslation(lang?: 'ko' | 'en'): Translations {
+  const storeLanguage = useSettingsStore((s) => s.settings.language ?? 'en')
+  return (lang ?? storeLanguage) === 'ko' ? ko : en
 }
 
 export function getTranslations(language: 'ko' | 'en'): Translations {

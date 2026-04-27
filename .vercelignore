@@ -1,0 +1,10 @@
+node_modules
+.git
+packages/tauri
+packages/renderer/node_modules
+packages/web/node_modules
+packages/web/.next
+dist
+out
+*.tsbuildinfo
+.turbo

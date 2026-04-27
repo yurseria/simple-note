@@ -7,6 +7,8 @@ export type MigrationAction = 'none' | 'rename'
 
 export interface MigrationPlan {
   action: MigrationAction
+  /** 'none' 액션이고 폴더가 이미 존재할 때 해당 폴더 ID */
+  currentFolderId?: string
   /** 'rename' 액션 대상 폴더 ID */
   legacyFolderId?: string
   /** 'rename' 액션 대상 폴더의 현재 이름 */
@@ -32,7 +34,7 @@ export async function planFolderMigration(
   // 1) 이미 Simple Note 있으면 그대로
   const current = await ctx.findFolderByName(SIMPLE_NOTE_FOLDER_NAME)
   if (current) {
-    return { action: 'none', targetName: SIMPLE_NOTE_FOLDER_NAME }
+    return { action: 'none', currentFolderId: current.id, targetName: SIMPLE_NOTE_FOLDER_NAME }
   }
 
   // 2) 레거시 이름으로 남아있는 폴더 탐색

@@ -101,10 +101,13 @@
 **레이아웃 영역 (cloud-sync-ui feature 기준):**
 
 - **좌측** (`.d-tabbar-left`): 사이드바 토글 버튼(26×26, radius 5px), 세로 divider(1px border-color)
+  - 정렬: `align-self: flex-end; height: 27px` — 탭 위 여백 제외, 탭 높이 기준 세로 중앙
 - **중앙** (`.d-tabs-scroll`): 기존 탭 목록 + 추가(+) 버튼
 - **우측** (`.d-tabbar-right`): 저장 상태(도트 6px + "저장됨" 11px muted) + 유저 아바타(22px round, accent bg)
+  - 정렬: `align-self: flex-end; height: 27px` — 탭 위 여백 제외, 탭 높이 기준 세로 중앙
   - 데스크탑 앱: 저장 상태 표시만 (Cmd/Ctrl+S 단축키)
   - 웹 브라우저: "저장" 버튼(파란 primary, 11px weight 600, padding 4×10)
+  - **아바타 클릭 → 컨텍스트 메뉴(dropdown)**: 유저 이름 + 이메일 + "로그아웃" 버튼. 로그아웃은 상태바/InfoBar에 두지 않음
 
 **탭 스펙:**
 

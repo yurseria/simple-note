@@ -7,7 +7,10 @@ import mermaid from "mermaid";
 import "./MarkdownPreview.css";
 
 // mermaid 초기화 (startOnLoad: false → useEffect에서 수동 실행)
-mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
+// SSR 환경에서는 건너뜀
+if (typeof window !== 'undefined') {
+  mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "strict" });
+}
 
 function getMermaidTheme(theme: string) {
   return theme === "light" ? "default" : "dark";
@@ -94,6 +97,8 @@ interface Props {
   basePath?: string | null;
   convertFileSrc?: (filePath: string) => string;
   onOpenFile?: (filePath: string) => void;
+  /** false 이면 상대 경로 이미지를 asset:// URL로 변환하지 않음 (웹 환경용) */
+  assetProtocol?: boolean;
 }
 
 export function MarkdownPreview({
@@ -103,13 +108,14 @@ export function MarkdownPreview({
   basePath,
   convertFileSrc,
   onOpenFile,
+  assetProtocol = true,
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
     const withLines = addSourceLines(content, raw);
     let sanitized = DOMPurify.sanitize(withLines);
-    // 상대 경로 이미지를 asset:// URL로 변환
-    if (basePath && convertFileSrc) {
+    // 상대 경로 이미지를 asset:// URL로 변환 (Tauri 전용 — 웹에서는 assetProtocol=false)
+    if (assetProtocol && basePath && convertFileSrc) {
       const dir = basePath.replace(/[\\/][^\\/]+$/, "");
       sanitized = sanitized.replace(
         /(<img\s[^>]*src=")(?!https?:\/\/|data:|asset:\/\/)([^"]+)(")/g,
@@ -121,7 +127,7 @@ export function MarkdownPreview({
       );
     }
     return sanitized;
-  }, [content, basePath, convertFileSrc]);
+  }, [content, basePath, convertFileSrc, assetProtocol]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

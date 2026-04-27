@@ -4,26 +4,34 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Plus, Moon, Sun, FolderPlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { FileList } from '../../components/FileList'
-import { OfflineBanner } from '../../components/OfflineBanner'
+import { FileList } from '../../../components/FileList'
+import { OfflineBanner } from '../../../components/OfflineBanner'
 import {
+  deleteFile,
   getCachedFileIds,
   getCurrentUser,
   isAuthenticated,
   listFiles,
+  listFolders,
+  moveFileToFolder,
+  readFile,
   signOut,
-} from '../../lib/cloudApi'
-import { drainQueue, pendingStatusMap } from '../../lib/syncQueue'
-import type { SyncStatus } from '../../lib/offlineCache'
-import { useCloudState } from '../../lib/useCloudState'
-import { useNetworkStatus } from '../../lib/useNetworkStatus'
+  createUserFolder,
+} from '../../../lib/cloudApi'
+import type { DriveFolder } from '../../../lib/cloudApi'
+import type { DriveFile } from '@simple-note/renderer/types/api'
+import { drainQueue, pendingStatusMap } from '../../../lib/syncQueue'
+import type { SyncStatus } from '../../../lib/offlineCache'
+import { useCloudState } from '../../../lib/useCloudState'
+import { useNetworkStatus } from '../../../lib/useNetworkStatus'
+import { useT } from '../../../lib/i18n'
 import './files.css'
-
-const ICON_PLUS = 'M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z'
 
 export default function FilesPage(): JSX.Element {
   const router = useRouter()
+  const t = useT()
   const { user, files, loading, error, setUser, setFiles, setLoading, setError } =
     useCloudState()
   const { online } = useNetworkStatus()
@@ -34,6 +42,22 @@ export default function FilesPage(): JSX.Element {
     Record<string, SyncStatus | undefined>
   >({})
   const drainInFlight = useRef(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>('light')
+  const [newFolderMode, setNewFolderMode] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const newFolderInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sn-theme') as 'dark' | 'light' | null
+    if (saved) setTheme(saved)
+  }, [])
+
+  function toggleTheme(): void {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    document.documentElement.dataset.theme = next
+    localStorage.setItem('sn-theme', next)
+  }
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
@@ -68,19 +92,17 @@ export default function FilesPage(): JSX.Element {
         const names = result.conflicts
           .map((c) => c.conflictFile.name)
           .join(', ')
-        showToast(
-          `충돌 ${conflicts}건 — 서버 버전을 ${names} 로 보관했습니다`
-        )
+        showToast(t.syncConflict(conflicts, names))
       } else if (synced > 0) {
-        showToast(`${synced}개 동기화 완료`)
+        showToast(t.syncDone(synced))
       } else if (failed > 0) {
-        showToast(`${failed}개 동기화 실패 — 잠시 후 다시 시도합니다`)
+        showToast(t.syncFailed(failed))
       }
       await refreshAll()
     } finally {
       drainInFlight.current = false
     }
-  }, [showToast, refreshAll])
+  }, [showToast, refreshAll, t])
 
   // 인증 가드 + 사용자/파일 로드 + 캐시 ID 조회
   useEffect(() => {
@@ -92,8 +114,9 @@ export default function FilesPage(): JSX.Element {
     if (u) setUser(u)
 
     let cancelled = false
-    setLoading(true)
     setError(null)
+    // 캐시 데이터가 없을 때만 로딩 스피너 표시
+    if (useCloudState.getState().files.length === 0) setLoading(true)
 
     Promise.all([listFiles(), getCachedFileIds(), pendingStatusMap()])
       .then(([list, ids, pend]) => {
@@ -101,6 +124,10 @@ export default function FilesPage(): JSX.Element {
         setFiles(list)
         setCachedIds(ids)
         setSyncStatuses(pend)
+        if (typeof navigator !== 'undefined' && navigator.onLine) {
+          list.slice(0, 5).forEach((f) => router.prefetch(`/editor/${f.id}`))
+          list.slice(0, 3).forEach((f) => readFile(f.id).catch(() => {}))
+        }
       })
       .catch((e: unknown) => {
         if (!cancelled) {
@@ -130,37 +157,88 @@ export default function FilesPage(): JSX.Element {
 
   function handleNew() {
     if (!online) {
-      showToast('새 문서는 온라인에서만 만들 수 있습니다')
+      showToast(t.newDocOnlineOnly)
       return
     }
     router.push('/editor/new')
   }
 
+  function handleNewFolderClick() {
+    setNewFolderMode(true)
+    setNewFolderName('')
+    setTimeout(() => newFolderInputRef.current?.focus(), 50)
+  }
+
+  async function handleCreateFolder() {
+    const name = newFolderName.trim()
+    setNewFolderMode(false)
+    setNewFolderName('')
+    if (!name) return
+    try {
+      const folder = await createUserFolder(name)
+      useCloudState.getState().upsertFile(folder)
+    } catch {
+      showToast('폴더 생성 실패')
+    }
+  }
+
   const handleBlockedClick = useCallback(() => {
-    showToast('온라인 연결이 필요합니다')
+    showToast(t.onlineRequired)
+  }, [showToast, t])
+
+  const handleDelete = useCallback(async (file: DriveFile) => {
+    if (!window.confirm(`"${file.name}" 파일을 삭제할까요?`)) return
+    try {
+      await deleteFile(file.id)
+      useCloudState.getState().removeFile(file.id)
+      showToast(`"${file.name}" 삭제됨`)
+    } catch {
+      showToast('삭제 실패')
+    }
+  }, [showToast])
+
+  const handleMoveToFolder = useCallback(async (file: DriveFile, folder: DriveFolder) => {
+    try {
+      await moveFileToFolder(file.id, folder.id)
+      useCloudState.getState().removeFile(file.id)
+      showToast(`"${file.name}" → ${folder.name}`)
+    } catch {
+      showToast('이동 실패')
+    }
   }, [showToast])
 
   return (
     <div className="files">
       <OfflineBanner />
       <nav className="files__nav">
-        <div className="files__title">내 문서</div>
+        <div className="files__title">{t.myDocs}</div>
         <div className="files__nav-right">
           <button
             type="button"
             className="sn-icon-btn files__nav-btn"
-            onClick={handleNew}
-            aria-label="새 문서"
-            title="새 문서"
+            onClick={toggleTheme}
+            aria-label={t.theme}
+            title={t.theme}
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="20"
-              height="20"
-              fill="currentColor"
-            >
-              <path d={ICON_PLUS} />
-            </svg>
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button
+            type="button"
+            className="sn-icon-btn files__nav-btn"
+            onClick={handleNewFolderClick}
+            aria-label={t.newFolder}
+            title={t.newFolder}
+          >
+            <FolderPlus size={18} />
+          </button>
+          <button
+            type="button"
+            className="sn-icon-btn files__nav-btn"
+            onClick={handleNew}
+            aria-label={t.newDoc}
+            title={t.newDoc}
+          >
+            <Plus size={20} />
           </button>
           <div className="files__user">
             <button
@@ -168,7 +246,7 @@ export default function FilesPage(): JSX.Element {
               className="files__avatar"
               onClick={() => setMenuOpen((v) => !v)}
               title={user?.email ?? ''}
-              aria-label="유저 메뉴"
+              aria-label={t.userMenu}
             >
               {user?.picture ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -191,7 +269,7 @@ export default function FilesPage(): JSX.Element {
                   className="files__user-logout"
                   onClick={handleLogout}
                 >
-                  로그아웃
+                  {t.logout}
                 </button>
               </div>
             )}
@@ -201,17 +279,37 @@ export default function FilesPage(): JSX.Element {
 
       {error && (
         <div className="files__error">
-          목록 로드 실패: {error}
+          {t.listLoadFailed(error)}
+        </div>
+      )}
+
+      {newFolderMode && (
+        <div className="files__new-folder">
+          <input
+            ref={newFolderInputRef}
+            className="files__new-folder-input"
+            placeholder={t.folderNamePlaceholder}
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            onBlur={() => void handleCreateFolder()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+              else if (e.key === 'Escape') { setNewFolderMode(false); setNewFolderName('') }
+            }}
+          />
         </div>
       )}
 
       <FileList
         files={files}
-        loading={loading}
+        loading={loading && files.length === 0}
         cachedIds={cachedIds}
         online={online}
         onBlockedClick={handleBlockedClick}
         syncStatuses={syncStatuses}
+        onDelete={handleDelete}
+        onMoveToFolder={handleMoveToFolder}
+        loadFolders={listFolders}
       />
 
       {toast && <div className="files__toast">{toast}</div>}

@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm run build --workspace=@simple-note/web",
+  "outputDirectory": "packages/web/.next",
+  "installCommand": "npm install",
+  "framework": "nextjs"
+}

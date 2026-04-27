@@ -29,7 +29,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
+  sidebarOpen: false,
   sidebarWidth: SIDEBAR_DEFAULT_WIDTH,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   openSidebar: () => set({ sidebarOpen: true }),

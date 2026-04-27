@@ -19,7 +19,8 @@
   padding-right: 6px;
   margin-right: 6px;
   border-right: 1px solid var(--border-color);
-  align-self: center;
+  align-self: flex-end;
+  height: 27px;
   -webkit-app-region: no-drag;
 }
 
@@ -65,7 +66,8 @@
 
 .tabbar__add {
   -webkit-app-region: no-drag;
-  align-self: center;
+  align-self: flex-end;
+  margin-bottom: 0;
   flex-shrink: 0;
   width: 26px;
   height: 26px;
@@ -96,7 +98,8 @@
   padding-left: 10px;
   margin-left: 6px;
   border-left: 1px solid var(--border-color);
-  align-self: center;
+  align-self: flex-end;
+  height: 27px;
   -webkit-app-region: no-drag;
 }
 

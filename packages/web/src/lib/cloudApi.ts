@@ -46,9 +46,79 @@ export interface DriveFileWithEtag extends DriveFile {
   etag: string
 }
 
+// ── sessionStorage 파일 목록 캐시 (TTL 5분) ───────────────────────
+const SESSION_FILES_KEY = 'sn_files_cache'
+const SESSION_FILES_TTL = 5 * 60 * 1000
+
+// ── sessionStorage 파일 내용 캐시 (TTL 3분) ──────────────────────
+const SESSION_CONTENT_PREFIX = 'sn_content_'
+const SESSION_CONTENT_TTL = 3 * 60 * 1000
+
+interface SessionContentCache {
+  content: string
+  etag: string
+  name?: string
+  ts: number
+}
+
+function loadSessionContent(fileId: string): ReadFileResult | null {
+  if (typeof sessionStorage === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(`${SESSION_CONTENT_PREFIX}${fileId}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as SessionContentCache
+    if (Date.now() - parsed.ts > SESSION_CONTENT_TTL) return null
+    return { content: parsed.content, etag: parsed.etag, name: parsed.name }
+  } catch { return null }
+}
+
+function saveSessionContent(fileId: string, result: ReadFileResult): void {
+  if (typeof sessionStorage === 'undefined') return
+  try {
+    const entry: SessionContentCache = { content: result.content, etag: result.etag, name: result.name, ts: Date.now() }
+    sessionStorage.setItem(`${SESSION_CONTENT_PREFIX}${fileId}`, JSON.stringify(entry))
+  } catch {}
+}
+
+function clearSessionContent(fileId: string): void {
+  if (typeof sessionStorage === 'undefined') return
+  try { sessionStorage.removeItem(`${SESSION_CONTENT_PREFIX}${fileId}`) } catch {}
+}
+
+interface SessionFilesCache {
+  files: DriveFileWithEtag[]
+  ts: number
+  folderId: string
+}
+
+function loadSessionFiles(folderId: string): DriveFileWithEtag[] | null {
+  if (typeof sessionStorage === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(SESSION_FILES_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as SessionFilesCache
+    if (parsed.folderId !== folderId) return null
+    if (Date.now() - parsed.ts > SESSION_FILES_TTL) return null
+    return parsed.files
+  } catch { return null }
+}
+
+function saveSessionFiles(files: DriveFileWithEtag[], folderId: string): void {
+  if (typeof sessionStorage === 'undefined') return
+  try {
+    sessionStorage.setItem(SESSION_FILES_KEY, JSON.stringify({ files, ts: Date.now(), folderId }))
+  } catch {}
+}
+
+function clearSessionFiles(): void {
+  if (typeof sessionStorage === 'undefined') return
+  try { sessionStorage.removeItem(SESSION_FILES_KEY) } catch {}
+}
+
 export interface ReadFileResult {
   content: string
   etag: string
+  name?: string
   /** 오프라인 캐시에서 로드된 경우 true */
   fromCache?: boolean
 }
@@ -58,6 +128,7 @@ export interface SaveResult {
   name: string
   renamed: boolean
   etag: string
+  parentId?: string
 }
 
 // ── env ──────────────────────────────────────────────────────────
@@ -98,6 +169,11 @@ function generateCodeVerifier(): string {
 }
 
 async function generateCodeChallenge(verifier: string): Promise<string> {
+  if (!crypto?.subtle) {
+    throw new Error(
+      'SubtleCrypto API를 사용할 수 없습니다. HTTPS 또는 localhost에서 접근해주세요.'
+    )
+  }
   const digest = await crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(verifier)
@@ -126,16 +202,12 @@ export class CloudError extends Error {
 
 async function refreshAccessToken(
   refreshToken: string,
-  clientId: string
+  _clientId: string
 ): Promise<TokenData> {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
+  const res = await fetch('/api/auth/refresh', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -227,15 +299,13 @@ export async function handleCallback(
     throw new CloudError('UNAUTHORIZED', 'PKCE verifier 가 없습니다 (재로그인 필요)')
   }
 
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+  const tokenRes = await fetch('/api/auth/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       code: codeParam,
-      client_id: getClientId(),
       redirect_uri: getRedirectUri(),
       code_verifier: verifier,
-      grant_type: 'authorization_code',
     }),
   })
   const tokenData = await tokenRes.json().catch(() => ({}))
@@ -308,17 +378,30 @@ async function driveFindFolderByName(
   token: string,
   name: string
 ): Promise<{ id: string } | null> {
-  const q = `name='${escapeQ(name)}' and mimeType='${DRIVE_MIME.FOLDER}' and 'root' in parents and trashed=false`
+  // 'root' in parents 필터는 drive.file scope에서 동작하지 않으므로 제외
+  const q = `name='${escapeQ(name)}' and mimeType='${DRIVE_MIME.FOLDER}' and trashed=false`
   const res = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
   if (!res.ok) {
-    throw new CloudError(mapStatus(res.status), '폴더 조회 실패', res.status)
+    const errBody = await res.json().catch(() => ({}))
+    const detail = errBody?.error?.message ?? errBody?.error ?? '폴더 조회 실패'
+    throw new CloudError(mapStatus(res.status), String(detail), res.status)
   }
   const data = await res.json()
   const files = data.files as Array<{ id: string }> | undefined
   return files && files.length > 0 ? { id: files[0].id } : null
+}
+
+async function driveVerifyFolder(token: string, folderId: string): Promise<boolean> {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,trashed`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) return false
+  const data = await res.json()
+  return !data.trashed
 }
 
 async function driveCreateFolder(token: string, name: string): Promise<string> {
@@ -386,6 +469,27 @@ async function driveListNamesInFolder(
   )
 }
 
+interface DriveItemRaw {
+  id: string
+  name: string
+  mimeType: string
+  modifiedTime: string
+  headRevisionId?: string
+}
+
+async function driveListFolderContents(token: string, folderId: string): Promise<DriveItemRaw[]> {
+  const q = `'${folderId}' in parents and trashed=false`
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime,headRevisionId)&orderBy=modifiedTime desc`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) {
+    throw new CloudError(mapStatus(res.status), '목록 조회 실패', res.status)
+  }
+  const data = await res.json()
+  return (data.files ?? []) as DriveItemRaw[]
+}
+
 function mapStatus(status: number): CloudError['code'] {
   if (status === 401) return 'UNAUTHORIZED'
   if (status === 404) return 'NOT_FOUND'
@@ -400,10 +504,31 @@ function mapStatus(status: number): CloudError['code'] {
  * 이미 데스크탑에서 마이그레이션했거나 처음부터 'Simple Note' 를 쓰는 케이스).
  * 필요 시 §2.2 Flow C 에 따라 추후 확인 토스트 추가 가능.
  */
-export async function ensureFolder(): Promise<string> {
-  const cached = loadFolder()
-  if (cached) return cached.folderId
 
+// 동시 다중 호출로 인한 폴더 중복 생성 방지 — 진행 중인 Promise를 공유한다
+let _ensureFolderInFlight: Promise<string> | null = null
+
+export function ensureFolder(): Promise<string> {
+  if (_ensureFolderInFlight) return _ensureFolderInFlight
+
+  _ensureFolderInFlight = _verifyAndEnsureFolder().finally(() => {
+    _ensureFolderInFlight = null
+  })
+  return _ensureFolderInFlight
+}
+
+async function _verifyAndEnsureFolder(): Promise<string> {
+  const cached = loadFolder()
+  if (cached) {
+    const token = await getValidToken()
+    const ok = await driveVerifyFolder(token, cached.folderId)
+    if (ok) return cached.folderId
+    // 캐시된 폴더가 삭제됐거나 drive.file 접근 불가 → 재생성
+  }
+  return _doEnsureFolder()
+}
+
+async function _doEnsureFolder(): Promise<string> {
   const token = await getValidToken()
   const plan = await planFolderMigration({
     findFolderByName: async (name) => driveFindFolderByName(token, name),
@@ -418,14 +543,9 @@ export async function ensureFolder(): Promise<string> {
     return plan.legacyFolderId
   }
 
-  // 재조회 (race 대비)
-  const existing = await driveFindFolderByName(token, SIMPLE_NOTE_FOLDER_NAME)
-  if (existing) {
-    saveFolder({
-      folderId: existing.id,
-      folderName: SIMPLE_NOTE_FOLDER_NAME,
-    })
-    return existing.id
+  if (plan.currentFolderId) {
+    saveFolder({ folderId: plan.currentFolderId, folderName: SIMPLE_NOTE_FOLDER_NAME })
+    return plan.currentFolderId
   }
 
   const created = await driveCreateFolder(token, SIMPLE_NOTE_FOLDER_NAME)
@@ -442,43 +562,47 @@ export async function ensureFolder(): Promise<string> {
 export async function listFiles(): Promise<DriveFileWithEtag[]> {
   const folderId = await ensureFolderOrCached()
 
-  // 오프라인 또는 네트워크 실패 → 캐시
+  // sessionStorage 캐시 히트 (TTL 5분) — 네트워크 불필요
+  const sessionHit = loadSessionFiles(folderId)
+  if (sessionHit) return sessionHit
+
+  // 오프라인 또는 네트워크 실패 → IndexedDB 캐시
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     return loadCachedList(folderId)
   }
 
   try {
     const token = await getValidToken()
-    const q = `'${folderId}' in parents and trashed=false`
-    const res = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime,headRevisionId)&orderBy=modifiedTime desc`,
-      { headers: { Authorization: `Bearer ${token}` } }
+    const rootItems = await driveListFolderContents(token, folderId)
+    const folderItems = rootItems.filter((i) => i.mimeType === DRIVE_MIME.FOLDER)
+    const rootFileItems = rootItems.filter((i) => i.mimeType !== DRIVE_MIME.FOLDER)
+
+    // Fetch all subfolder contents in parallel (1 level deep)
+    const subItemsArrays = await Promise.all(
+      folderItems.map((f) => driveListFolderContents(token, f.id).catch(() => [] as DriveItemRaw[]))
     )
-    if (!res.ok) {
-      throw new CloudError(mapStatus(res.status), '목록 조회 실패', res.status)
+
+    const result: DriveFileWithEtag[] = []
+    for (const f of folderItems) {
+      result.push({ id: f.id, name: f.name, mimeType: f.mimeType, modifiedTime: f.modifiedTime, etag: '' })
     }
-    const data = await res.json()
-    const raw = (data.files ?? []) as Array<{
-      id: string
-      name: string
-      mimeType: string
-      modifiedTime: string
-      headRevisionId?: string
-    }>
-    const files: DriveFileWithEtag[] = raw.map((f) => ({
-      id: f.id,
-      name: f.name,
-      mimeType: f.mimeType,
-      modifiedTime: f.modifiedTime,
-      etag: f.headRevisionId ?? '',
-    }))
-    // 메타 캐싱 (오프라인 복구용)
-    await saveMetadataList(files, folderId, (f) =>
+    for (const f of rootFileItems) {
+      result.push({ id: f.id, name: f.name, mimeType: f.mimeType, modifiedTime: f.modifiedTime, etag: f.headRevisionId ?? '' })
+    }
+    for (let i = 0; i < folderItems.length; i++) {
+      for (const f of subItemsArrays[i]) {
+        if (f.mimeType !== DRIVE_MIME.FOLDER) {
+          result.push({ id: f.id, name: f.name, mimeType: f.mimeType, modifiedTime: f.modifiedTime, etag: f.headRevisionId ?? '', parentId: folderItems[i].id })
+        }
+      }
+    }
+
+    saveSessionFiles(result, folderId)
+    const filesOnly = result.filter((f) => f.mimeType !== DRIVE_MIME.FOLDER)
+    await saveMetadataList(filesOnly, folderId, (f) =>
       (f as DriveFileWithEtag).etag
-    ).catch(() => {
-      /* best effort */
-    })
-    return files
+    ).catch(() => {})
+    return result
   } catch (e) {
     if (e instanceof CloudError && e.code === 'UNAUTHORIZED') throw e
     // 네트워크 실패 추정 → 캐시 폴백
@@ -517,6 +641,10 @@ async function ensureFolderOrCached(): Promise<string> {
  * 오프라인 시 캐시에서 로드.
  */
 export async function readFile(fileId: string): Promise<ReadFileResult> {
+  // sessionStorage 캐시 히트 (TTL 3분) — 네트워크 불필요
+  const sessionHit = loadSessionContent(fileId)
+  if (sessionHit) return sessionHit
+
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     const cached = await loadContent(fileId)
     if (cached) {
@@ -535,7 +663,7 @@ export async function readFile(fileId: string): Promise<ReadFileResult> {
         { headers: { Authorization: `Bearer ${token}` } }
       ),
       fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}?fields=headRevisionId`,
+        `https://www.googleapis.com/drive/v3/files/${fileId}?fields=headRevisionId,name`,
         { headers: { Authorization: `Bearer ${token}` } }
       ),
     ])
@@ -549,8 +677,11 @@ export async function readFile(fileId: string): Promise<ReadFileResult> {
     const content = await bodyRes.text()
     const meta = metaRes.ok ? await metaRes.json() : {}
     const etag = (meta?.headRevisionId as string | undefined) ?? ''
+    const name = (meta?.name as string | undefined) || undefined
+    const result: ReadFileResult = { content, etag, name }
+    saveSessionContent(fileId, result)
     await cacheSaveContent(fileId, content, etag).catch(() => {})
-    return { content, etag }
+    return result
   } catch (e) {
     if (e instanceof CloudError && e.code === 'UNAUTHORIZED') throw e
     // 네트워크 실패 → 캐시 폴백
@@ -604,7 +735,8 @@ export async function fetchMetadata(fileId: string): Promise<{
 export async function saveFile(
   name: string,
   content: string,
-  fileId?: string
+  fileId?: string,
+  parentFolderId?: string
 ): Promise<SaveResult> {
   const token = await getValidToken()
   const mimeType =
@@ -634,14 +766,16 @@ export async function saveFile(
     }
     const etag = (data.headRevisionId as string | undefined) ?? ''
     await cacheSaveContent(fileId, content, etag).catch(() => {})
+    clearSessionFiles()
+    clearSessionContent(fileId)
     return { id: data.id, name: data.name ?? name, renamed: false, etag }
   }
 
-  const folderId = await ensureFolder()
-  const existingNames = await driveListNamesInFolder(token, folderId)
+  const targetFolder = parentFolderId ?? await ensureFolder()
+  const existingNames = await driveListNamesInFolder(token, targetFolder)
   const { name: finalName, renamed } = resolveUniqueName(name, existingNames)
 
-  const metadata = { name: finalName, mimeType, parents: [folderId] }
+  const metadata = { name: finalName, mimeType, parents: [targetFolder] }
   const form = new FormData()
   form.append(
     'metadata',
@@ -667,7 +801,20 @@ export async function saveFile(
   }
   const etag = (data.headRevisionId as string | undefined) ?? ''
   await cacheSaveContent(data.id, content, etag).catch(() => {})
-  return { id: data.id, name: finalName, renamed, etag }
+  clearSessionFiles()
+  return { id: data.id, name: finalName, renamed, etag, parentId: parentFolderId }
+}
+
+/**
+ * 캐시된 파일 목록 즉시 반환 (stale-while-revalidate 용).
+ * 네트워크 불필요, 오프라인에서도 사용 가능.
+ */
+export async function getCachedFilesList(): Promise<DriveFileWithEtag[]> {
+  const folder = loadFolder()
+  if (!folder) return []
+  const sessionHit = loadSessionFiles(folder.folderId)
+  if (sessionHit) return sessionHit
+  return loadCachedList(folder.folderId).catch(() => [])
 }
 
 /**
@@ -691,6 +838,91 @@ export async function clearCacheForLogout(): Promise<void> {
   }
 }
 
+export async function createUserFolder(name: string): Promise<DriveFile> {
+  const token = await getValidToken()
+  const rootFolderId = await ensureFolder()
+  const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, mimeType: DRIVE_MIME.FOLDER, parents: [rootFolderId] }),
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new CloudError(mapStatus(res.status), data?.error?.message ?? '폴더 생성 실패', res.status)
+  }
+  clearSessionFiles()
+  return {
+    id: data.id as string,
+    name: (data.name as string) ?? name,
+    mimeType: DRIVE_MIME.FOLDER,
+    modifiedTime: new Date().toISOString(),
+  }
+}
+
+export function getRootFolderId(): string | null {
+  return loadFolder()?.folderId ?? null
+}
+
+export async function moveFile(fileId: string, newParentId: string, oldParentId?: string): Promise<void> {
+  const token = await getValidToken()
+  const effectiveOldParentId = oldParentId ?? await ensureFolder()
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${encodeURIComponent(newParentId)}&removeParents=${encodeURIComponent(effectiveOldParentId)}&fields=id`,
+    { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new CloudError(mapStatus(res.status), data?.error?.message ?? '이동 실패', res.status)
+  }
+  clearSessionFiles()
+}
+
+export async function renameFile(fileId: string, newName: string): Promise<void> {
+  const token = await getValidToken()
+  await driveRenameFile(token, fileId, newName)
+  clearSessionFiles()
+}
+
+export interface DriveFolder {
+  id: string
+  name: string
+}
+
+export async function listFolders(): Promise<DriveFolder[]> {
+  const token = await getValidToken()
+  const q = `mimeType='application/vnd.google-apps.folder' and trashed=false`
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&orderBy=name&pageSize=100`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) throw new CloudError(mapStatus(res.status), '폴더 목록 조회 실패', res.status)
+  const data = await res.json()
+  return (data.files ?? []) as DriveFolder[]
+}
+
+export async function moveFileToFolder(fileId: string, newFolderId: string): Promise<void> {
+  const token = await getValidToken()
+  const folder = loadFolder()
+  const params = new URLSearchParams({ fields: 'id', addParents: newFolderId })
+  if (folder?.folderId) params.set('removeParents', folder.folderId)
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?${params}`,
+    {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: '{}',
+    }
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new CloudError(mapStatus(res.status), data?.error?.message ?? '이동 실패', res.status)
+  }
+  clearSessionFiles()
+}
+
 export async function deleteFile(fileId: string): Promise<void> {
   const token = await getValidToken()
   const res = await fetch(
@@ -700,5 +932,7 @@ export async function deleteFile(fileId: string): Promise<void> {
   if (!res.ok && res.status !== 404) {
     throw new CloudError(mapStatus(res.status), '삭제 실패', res.status)
   }
+  clearSessionFiles()
+  clearSessionContent(fileId)
   await removeMetadata(fileId).catch(() => {})
 }

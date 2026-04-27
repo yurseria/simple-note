@@ -1,0 +1,190 @@
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--editor-bg);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.md-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Button ── */
+
+.md-toolbar__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-color);
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.1s, background 0.1s;
+  flex-shrink: 0;
+}
+
+.md-toolbar__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.md-toolbar__btn:hover {
+  opacity: 1;
+  background: var(--border-color);
+}
+
+.md-toolbar__btn:active {
+  opacity: 0.5;
+}
+
+/* ── Dropdown button with chevron ── */
+
+.md-toolbar__btn--dropdown {
+  gap: 0;
+  padding-right: 2px;
+}
+
+.md-toolbar__chevron svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.5;
+}
+
+/* ── Separator ── */
+
+.md-toolbar__sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border-color);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── Dropdown container ── */
+
+.md-toolbar__dropdown {
+  position: relative;
+}
+
+/* ── Dropdown menu ── */
+
+.md-toolbar__menu {
+  z-index: 1000;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--editor-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='dark'] .md-toolbar__menu {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.md-toolbar__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-color);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.md-toolbar__menu-item:hover {
+  background: var(--border-color);
+}
+
+.md-toolbar__menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.md-toolbar__menu-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.md-toolbar__menu-sep {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+/* ── Heading level labels ── */
+
+.md-toolbar__h {
+  font-weight: 700;
+  font-family: ui-monospace, Menlo, monospace;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.md-toolbar__h--1 { font-size: 16px; }
+.md-toolbar__h--2 { font-size: 14px; }
+.md-toolbar__h--3 { font-size: 13px; }
+.md-toolbar__h--4 { font-size: 12px; }
+.md-toolbar__h--5 { font-size: 11px; }
+
+.md-toolbar__h-label {
+  opacity: 0.6;
+}
+
+/* ── Mobile: 하단 고정, 큰 터치 타깃 ── */
+
+@media (max-width: 767px) {
+  .md-toolbar {
+    position: fixed;
+    bottom: 48px;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    padding: 2px 4px;
+  }
+
+  .md-toolbar__btn {
+    padding: 4px 4px;
+    min-width: 33px;
+    min-height: 33px;
+    border-radius: 5px;
+  }
+
+  .md-toolbar__btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .md-toolbar__chevron svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .md-toolbar__sep {
+    height: 16px;
+    margin: 0 2px;
+  }
+}

@@ -3,11 +3,11 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { handleCallback } from '../../../lib/cloudApi'
 
-export default function CallbackPage(): JSX.Element {
+function CallbackInner(): JSX.Element {
   const router = useRouter()
   const params = useSearchParams()
   const [error, setError] = useState<string | null>(null)
@@ -38,17 +38,7 @@ export default function CallbackPage(): JSX.Element {
   }, [params, router])
 
   return (
-    <main
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 32,
-        gap: 16,
-      }}
-    >
+    <>
       {error ? (
         <>
           <div
@@ -74,6 +64,26 @@ export default function CallbackPage(): JSX.Element {
           로그인 처리 중...
         </div>
       )}
+    </>
+  )
+}
+
+export default function CallbackPage(): JSX.Element {
+  return (
+    <main
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+        gap: 16,
+      }}
+    >
+      <Suspense fallback={<div style={{ color: 'var(--text-muted)', fontSize: 13 }}>로그인 처리 중...</div>}>
+        <CallbackInner />
+      </Suspense>
     </main>
   )
 }
