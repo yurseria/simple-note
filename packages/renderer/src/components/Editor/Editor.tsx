@@ -7,7 +7,6 @@ import { selectNextOccurrence, selectSelectionMatches } from "@codemirror/search
 import {
   createCompartments,
   buildBaseExtensions,
-  buildLanguageExt,
   buildLineNumbersExt,
   buildTabExt,
   buildThemeExt,
@@ -15,7 +14,6 @@ import {
   type EditorCompartments,
 } from "./extensions";
 import { FindReplace } from "./FindReplace/FindReplace";
-import { MarkdownToolbar } from "./MarkdownToolbar/MarkdownToolbar";
 import { api } from "../../platform";
 import { csvTsvToMarkdownTable } from "./markdownActions";
 import { useTranslation } from "../../i18n";
@@ -31,6 +29,8 @@ interface Props {
   settings: Settings["editor"];
   onChange: (content: string) => void;
   onTopLine?: (line: number) => void;
+  onViewReady?: (view: EditorView) => void;
+  onFocus?: () => void;
 }
 
 export function Editor({
@@ -41,6 +41,8 @@ export function Editor({
   settings,
   onChange,
   onTopLine,
+  onViewReady,
+  onFocus,
 }: Props): JSX.Element {
   const t = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,6 +55,10 @@ export function Editor({
   const filePathRef = useRef(filePath);
   filePathRef.current = filePath;
   onTopLineRef.current = onTopLine;
+  const onViewReadyRef = useRef(onViewReady);
+  onViewReadyRef.current = onViewReady;
+  const onFocusRef = useRef(onFocus);
+  onFocusRef.current = onFocus;
   // 마지막으로 에디터가 스스로 보고한 content — 외부 sync 스킵 판별용
   const lastEditorContentRef = useRef(content);
 
@@ -84,12 +90,17 @@ export function Editor({
         const line = update.state.doc.lineAt(update.state.selection.main.head).number;
         onTopLineRef.current?.(line);
       }),
+      // 포커스 이벤트 → onFocus 콜백
+      EditorView.domEventHandlers({
+        focus: () => { onFocusRef.current?.(); return false; },
+      }),
     ];
 
     const state = EditorState.create({ doc: content, extensions });
     const view = new EditorView({ state, parent: containerRef.current });
     viewRef.current = view;
     setCmView(view);
+    onViewReadyRef.current?.(view);
 
     // 동적 언어 로딩 (마크다운은 빌드시 기본 포함됨)
     if (language !== "markdown" && language !== "plaintext") {
@@ -322,11 +333,8 @@ export function Editor({
     return () => container.removeEventListener("paste", handlePaste, { capture: true });
   }, [language]);
 
-  const isMarkdown = language === "markdown";
-
   return (
     <div className="editor">
-      {isMarkdown && cmView && <MarkdownToolbar view={cmView} />}
       <div className="editor__cm" ref={containerRef}>
         {findOpen && cmView && (
           <FindReplace

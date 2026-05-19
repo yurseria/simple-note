@@ -1,0 +1,131 @@
+.wysiwyg-editor {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Milkdown root */
+.wysiwyg-editor .milkdown {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  outline: none;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  height: 100%;
+  font-family: var(--font-family, 'PretendardVariable', system-ui, sans-serif);
+  font-size: var(--editor-font-size, 14px);
+  line-height: 1.7;
+}
+
+/* Scrollbar */
+.wysiwyg-editor .milkdown::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.wysiwyg-editor .milkdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wysiwyg-editor .milkdown::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+}
+
+/* Dark theme */
+.wysiwyg-editor--dark {
+  background: var(--editor-bg, #282c34);
+  color: var(--editor-fg, #abb2bf);
+}
+.wysiwyg-editor--dark .milkdown::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #565c68);
+}
+.wysiwyg-editor--dark .milkdown:focus-within {
+  outline: none;
+}
+
+/* Light theme */
+.wysiwyg-editor--light {
+  background: var(--editor-bg, #ffffff);
+  color: var(--editor-fg, #383a42);
+}
+.wysiwyg-editor--light .milkdown::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #b0b0b0);
+}
+
+/* Typography — dark */
+.wysiwyg-editor--dark .milkdown h1,
+.wysiwyg-editor--dark .milkdown h2,
+.wysiwyg-editor--dark .milkdown h3,
+.wysiwyg-editor--dark .milkdown h4,
+.wysiwyg-editor--dark .milkdown h5,
+.wysiwyg-editor--dark .milkdown h6 { color: #e5c07b; font-weight: 600; margin: 1.2em 0 0.4em; }
+.wysiwyg-editor--dark .milkdown h1 { font-size: 1.8em; border-bottom: 1px solid #3e4451; padding-bottom: 0.2em; }
+.wysiwyg-editor--dark .milkdown h2 { font-size: 1.4em; border-bottom: 1px solid #3e4451; padding-bottom: 0.2em; }
+.wysiwyg-editor--dark .milkdown h3 { font-size: 1.2em; }
+.wysiwyg-editor--dark .milkdown code { background: #2c313a; color: #e06c75; border-radius: 3px; padding: 1px 5px; font-size: 0.9em; }
+.wysiwyg-editor--dark .milkdown pre { background: #2c313a; border-radius: 6px; padding: 12px 16px; overflow-x: auto; }
+.wysiwyg-editor--dark .milkdown pre code { background: none; padding: 0; color: inherit; }
+.wysiwyg-editor--dark .milkdown blockquote { border-left: 3px solid #61afef; margin: 0; padding-left: 16px; color: #7f848e; }
+.wysiwyg-editor--dark .milkdown a { color: #61afef; text-decoration: none; }
+.wysiwyg-editor--dark .milkdown a:hover { text-decoration: underline; }
+.wysiwyg-editor--dark .milkdown strong { color: #d19a66; font-weight: 600; }
+.wysiwyg-editor--dark .milkdown em { color: #98c379; font-style: italic; }
+.wysiwyg-editor--dark .milkdown del { color: #7f848e; }
+.wysiwyg-editor--dark .milkdown hr { border: none; border-top: 1px solid #3e4451; margin: 1.5em 0; }
+.wysiwyg-editor--dark .milkdown ul,
+.wysiwyg-editor--dark .milkdown ol { padding-left: 1.5em; }
+.wysiwyg-editor--dark .milkdown li { margin: 0.2em 0; }
+.wysiwyg-editor--dark .milkdown img { max-width: 100%; border-radius: 4px; }
+/* Table */
+.wysiwyg-editor--dark .milkdown table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+.wysiwyg-editor--dark .milkdown th,
+.wysiwyg-editor--dark .milkdown td { border: 1px solid #3e4451; padding: 6px 12px; }
+.wysiwyg-editor--dark .milkdown th { background: #2c313a; font-weight: 600; }
+.wysiwyg-editor--dark .milkdown tr:nth-child(even) { background: #2c313a40; }
+/* Task list */
+.wysiwyg-editor--dark .milkdown input[type="checkbox"] { margin-right: 6px; }
+/* Selection */
+.wysiwyg-editor--dark .milkdown .ProseMirror-selectednode { outline: 2px solid #61afef; }
+.wysiwyg-editor--dark .milkdown .ProseMirror ::selection { background: #264f7840; }
+
+/* Typography — light */
+.wysiwyg-editor--light .milkdown h1,
+.wysiwyg-editor--light .milkdown h2,
+.wysiwyg-editor--light .milkdown h3,
+.wysiwyg-editor--light .milkdown h4,
+.wysiwyg-editor--light .milkdown h5,
+.wysiwyg-editor--light .milkdown h6 { color: #0184bb; font-weight: 600; margin: 1.2em 0 0.4em; }
+.wysiwyg-editor--light .milkdown h1 { font-size: 1.8em; border-bottom: 1px solid #e0e0e0; padding-bottom: 0.2em; }
+.wysiwyg-editor--light .milkdown h2 { font-size: 1.4em; border-bottom: 1px solid #e0e0e0; padding-bottom: 0.2em; }
+.wysiwyg-editor--light .milkdown h3 { font-size: 1.2em; }
+.wysiwyg-editor--light .milkdown code { background: #f0f0f0; color: #e45649; border-radius: 3px; padding: 1px 5px; font-size: 0.9em; }
+.wysiwyg-editor--light .milkdown pre { background: #f5f5f5; border-radius: 6px; padding: 12px 16px; overflow-x: auto; }
+.wysiwyg-editor--light .milkdown pre code { background: none; padding: 0; color: inherit; }
+.wysiwyg-editor--light .milkdown blockquote { border-left: 3px solid #0184bb; margin: 0; padding-left: 16px; color: #696c77; }
+.wysiwyg-editor--light .milkdown a { color: #0184bb; text-decoration: none; }
+.wysiwyg-editor--light .milkdown a:hover { text-decoration: underline; }
+.wysiwyg-editor--light .milkdown strong { color: #986801; font-weight: 600; }
+.wysiwyg-editor--light .milkdown em { color: #50a14f; font-style: italic; }
+.wysiwyg-editor--light .milkdown del { color: #696c77; }
+.wysiwyg-editor--light .milkdown hr { border: none; border-top: 1px solid #e0e0e0; margin: 1.5em 0; }
+.wysiwyg-editor--light .milkdown ul,
+.wysiwyg-editor--light .milkdown ol { padding-left: 1.5em; }
+.wysiwyg-editor--light .milkdown li { margin: 0.2em 0; }
+.wysiwyg-editor--light .milkdown img { max-width: 100%; border-radius: 4px; }
+.wysiwyg-editor--light .milkdown table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+.wysiwyg-editor--light .milkdown th,
+.wysiwyg-editor--light .milkdown td { border: 1px solid #e0e0e0; padding: 6px 12px; }
+.wysiwyg-editor--light .milkdown th { background: #f5f5f5; font-weight: 600; }
+.wysiwyg-editor--light .milkdown tr:nth-child(even) { background: #f9f9f9; }
+.wysiwyg-editor--light .milkdown input[type="checkbox"] { margin-right: 6px; }
+.wysiwyg-editor--light .milkdown .ProseMirror-selectednode { outline: 2px solid #0184bb; }
+.wysiwyg-editor--light .milkdown .ProseMirror ::selection { background: #add6ff60; }
+
+/* ProseMirror placeholder */
+.wysiwyg-editor .milkdown .ProseMirror p.is-empty::before {
+  content: attr(data-placeholder);
+  color: #7f848e;
+  pointer-events: none;
+  position: absolute;
+}
