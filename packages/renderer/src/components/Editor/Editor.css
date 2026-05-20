@@ -98,6 +98,14 @@
   background: rgba(64, 120, 242, 0.22) !important;
 }
 
+/* WYSIWYG sync: temporary line highlight when synced from WYSIWYG click */
+[data-theme='dark'] .editor__cm .cm-sync-line {
+  background: rgba(97, 175, 239, 0.12);
+}
+[data-theme='light'] .editor__cm .cm-sync-line {
+  background: rgba(64, 120, 242, 0.08);
+}
+
 /* highlightSelectionMatches: 같은 문자 자동 하이라이트 */
 [data-theme='dark'] .editor__cm .cm-selectionMatch {
   background: rgba(97, 175, 239, 0.18);

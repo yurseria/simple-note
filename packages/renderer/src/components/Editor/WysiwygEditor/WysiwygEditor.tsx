@@ -19,19 +19,53 @@ interface Props {
   onChange: (content: string) => void;
   theme: "dark" | "light";
   fontSize?: number;
+  topLine?: number;
+  onCursorLine?: (line: number) => void;
   onFocus?: () => void;
   onBlur?: () => void;
   onEditorReady?: (editor: Editor) => void;
 }
 
+// Map markdown source line number → top-level block index
+function lineToBlockIndex(content: string, line: number): number {
+  const lines = content.split("\n");
+  let blockIdx = -1;
+  let inBlock = false;
+  for (let i = 0; i < lines.length && i < line; i++) {
+    const empty = !lines[i].trim();
+    if (!empty && !inBlock) { blockIdx++; inBlock = true; }
+    else if (empty) inBlock = false;
+  }
+  return Math.max(0, blockIdx);
+}
+
+// Map top-level block index → markdown source line number (1-based)
+function blockIndexToLine(content: string, blockIndex: number): number {
+  const lines = content.split("\n");
+  let blockIdx = -1;
+  let inBlock = false;
+  for (let i = 0; i < lines.length; i++) {
+    const empty = !lines[i].trim();
+    if (!empty && !inBlock) {
+      if (++blockIdx === blockIndex) return i + 1;
+      inBlock = true;
+    } else if (empty) inBlock = false;
+  }
+  return 1;
+}
+
 function MilkdownInner({
   content,
   onChange,
+  topLine,
+  onCursorLine,
   onFocus,
   onBlur,
   onEditorReady,
 }: Props) {
   const lastContentRef = useRef(content);
+  const contentRef = useRef(content);
+  contentRef.current = content;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const onFocusRef = useRef(onFocus);
@@ -40,6 +74,9 @@ function MilkdownInner({
   onBlurRef.current = onBlur;
   const onEditorReadyRef = useRef(onEditorReady);
   onEditorReadyRef.current = onEditorReady;
+  const onCursorLineRef = useRef(onCursorLine);
+  onCursorLineRef.current = onCursorLine;
+  const lastTopLineRef = useRef<number | undefined>(undefined);
 
   const { get, loading } = useEditor((root) => {
     return Editor.make()
@@ -67,15 +104,51 @@ function MilkdownInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Propagate onEditorReady once editor finishes loading.
-  // get is intentionally excluded — it's a new reference every render but
-  // we only care about the loading→false transition, not get's identity.
+  // Propagate onEditorReady + attach WYSIWYG→CM click listener once editor is ready.
+  // get is intentionally excluded — only the loading→false transition matters.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (loading) return;
     const editor = get();
-    if (editor) onEditorReadyRef.current?.(editor);
-  }, [loading]);
+    if (!editor) return;
+    onEditorReadyRef.current?.(editor);
+
+    // Grab the ProseMirror DOM node for click listening
+    let pm: Element | null = null;
+    editor.action((ctx) => { pm = ctx.get(editorViewCtx).dom; });
+    if (!pm) return;
+
+    const handleClick = () => {
+      editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const resolved = view.state.selection.$head;
+        const blockIdx = resolved.index(0);
+        const line = blockIndexToLine(contentRef.current, blockIdx);
+        onCursorLineRef.current?.(line);
+      });
+    };
+
+    (pm as Element).addEventListener("click", handleClick);
+    return () => (pm as Element).removeEventListener("click", handleClick);
+  }, [loading]); // eslint-disable-line
+
+  // CM → WYSIWYG: scroll to block corresponding to topLine
+  useEffect(() => {
+    if (topLine === lastTopLineRef.current) return;
+    lastTopLineRef.current = topLine;
+    if (topLine == null) return;
+    const editor = get();
+    if (!editor) return;
+    try {
+      editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const blockIdx = lineToBlockIndex(contentRef.current, topLine);
+        const children = view.dom.children;
+        const target = children[Math.min(blockIdx, children.length - 1)] as HTMLElement | undefined;
+        target?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    } catch { /* editor may not be ready */ }
+  }, [topLine, get]);
 
   // Sync external content changes (from CodeMirror pane)
   useEffect(() => {

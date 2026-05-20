@@ -12,7 +12,7 @@ import {
   rectangularSelection,
   crosshairCursor
 } from '@codemirror/view'
-import { EditorState, EditorSelection, Compartment, Extension, Transaction, RangeSetBuilder } from '@codemirror/state'
+import { EditorState, EditorSelection, Compartment, Extension, Transaction, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state'
 import {
   history,
   defaultKeymap,
@@ -43,6 +43,26 @@ import { tags } from '@lezer/highlight'
 import type { LanguageMode } from '../../types/tab'
 import type { Settings } from '../../types/settings'
 import { wrapSelection, toggleLinePrefix, insertCodeBlock, insertLink } from './markdownActions'
+
+// WYSIWYG ↔ CM scroll sync: temporary line highlight
+export const syncHighlightEffect = StateEffect.define<number | null>();
+
+export const syncHighlightField = StateField.define<DecorationSet>({
+  create() { return Decoration.none; },
+  update(deco, tr) {
+    deco = deco.map(tr.changes);
+    for (const e of tr.effects) {
+      if (e.is(syncHighlightEffect)) {
+        if (e.value == null) return Decoration.none;
+        const ln = Math.min(e.value, tr.state.doc.lines);
+        const line = tr.state.doc.line(ln);
+        return Decoration.set([Decoration.line({ class: 'cm-sync-line' }).range(line.from)]);
+      }
+    }
+    return deco;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
 
 export interface EditorCompartments {
   language: Compartment
@@ -294,6 +314,7 @@ export function buildBaseExtensions(
         onChange(update.state.doc.toString())
       }
     }),
+    syncHighlightField,
     compartments.language.of(buildLanguageExt(language)),
     compartments.lineNumbers.of(buildLineNumbersExt(settings.showLineNumbers)),
     compartments.tabSize.of(buildTabExt(settings.tabSize, settings.useSpacesForTabs)),

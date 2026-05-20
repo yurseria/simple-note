@@ -370,6 +370,10 @@ export function App(): JSX.Element {
                     content={tab.content}
                     onChange={(c) => updateContent(tab.id, c)}
                     theme={settings.editor.theme}
+                    topLine={previewTopLine}
+                    onCursorLine={(line) => {
+                      window.dispatchEvent(new CustomEvent("editor:scrollToLine", { detail: line }));
+                    }}
                     onEditorReady={(editor) => {
                       milkdownRef.current = editor;
                       if (lastFocusRef.current === "wysiwyg") {
