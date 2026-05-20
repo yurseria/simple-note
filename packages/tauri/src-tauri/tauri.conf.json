@@ -1,6 +1,6 @@
 {
   "productName": "Note",
-  "version": "0.6.5",
+  "version": "0.11.0",
   "identifier": "com.yurseria.simple-note",
   "build": {
     "beforeDevCommand": "npm run dev:vite",
@@ -27,7 +27,9 @@
       "assetProtocol": {
         "enable": true,
         "scope": {
-          "allow": ["**"],
+          "allow": [
+            "**"
+          ],
           "requireLiteralLeadingDot": false
         }
       }
