@@ -59,6 +59,11 @@
 [data-theme='dark'] .editor__cm .cm-activeLineGutter {
   color: #fff;
 }
+
+/* active line highlight — One Dark 기본(#6699ff0b, 파란 계열 4%)보다 밝고 중립적인 흰 계열로 */
+[data-theme='dark'] .editor__cm .cm-activeLine {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
 [data-theme='light'] .editor__cm .cm-activeLineGutter {
   color: #1a1d24;
 }
