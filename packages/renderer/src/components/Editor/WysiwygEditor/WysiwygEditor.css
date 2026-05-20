@@ -81,7 +81,7 @@
 .wysiwyg-editor .milkdown h1 { font-size: 1.8em; padding-bottom: 0.2em; }
 .wysiwyg-editor .milkdown h2 { font-size: 1.4em; padding-bottom: 0.2em; }
 .wysiwyg-editor .milkdown h3 { font-size: 1.2em; }
-.wysiwyg-editor .milkdown p { margin: 1em 0; }
+.wysiwyg-editor .milkdown p { margin: 0.75em 0; }
 .wysiwyg-editor .milkdown p:first-child { margin-top: 0; }
 .wysiwyg-editor .milkdown strong { color: inherit; font-weight: 700; }
 .wysiwyg-editor .milkdown em { color: inherit; font-style: italic; }
