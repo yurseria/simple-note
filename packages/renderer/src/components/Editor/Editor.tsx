@@ -29,7 +29,7 @@ interface Props {
   filePath: string | null;
   settings: Settings["editor"];
   onChange: (content: string) => void;
-  onTopLine?: (line: number) => void;
+  onLineClick?: (line: number) => void;
   onViewReady?: (view: EditorView) => void;
   onFocus?: () => void;
 }
@@ -41,7 +41,7 @@ export function Editor({
   filePath,
   settings,
   onChange,
-  onTopLine,
+  onLineClick,
   onViewReady,
   onFocus,
 }: Props): JSX.Element {
@@ -52,10 +52,10 @@ export function Editor({
   // onChange / onCursorAtBottom ref로 stale closure 방지
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const onTopLineRef = useRef(onTopLine);
+  const onLineClickRef = useRef(onLineClick);
+  onLineClickRef.current = onLineClick;
   const filePathRef = useRef(filePath);
   filePathRef.current = filePath;
-  onTopLineRef.current = onTopLine;
   const onViewReadyRef = useRef(onViewReady);
   onViewReadyRef.current = onViewReady;
   const onFocusRef = useRef(onFocus);
@@ -85,15 +85,16 @@ export function Editor({
     const extensions = [
       settings.theme === "dark" ? oneDark : [],
       ...buildBaseExtensions(stableOnChange, compartments, settings, language),
-      // 커서 이동 시 프리뷰에 커서 줄 번호 전달
-      EditorView.updateListener.of((update) => {
-        if (!update.selectionSet) return;
-        const line = update.state.doc.lineAt(update.state.selection.main.head).number;
-        onTopLineRef.current?.(line);
-      }),
-      // 포커스 이벤트 → onFocus 콜백
       EditorView.domEventHandlers({
         focus: () => { onFocusRef.current?.(); return false; },
+        click: (e, view) => {
+          const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+          if (pos != null) {
+            const line = view.state.doc.lineAt(pos).number;
+            onLineClickRef.current?.(line);
+          }
+          return false;
+        },
       }),
     ];
 

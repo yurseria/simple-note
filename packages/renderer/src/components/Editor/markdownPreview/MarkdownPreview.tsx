@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect, useCallback } from "react";
-import { marked, type Token, type Tokens } from "marked";
+import { marked } from "marked";
 import { markedHighlight } from "marked-highlight";
+import { getTokenLineMap } from "../../../utils/markdownLineMap";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
 import mermaid from "mermaid";
@@ -39,27 +40,6 @@ const markedInstance = marked.use(
     },
   },
 );
-
-/**
- * marked lexer의 토큰을 사용해 소스 줄 번호를 계산.
- * 토큰의 raw 길이를 누적해서 각 최상위 블록 토큰의 시작 줄을 추적한다.
- */
-function getTokenLineMap(markdown: string): number[] {
-  const tokens = marked.lexer(markdown);
-  const lineMap: number[] = [];
-  let offset = 0;
-
-  for (const token of tokens) {
-    // 빈 space 토큰 등은 스킵
-    if (token.type === "space") {
-      offset += (token.raw.match(/\n/g) || []).length;
-      continue;
-    }
-    lineMap.push(offset + 1); // 1-based
-    offset += (token.raw.match(/\n/g) || []).length;
-  }
-  return lineMap;
-}
 
 /**
  * HTML의 최상위 블록 요소에 data-source-line 속성을 삽입.

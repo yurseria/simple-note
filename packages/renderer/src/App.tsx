@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
 import { Editor } from "./components/Editor/Editor";
-import { WysiwygEditor } from "./components/Editor/WysiwygEditor/WysiwygEditor";
+import { WysiwygEditor, type WysiwygEditorHandle } from "./components/Editor/WysiwygEditor/WysiwygEditor";
 import { MarkdownToolbar } from "./components/Editor/MarkdownToolbar/MarkdownToolbar";
 import { InfoBar } from "./components/InfoBar/InfoBar";
 import { useTabStore, inferLanguage } from "./store/tabStore";
@@ -37,7 +37,6 @@ export function App(): JSX.Element {
   const [gotoLineVisible, setGotoLineVisible] = useState(false);
   const [gotoLineValue, setGotoLineValue] = useState("");
   const [splitRatio, setSplitRatio] = useState(0.5);
-  const [previewTopLine, setPreviewTopLine] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
@@ -47,6 +46,7 @@ export function App(): JSX.Element {
   // Toolbar focus tracking
   const cmViewRef = useRef<EditorView | null>(null);
   const milkdownRef = useRef<MilkdownEditorInstance | null>(null);
+  const wysiwygRef = useRef<WysiwygEditorHandle>(null);
   const lastFocusRef = useRef<"codemirror" | "wysiwyg">("codemirror");
   const [toolbarCommands, setToolbarCommands] = useState<MarkdownCommands | null>(null);
 
@@ -343,9 +343,9 @@ export function App(): JSX.Element {
                 filePath={tab.filePath}
                 settings={settings.editor}
                 onChange={(c) => updateContent(tab.id, c)}
-                onTopLine={
+                onLineClick={
                   isMarkdown && showPreview
-                    ? setPreviewTopLine
+                    ? (line) => wysiwygRef.current?.scrollToSourceLine(line)
                     : undefined
                 }
                 onViewReady={(view) => {
@@ -367,10 +367,10 @@ export function App(): JSX.Element {
                     onMouseDown={handleDividerMouseDown}
                   />
                   <WysiwygEditor
+                    ref={wysiwygRef}
                     content={tab.content}
                     onChange={(c) => updateContent(tab.id, c)}
                     theme={settings.editor.theme}
-                    topLine={previewTopLine}
                     onCursorLine={(line) => {
                       window.dispatchEvent(new CustomEvent("editor:scrollToLine", { detail: line }));
                     }}
