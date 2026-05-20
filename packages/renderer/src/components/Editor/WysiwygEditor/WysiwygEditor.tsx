@@ -45,7 +45,9 @@ function annotateListItems(pmListEl: Element, items: Tokens.ListItem[], startOff
         const nestedLineCount = nestedToken.items.reduce(
           (sum, it) => sum + (it.raw.match(/\n/g) || []).length, 0,
         );
-        const itemLineCount = (item.raw.match(/\n/g) || []).length;
+        // Trim trailing blank lines from item.raw: loose lists append \n\n to separate
+        // items, inflating the count and shifting the nested start offset by 1.
+        const itemLineCount = (item.raw.replace(/\n+$/, "\n").match(/\n/g) || []).length;
         annotateListItems(nestedEl, nestedToken.items, offset + (itemLineCount - nestedLineCount));
       }
     }
