@@ -370,7 +370,6 @@ export function App(): JSX.Element {
                     content={tab.content}
                     onChange={(c) => updateContent(tab.id, c)}
                     theme={settings.editor.theme}
-                    fontSize={settings.editor.fontSize}
                     onEditorReady={(editor) => {
                       milkdownRef.current = editor;
                       if (lastFocusRef.current === "wysiwyg") {
