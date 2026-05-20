@@ -41,10 +41,11 @@ function annotateListItems(pmListEl: Element, items: Tokens.ListItem[], startOff
     if (nestedToken) {
       const nestedEl = pmItems[i].querySelector<HTMLElement>(":scope > ul, :scope > ol");
       if (nestedEl) {
-        // Nested list occupies the last N lines of this item's raw — derive its start offset
-        const nestedLineCount = nestedToken.items.reduce(
-          (sum, it) => sum + (it.raw.match(/\n/g) || []).length, 0,
-        );
+        // Nested list occupies the last N lines of this item's raw — derive its start offset.
+        // Use nestedToken.raw (not item raws sum) because marked v17 omits the trailing \n
+        // from the last list item, causing item-sum to undercount lines by 1.
+        const nestedRaw = nestedToken.raw;
+        const nestedLineCount = (nestedRaw.match(/\n/g) || []).length + (nestedRaw.endsWith("\n") ? 0 : 1);
         // Trim trailing blank lines from item.raw: loose lists append \n\n to separate
         // items, inflating the count and shifting the nested start offset by 1.
         const itemLineCount = (item.raw.replace(/\n+$/, "\n").match(/\n/g) || []).length;
