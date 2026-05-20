@@ -1,3 +1,19 @@
+# v0.11.1 (Wed May 20 2026)
+
+#### 🐛 Bug Fix
+
+- fix: use differential update in CM content sync to preserve cursor position ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- Merge branch 'main' into release ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.11.0 (Wed May 20 2026)
 
 #### 🚀 Enhancement
