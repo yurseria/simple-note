@@ -98,7 +98,7 @@ const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownIn
       try {
         editor.action((ctx) => {
           const view = ctx.get(editorViewCtx);
-          annotateSourceLines(view.dom, contentRef.current);
+          annotateSourceLines(view.dom, lastContentRef.current);
           const elements = Array.from(
             view.dom.querySelectorAll<HTMLElement>("[data-source-line]"),
           );
@@ -128,14 +128,15 @@ const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownIn
     editor.action((ctx) => { pm = ctx.get(editorViewCtx).dom; });
     if (!pm) return;
 
-    const handleClick = (e: Event) => {
+    const handleClick = () => {
       editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
-        annotateSourceLines(view.dom, contentRef.current);
-        const target = (e.target as Element).closest("[data-source-line]");
-        if (!target) return;
-        const line = parseInt((target as HTMLElement).dataset.sourceLine!, 10);
-        if (!isNaN(line)) onCursorLineRef.current?.(line);
+        // Use ProseMirror's own selection (updated on mousedown before click fires)
+        // to get the block index — more reliable than DOM attribute lookup.
+        const lineMap = getTokenLineMap(lastContentRef.current);
+        const blockIdx = view.state.selection.$head.index(0);
+        const line = lineMap[blockIdx] ?? lineMap[lineMap.length - 1] ?? 1;
+        onCursorLineRef.current?.(line);
       });
     };
 
