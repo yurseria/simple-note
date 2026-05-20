@@ -141,8 +141,17 @@ export function Editor({
     const current = view.state.doc.toString();
     if (current !== content) {
       lastEditorContentRef.current = content;
+      let start = 0;
+      const minLen = Math.min(current.length, content.length);
+      while (start < minLen && current[start] === content[start]) start++;
+      let endCur = current.length;
+      let endNew = content.length;
+      while (endCur > start && endNew > start && current[endCur - 1] === content[endNew - 1]) {
+        endCur--;
+        endNew--;
+      }
       view.dispatch({
-        changes: { from: 0, to: current.length, insert: content },
+        changes: { from: start, to: endCur, insert: content.slice(start, endNew) },
         annotations: Transaction.remote.of(true),
       });
     }
