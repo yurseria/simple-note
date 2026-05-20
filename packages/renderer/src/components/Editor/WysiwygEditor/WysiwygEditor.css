@@ -19,22 +19,17 @@
   font-family: var(--font-family, 'PretendardVariable', system-ui, sans-serif);
   font-size: inherit;
   line-height: 1.7;
-  /* flex column so ProseMirror can fill empty space for click-to-end */
-  display: flex;
-  flex-direction: column;
   cursor: text;
 }
 
 /* Milkdown intermediate wrapper */
 .wysiwyg-editor .milkdown > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  min-height: 100%;
 }
 
 /* ProseMirror fills remaining space → clicks in empty area land here */
 .wysiwyg-editor .milkdown .ProseMirror {
-  flex: 1;
+  min-height: 100%;
   outline: none;
 }
 
