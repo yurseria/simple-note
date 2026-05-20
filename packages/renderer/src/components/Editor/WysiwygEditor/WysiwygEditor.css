@@ -7,29 +7,21 @@
   font-size: 15px;
 }
 
-/* Milkdown root */
+/* Milkdown root — min-height:0 is required for flex-child scroll to work */
 .wysiwyg-editor .milkdown {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   outline: none;
   padding: 16px 24px;
   box-sizing: border-box;
-  height: 100%;
   font-family: var(--font-family, 'PretendardVariable', system-ui, sans-serif);
   font-size: inherit;
   line-height: 1.7;
-  cursor: text;
 }
 
-/* Milkdown intermediate wrapper */
-.wysiwyg-editor .milkdown > div {
-  min-height: 100%;
-}
-
-/* ProseMirror fills remaining space → clicks in empty area land here */
 .wysiwyg-editor .milkdown .ProseMirror {
-  min-height: 100%;
   outline: none;
 }
 

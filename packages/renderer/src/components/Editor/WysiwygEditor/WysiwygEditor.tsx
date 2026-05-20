@@ -102,11 +102,19 @@ function MilkdownInner({
 }
 
 export function WysiwygEditor(props: Props) {
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    // If clicked outside ProseMirror content, focus editor at end
+    if ((e.target as HTMLElement).closest('.ProseMirror')) return;
+    const pm = e.currentTarget.querySelector<HTMLElement>('.ProseMirror');
+    pm?.focus();
+  }
+
   return (
     <MilkdownProvider>
       <div
         className={`wysiwyg-editor wysiwyg-editor--${props.theme}`}
         style={props.fontSize ? { fontSize: props.fontSize } : undefined}
+        onClick={handleClick}
       >
         <MilkdownInner {...props} />
       </div>
