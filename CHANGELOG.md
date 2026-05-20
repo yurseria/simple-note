@@ -1,3 +1,71 @@
+# v0.11.0 (Wed May 20 2026)
+
+#### 🚀 Enhancement
+
+- feat: bidirectional scroll sync between CodeMirror and WYSIWYG ([@yurseria](https://github.com/yurseria))
+- feat: add WYSIWYG markdown editor with bidirectional sync ([@yurseria](https://github.com/yurseria))
+- feat: open internal md/txt links in new tab from markdown preview ([@yurseria](https://github.com/yurseria))
+- feat: render local images in markdown preview via asset protocol ([@yurseria](https://github.com/yurseria))
+- feat: markdown-aware save and clipboard image alt text ([@yurseria](https://github.com/yurseria))
+- feat: add missing menu items to Windows CustomMenu ([@yurseria](https://github.com/yurseria))
+- feat: platform-aware update checker with copy command support ([@yurseria](https://github.com/yurseria))
+- feat: verify artifact count and rollback release on build failure ([@yurseria](https://github.com/yurseria))
+- feat: sync preview scroll to editor cursor position ([@yurseria](https://github.com/yurseria))
+
+#### 🐛 Bug Fix
+
+- fix: resolve merge conflicts between release and main ([@yurseria](https://github.com/yurseria))
+- fix: prevent WYSIWYG margin-click from triggering CM line sync and block highlight ([@yurseria](https://github.com/yurseria))
+- fix: lighten dark mode active line highlight color ([@yurseria](https://github.com/yurseria))
+- fix: brighten dark mode syntax highlight colors by ~10% lightness ([@yurseria](https://github.com/yurseria))
+- fix: use nestedToken.raw for line count to fix nested list scroll offset ([@yurseria](https://github.com/yurseria))
+- fix: trim trailing blank from item.raw to fix loose nested list line offset ([@yurseria](https://github.com/yurseria))
+- fix: recursively annotate nested list items with data-source-line ([@yurseria](https://github.com/yurseria))
+- fix: move CM cursor to line on WYSIWYG click instead of temporary highlight ([@yurseria](https://github.com/yurseria))
+- fix: annotate list items with data-source-line for per-item WYSIWYG->CM scroll ([@yurseria](https://github.com/yurseria))
+- fix: use ProseMirror selection for WYSIWYG->CM scroll instead of DOM annotation ([@yurseria](https://github.com/yurseria))
+- fix: use absolute positioning for WYSIWYG scroll container ([@yurseria](https://github.com/yurseria))
+- fix: fix WYSIWYG scroll by using min-height:0 instead of height:100% ([@yurseria](https://github.com/yurseria))
+- fix: restore WYSIWYG scroll by replacing flex with min-height ([@yurseria](https://github.com/yurseria))
+- fix: adjust paragraph margin to 0.75em in WYSIWYG ([@yurseria](https://github.com/yurseria))
+- fix: set WYSIWYG font-size to 15px and add paragraph margins ([@yurseria](https://github.com/yurseria))
+- fix: remove get from useEffect deps to break infinite update loop ([@yurseria](https://github.com/yurseria))
+- fix: improve WYSIWYG UX — bold weight, font size sync, focus outline, click-to-end ([@yurseria](https://github.com/yurseria))
+- fix: remove color overrides from WYSIWYG formatting (keep links only) ([@yurseria](https://github.com/yurseria))
+- fix: override contentSeparator (---) color in editor ([@yurseria](https://github.com/yurseria))
+- fix: vertically center new tab button in tab bar ([@yurseria](https://github.com/yurseria))
+- fix: remove scrollbar-color/scrollbar-width, use webkit-scrollbar only ([@yurseria](https://github.com/yurseria))
+- fix: use opaque hex for scrollbar-thumb to fix WebKit rendering ([@yurseria](https://github.com/yurseria))
+- fix: sync package versions from release tag before build ([@yurseria](https://github.com/yurseria))
+- fix: add Electron to sync-version targets and sync all to 0.6.5 ([@yurseria](https://github.com/yurseria))
+- fix: add WebKit scrollbar compatibility and reduce width to 4px ([@yurseria](https://github.com/yurseria))
+- fix: sync-version.mjs reads version from ARG_0 env var ([@yurseria](https://github.com/yurseria))
+- fix: add Tauri Linux build and flatten artifact paths ([@yurseria](https://github.com/yurseria))
+- fix: sync version to all packages and distinguish Electron/Tauri assets ([@yurseria](https://github.com/yurseria))
+- fix: use bash shell for ls step on Windows runner ([@yurseria](https://github.com/yurseria))
+- fix: fix Electron artifact upload path and disable auto-publish ([@yurseria](https://github.com/yurseria))
+- fix: set artifactName to avoid scoped package path in deb output ([@yurseria](https://github.com/yurseria))
+- fix: remove invalid tagPrefix from .autorc ([@yurseria](https://github.com/yurseria))
+- fix: use v-prefix tags to match existing release naming ([@yurseria](https://github.com/yurseria))
+- fix: set explicit output directory for electron-builder ([@yurseria](https://github.com/yurseria))
+- fix: reset lock file after auto install to avoid dirty tree ([@yurseria](https://github.com/yurseria))
+- fix: checkout release branch instead of tag for packaging ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- Revert "fix: brighten dark mode syntax highlight colors by ~10% lightness" ([@yurseria](https://github.com/yurseria))
+- refactor: replace block-index scroll sync with data-source-line attribute approach ([@yurseria](https://github.com/yurseria))
+- docs: add DESIGN.md with macOS Tauri baseline UI spec ([@yurseria](https://github.com/yurseria))
+- Merge branch 'release' ([@yurseria](https://github.com/yurseria))
+- chore: rewrite install.sh and update release template ([@yurseria](https://github.com/yurseria))
+- ci: add macOS builds to release workflow ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.10.0 (Tue Apr 14 2026)
 
 #### 🚀 Enhancement
