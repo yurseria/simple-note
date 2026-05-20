@@ -44,26 +44,6 @@ import type { LanguageMode } from '../../types/tab'
 import type { Settings } from '../../types/settings'
 import { wrapSelection, toggleLinePrefix, insertCodeBlock, insertLink } from './markdownActions'
 
-// 다크모드 전용 syntax highlight — oneDark 팔레트 대비 약 +10% 밝기
-const darkHighlightExt = syntaxHighlighting(HighlightStyle.define([
-  { tag: tags.keyword,                                                                                      color: '#d48ee8' },
-  { tag: [tags.name, tags.deleted, tags.character, tags.propertyName, tags.macroName],                     color: '#f07c84' },
-  { tag: [tags.function(tags.variableName), tags.labelName],                                               color: '#7bbef5' },
-  { tag: [tags.color, tags.constant(tags.name), tags.standard(tags.name)],                                 color: '#e4b07a' },
-  { tag: [tags.definition(tags.name), tags.separator],                                                     color: '#bcc4cf' },
-  { tag: [tags.typeName, tags.className, tags.number, tags.changed, tags.annotation, tags.modifier, tags.self, tags.namespace], color: '#f5d08b' },
-  { tag: [tags.operator, tags.operatorKeyword, tags.url, tags.escape, tags.regexp, tags.link, tags.special(tags.string)], color: '#69cad5' },
-  { tag: [tags.meta, tags.comment],                                                                        color: '#96a0b3' },
-  { tag: tags.strong,      fontWeight: 'bold' },
-  { tag: tags.emphasis,    fontStyle: 'italic' },
-  { tag: tags.link,                                                                                        color: '#96a0b3' },
-  { tag: tags.heading,     fontWeight: 'bold',                                                             color: '#f07c84' },
-  { tag: [tags.atom, tags.bool, tags.special(tags.variableName)],                                         color: '#e4b07a' },
-  { tag: [tags.processingInstruction, tags.string, tags.inserted],                                        color: '#acd487' },
-  { tag: tags.invalid,                                                                                     color: '#ffffff' },
-  { tag: tags.contentSeparator,                                                                            color: '#66B5FF' },
-]));
-
 // WYSIWYG ↔ CM scroll sync: temporary line highlight
 export const syncHighlightEffect = StateEffect.define<number | null>();
 
@@ -291,14 +271,12 @@ export function buildBaseExtensions(
     EditorState.allowMultipleSelections.of(true),
     highlightActiveLine(),
     highlightActiveLineGutter(),
-    // 다크모드: 밝은 커스텀 스타일 (contentSeparator 포함) / 라이트모드: 기본 스타일 + contentSeparator 오버라이드
-    ...(settings.theme === 'dark'
-      ? [darkHighlightExt]
-      : [
-          syntaxHighlighting(HighlightStyle.define([{ tag: tags.contentSeparator, color: '#66B5FF' }])),
-          syntaxHighlighting(defaultHighlightStyle),
-        ]
-    ),
+    // contentSeparator (---) 색상을 defaultHighlightStyle보다 먼저 등록
+    // defaultHighlightStyle은 fallback: true이므로, non-fallback이 우선함
+    syntaxHighlighting(HighlightStyle.define([
+      { tag: tags.contentSeparator, color: '#66B5FF' },
+    ])),
+    syntaxHighlighting(defaultHighlightStyle),
     // 선택 텍스트의 나머지 미선택 항목 하이라이트 (멀티커서 중에도 유지)
     remainingMatchPlugin,
     // Shift+Alt+Drag: 컬럼(박스) 선택
