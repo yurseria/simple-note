@@ -11,7 +11,6 @@ import {
   buildTabExt,
   buildThemeExt,
   loadLanguageExtension,
-  syncHighlightEffect,
   type EditorCompartments,
 } from "./extensions";
 import { FindReplace } from "./FindReplace/FindReplace";
@@ -243,7 +242,7 @@ export function Editor({
     };
   }, []);
 
-  // WYSIWYG → CM: 해당 줄로 스크롤하고 잠시 하이라이트
+  // WYSIWYG → CM: 해당 줄로 커서 이동 및 스크롤
   useEffect(() => {
     function handleScrollToLine(e: Event) {
       const view = viewRef.current;
@@ -252,14 +251,9 @@ export function Editor({
       if (lineNum < 1 || lineNum > view.state.doc.lines) return;
       const line = view.state.doc.line(lineNum);
       view.dispatch({
-        effects: [
-          EditorView.scrollIntoView(line.from, { y: "center" }),
-          syncHighlightEffect.of(lineNum),
-        ],
+        selection: { anchor: line.from },
+        effects: EditorView.scrollIntoView(line.from, { y: "center" }),
       });
-      setTimeout(() => {
-        viewRef.current?.dispatch({ effects: syncHighlightEffect.of(null) });
-      }, 1500);
     }
     window.addEventListener("editor:scrollToLine", handleScrollToLine);
     return () => window.removeEventListener("editor:scrollToLine", handleScrollToLine);
