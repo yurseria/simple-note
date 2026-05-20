@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorView } from "@codemirror/view";
 import { EditorState, Transaction } from "@codemirror/state";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { oneDarkTheme } from "@codemirror/theme-one-dark";
 import { selectAll, undo, redo } from "@codemirror/commands";
 import { selectNextOccurrence, selectSelectionMatches } from "@codemirror/search";
 import {
@@ -82,7 +82,7 @@ export function Editor({
     };
 
     const extensions = [
-      settings.theme === "dark" ? oneDark : [],
+      settings.theme === "dark" ? oneDarkTheme : [],
       ...buildBaseExtensions(stableOnChange, compartments, settings, language),
       EditorView.domEventHandlers({
         focus: () => { onFocusRef.current?.(); return false; },
