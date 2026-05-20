@@ -67,12 +67,15 @@ function MilkdownInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Propagate onEditorReady once editor finishes loading
+  // Propagate onEditorReady once editor finishes loading.
+  // get is intentionally excluded — it's a new reference every render but
+  // we only care about the loading→false transition, not get's identity.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (loading) return;
     const editor = get();
     if (editor) onEditorReadyRef.current?.(editor);
-  }, [loading, get]);
+  }, [loading]);
 
   // Sync external content changes (from CodeMirror pane)
   useEffect(() => {
