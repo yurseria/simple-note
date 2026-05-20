@@ -12,7 +12,7 @@ import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { history } from "@milkdown/kit/plugin/history";
 import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
-import { getTokenLineMap } from "../../../utils/markdownLineMap";
+import { marked, type Tokens } from "marked";
 import "./WysiwygEditor.css";
 
 export interface WysiwygEditorHandle {
@@ -30,17 +30,39 @@ interface Props {
   onEditorReady?: (editor: Editor) => void;
 }
 
-/** Stamps data-source-line on each direct child of the ProseMirror root. */
+/**
+ * Stamps data-source-line on each direct child of the ProseMirror root.
+ * For lists, also stamps each <li> so clicking individual items gives the exact line.
+ */
 function annotateSourceLines(pmDom: Element, content: string) {
-  const lineMap = getTokenLineMap(content);
+  const tokens = marked.lexer(content);
   const children = Array.from(pmDom.children) as HTMLElement[];
-  children.forEach((child, i) => {
-    if (i < lineMap.length) {
-      child.dataset.sourceLine = String(lineMap[i]);
-    } else {
-      delete child.dataset.sourceLine;
+  let childIdx = 0;
+  let lineOffset = 0;
+
+  for (const token of tokens) {
+    if (token.type === "space") {
+      lineOffset += (token.raw.match(/\n/g) || []).length;
+      continue;
     }
-  });
+    const child = children[childIdx++];
+    if (child) {
+      child.dataset.sourceLine = String(lineOffset + 1);
+      if (token.type === "list") {
+        const listToken = token as Tokens.List;
+        const pmItems = Array.from(child.querySelectorAll<HTMLElement>(":scope > li"));
+        let itemOffset = lineOffset;
+        for (let i = 0; i < listToken.items.length && i < pmItems.length; i++) {
+          pmItems[i].dataset.sourceLine = String(itemOffset + 1);
+          itemOffset += (listToken.items[i].raw.match(/\n/g) || []).length;
+        }
+      }
+    }
+    lineOffset += (token.raw.match(/\n/g) || []).length;
+  }
+  for (let i = childIdx; i < children.length; i++) {
+    delete children[i].dataset.sourceLine;
+  }
 }
 
 const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownInner(
@@ -128,15 +150,14 @@ const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownIn
     editor.action((ctx) => { pm = ctx.get(editorViewCtx).dom; });
     if (!pm) return;
 
-    const handleClick = () => {
+    const handleClick = (e: Event) => {
       editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
-        // Use ProseMirror's own selection (updated on mousedown before click fires)
-        // to get the block index — more reliable than DOM attribute lookup.
-        const lineMap = getTokenLineMap(lastContentRef.current);
-        const blockIdx = view.state.selection.$head.index(0);
-        const line = lineMap[blockIdx] ?? lineMap[lineMap.length - 1] ?? 1;
-        onCursorLineRef.current?.(line);
+        annotateSourceLines(view.dom, lastContentRef.current);
+        const target = (e.target as Element).closest("[data-source-line]");
+        if (!target) return;
+        const line = parseInt((target as HTMLElement).dataset.sourceLine!, 10);
+        if (!isNaN(line)) onCursorLineRef.current?.(line);
       });
     };
 
