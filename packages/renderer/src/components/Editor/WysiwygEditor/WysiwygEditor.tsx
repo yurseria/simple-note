@@ -8,6 +8,7 @@ import {
   rootCtx,
   remarkStringifyOptionsCtx,
 } from "@milkdown/kit/core";
+import { NodeSelection, TextSelection } from "@milkdown/kit/prose/state";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { history } from "@milkdown/kit/plugin/history";
@@ -173,6 +174,29 @@ const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownIn
     const handleClick = (e: Event) => {
       editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        // 줄 사이 여백 클릭 시 ProseMirror가 block 노드에 NodeSelection을 생성하면
+        // .ProseMirror-selectednode 클래스(outline 하이라이트)가 붙는 문제 수정.
+        // leaf가 아닌 노드(p, h1~h6, ul/ol 등)의 NodeSelection은 TextSelection으로 변환.
+        if (state.selection instanceof NodeSelection && !state.selection.node.isLeaf) {
+          const resolved = state.doc.resolve(
+            Math.min(state.selection.from + 1, state.doc.content.size)
+          );
+          view.dispatch(state.tr.setSelection(TextSelection.near(resolved)));
+          return;
+        }
+
+        // WebKit contenteditable은 margin 영역 클릭도 인접 <p>로 e.target/elementFromPoint를
+        // resolve하므로 좌표 기반 hit-test는 모두 신뢰할 수 없음.
+        // 대신 ProseMirror가 cursor를 놓은 위치를 역산해 실제 텍스트 줄 범위를 구하고,
+        // 클릭 Y가 그 범위 밖이면 margin 클릭으로 판단.
+        const me = e as MouseEvent;
+        const cursor = (view.state.selection as TextSelection).$cursor;
+        if (!cursor) return;
+        const cc = view.coordsAtPos(cursor.pos);
+        if (me.clientY < cc.top || me.clientY > cc.bottom) return;
+
         annotateSourceLines(view.dom, lastContentRef.current);
         const target = (e.target as Element).closest("[data-source-line]");
         if (!target) return;
@@ -186,9 +210,12 @@ const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownIn
   }, [loading]); // eslint-disable-line
 
   // Sync external content changes (from CodeMirror pane)
+  // getRef 사용 — get을 deps에 넣으면 useEditor가 매 렌더마다 새 참조를 반환해
+  // 이펙트가 불필요하게 재실행되고 tr.replaceWith(0, size, …)로 커서가 0으로 이동,
+  // 결과적으로 스크롤이 최상단으로 올라가는 버그 발생
   useEffect(() => {
     if (content === lastContentRef.current) return;
-    const editor = get();
+    const editor = getRef.current?.();
     if (!editor) return;
     try {
       editor.action((ctx) => {
@@ -197,14 +224,17 @@ const MilkdownInner = forwardRef<WysiwygEditorHandle, Props>(function MilkdownIn
         const doc = parser(content);
         if (!doc) return;
         const { state } = view;
+        const scrollEl = view.dom.parentElement;
+        const savedScrollTop = scrollEl?.scrollTop ?? 0;
         const tr = state.tr.replaceWith(0, state.doc.content.size, doc.content);
         view.dispatch(tr);
+        if (scrollEl) scrollEl.scrollTop = savedScrollTop;
         lastContentRef.current = content;
       });
     } catch {
       // editor may not be ready yet
     }
-  }, [content, get]);
+  }, [content]); // eslint-disable-line
 
   return <Milkdown />;
 });
