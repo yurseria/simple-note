@@ -1,16 +1,15 @@
 .wysiwyg-editor {
   flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
   font-size: 15px;
 }
 
-/* Milkdown root — min-height:0 is required for flex-child scroll to work */
+/* Milkdown root — absolute fill so scroll always works regardless of flex context */
 .wysiwyg-editor .milkdown {
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
   outline: none;
