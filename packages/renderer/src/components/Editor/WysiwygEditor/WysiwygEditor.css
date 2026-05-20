@@ -16,8 +16,25 @@
   box-sizing: border-box;
   height: 100%;
   font-family: var(--font-family, 'PretendardVariable', system-ui, sans-serif);
-  font-size: var(--editor-font-size, 14px);
+  font-size: inherit;
   line-height: 1.7;
+  /* flex column so ProseMirror can fill empty space for click-to-end */
+  display: flex;
+  flex-direction: column;
+  cursor: text;
+}
+
+/* Milkdown intermediate wrapper */
+.wysiwyg-editor .milkdown > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ProseMirror fills remaining space → clicks in empty area land here */
+.wysiwyg-editor .milkdown .ProseMirror {
+  flex: 1;
+  outline: none;
 }
 
 /* Scrollbar */
@@ -63,7 +80,7 @@
 .wysiwyg-editor .milkdown h1 { font-size: 1.8em; padding-bottom: 0.2em; }
 .wysiwyg-editor .milkdown h2 { font-size: 1.4em; padding-bottom: 0.2em; }
 .wysiwyg-editor .milkdown h3 { font-size: 1.2em; }
-.wysiwyg-editor .milkdown strong { color: inherit; font-weight: 600; }
+.wysiwyg-editor .milkdown strong { color: inherit; font-weight: 700; }
 .wysiwyg-editor .milkdown em { color: inherit; font-style: italic; }
 .wysiwyg-editor .milkdown del { color: inherit; }
 .wysiwyg-editor .milkdown ul,

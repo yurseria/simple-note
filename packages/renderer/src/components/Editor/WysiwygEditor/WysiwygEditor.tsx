@@ -18,6 +18,7 @@ interface Props {
   content: string;
   onChange: (content: string) => void;
   theme: "dark" | "light";
+  fontSize?: number;
   onFocus?: () => void;
   onBlur?: () => void;
   onEditorReady?: (editor: Editor) => void;
@@ -100,7 +101,10 @@ function MilkdownInner({
 export function WysiwygEditor(props: Props) {
   return (
     <MilkdownProvider>
-      <div className={`wysiwyg-editor wysiwyg-editor--${props.theme}`}>
+      <div
+        className={`wysiwyg-editor wysiwyg-editor--${props.theme}`}
+        style={props.fontSize ? { fontSize: props.fontSize } : undefined}
+      >
         <MilkdownInner {...props} />
       </div>
     </MilkdownProvider>
