@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect, useCallback } from "react";
-import { marked, type Token, type Tokens } from "marked";
+import { marked } from "marked";
 import { markedHighlight } from "marked-highlight";
+import { getTokenLineMap } from "../../../utils/markdownLineMap";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
 import mermaid from "mermaid";
@@ -41,27 +42,6 @@ const markedInstance = marked.use(
 );
 
 /**
- * marked lexer의 토큰을 사용해 소스 줄 번호를 계산.
- * 토큰의 raw 길이를 누적해서 각 최상위 블록 토큰의 시작 줄을 추적한다.
- */
-function getTokenLineMap(markdown: string): number[] {
-  const tokens = marked.lexer(markdown);
-  const lineMap: number[] = [];
-  let offset = 0;
-
-  for (const token of tokens) {
-    // 빈 space 토큰 등은 스킵
-    if (token.type === "space") {
-      offset += (token.raw.match(/\n/g) || []).length;
-      continue;
-    }
-    lineMap.push(offset + 1); // 1-based
-    offset += (token.raw.match(/\n/g) || []).length;
-  }
-  return lineMap;
-}
-
-/**
  * HTML의 최상위 블록 요소에 data-source-line 속성을 삽입.
  * marked lexer 토큰 순서와 HTML 블록 순서가 1:1로 대응됨.
  */
@@ -93,6 +73,7 @@ interface Props {
   theme?: string;
   basePath?: string | null;
   convertFileSrc?: (filePath: string) => string;
+  onOpenFile?: (filePath: string) => void;
 }
 
 export function MarkdownPreview({
@@ -101,6 +82,7 @@ export function MarkdownPreview({
   theme = "dark",
   basePath,
   convertFileSrc,
+  onOpenFile,
 }: Props): JSX.Element {
   const html = useMemo(() => {
     const raw = markedInstance.parse(content, { async: false }) as string;
@@ -183,6 +165,31 @@ export function MarkdownPreview({
     const elementTop = closest.getBoundingClientRect().top;
     el.scrollTop += elementTop - containerTop;
   }, [topLine]);
+
+  useEffect(() => {
+    if (!onOpenFile) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as Element).closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+      // 외부 URL, 앵커, 특수 스킴은 무시
+      if (/^(https?|mailto|data|asset):\/\//i.test(href) || href.startsWith("#")) return;
+      // .md / .markdown / .txt 파일만 처리
+      if (!/\.(md|markdown|txt)$/i.test(href.split("?")[0].split("#")[0])) return;
+
+      e.preventDefault();
+      const dir = basePath ? basePath.replace(/[\\/][^\\/]+$/, "") : "";
+      const absPath = href.startsWith("/") ? href : `${dir}/${href}`;
+      onOpenFile(absPath);
+    };
+
+    el.addEventListener("click", handleClick);
+    return () => el.removeEventListener("click", handleClick);
+  }, [onOpenFile, basePath]);
 
   useEffect(() => {
     const el = containerRef.current;

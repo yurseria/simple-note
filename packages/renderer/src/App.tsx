@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
 import { Editor } from "./components/Editor/Editor";
-import { MarkdownPreview } from "./components/Editor/markdownPreview/MarkdownPreview";
+import { WysiwygEditor, type WysiwygEditorHandle } from "./components/Editor/WysiwygEditor/WysiwygEditor";
+import { MarkdownToolbar } from "./components/Editor/MarkdownToolbar/MarkdownToolbar";
 import { InfoBar } from "./components/InfoBar/InfoBar";
 import { useTabStore, inferLanguage } from "./store/tabStore";
 import { useSettingsStore } from "./store/settingsStore";
@@ -12,8 +13,11 @@ import { useExternalFileSync } from "./hooks/useExternalFileSync";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import { api } from "./platform";
 import { useTranslation } from "./i18n";
+import { createCodeMirrorCommands, createMilkdownCommands, type MarkdownCommands } from "./components/Editor/markdownActions";
 import type { LanguageMode } from "./types/tab";
 import type { UILanguage } from "./types/settings";
+import type { EditorView } from "@codemirror/view";
+import type { Editor as MilkdownEditorInstance } from "@milkdown/kit/core";
 import "./App.css";
 
 export function App(): JSX.Element {
@@ -33,12 +37,18 @@ export function App(): JSX.Element {
   const [gotoLineVisible, setGotoLineVisible] = useState(false);
   const [gotoLineValue, setGotoLineValue] = useState("");
   const [splitRatio, setSplitRatio] = useState(0.5);
-  const [previewTopLine, setPreviewTopLine] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [zenMode, setZenMode] = useState(false);
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+
+  // Toolbar focus tracking
+  const cmViewRef = useRef<EditorView | null>(null);
+  const milkdownRef = useRef<MilkdownEditorInstance | null>(null);
+  const wysiwygRef = useRef<WysiwygEditorHandle>(null);
+  const lastFocusRef = useRef<"codemirror" | "wysiwyg">("codemirror");
+  const [toolbarCommands, setToolbarCommands] = useState<MarkdownCommands | null>(null);
 
   const tab = activeTab();
 
@@ -312,6 +322,9 @@ export function App(): JSX.Element {
       >
         {tab && (
           <>
+            {isMarkdown && showPreview && toolbarCommands && (
+              <MarkdownToolbar commands={toolbarCommands} />
+            )}
             <div
               ref={splitContainerRef}
               className={`app__editor-pane ${showPreview && isMarkdown ? "app__editor-pane--split" : ""}`}
@@ -330,11 +343,22 @@ export function App(): JSX.Element {
                 filePath={tab.filePath}
                 settings={settings.editor}
                 onChange={(c) => updateContent(tab.id, c)}
-                onTopLine={
+                onLineClick={
                   isMarkdown && showPreview
-                    ? setPreviewTopLine
+                    ? (line) => wysiwygRef.current?.scrollToSourceLine(line)
                     : undefined
                 }
+                onViewReady={(view) => {
+                  cmViewRef.current = view;
+                  if (lastFocusRef.current === "codemirror") {
+                    setToolbarCommands(createCodeMirrorCommands(view));
+                  }
+                }}
+                onFocus={() => {
+                  lastFocusRef.current = "codemirror";
+                  const view = cmViewRef.current;
+                  if (view) setToolbarCommands(createCodeMirrorCommands(view));
+                }}
               />
               {isMarkdown && showPreview && (
                 <>
@@ -342,12 +366,29 @@ export function App(): JSX.Element {
                     className="split-divider"
                     onMouseDown={handleDividerMouseDown}
                   />
-                  <MarkdownPreview
+                  <WysiwygEditor
+                    ref={wysiwygRef}
                     content={tab.content}
-                    topLine={previewTopLine}
+                    onChange={(c) => updateContent(tab.id, c)}
                     theme={settings.editor.theme}
                     basePath={tab.filePath}
                     convertFileSrc={api.convertFileSrc}
+                    onCursorLine={(line) => {
+                      window.dispatchEvent(new CustomEvent("editor:scrollToLine", { detail: line }));
+                    }}
+                    onEditorReady={(editor) => {
+                      milkdownRef.current = editor;
+                      if (lastFocusRef.current === "wysiwyg") {
+                        setToolbarCommands(createMilkdownCommands(() => milkdownRef.current ?? undefined));
+                      }
+                    }}
+                    onFocus={() => {
+                      lastFocusRef.current = "wysiwyg";
+                      setToolbarCommands(createMilkdownCommands(() => milkdownRef.current ?? undefined));
+                    }}
+                    onBlur={() => {
+                      // keep wysiwyg commands active until CM is focused
+                    }}
                   />
                 </>
               )}

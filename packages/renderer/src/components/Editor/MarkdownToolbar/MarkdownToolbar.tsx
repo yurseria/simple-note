@@ -1,24 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { EditorView } from '@codemirror/view'
 import { useTranslation } from '../../../i18n'
-import {
-  wrapSelection,
-  toggleLinePrefix,
-  setHeading,
-  insertCodeBlock,
-  insertTable,
-  insertLink,
-  insertImage,
-  insertHr,
-  tableAddRow,
-  tableDelRow,
-  tableAddCol,
-  tableDelCol,
-} from '../markdownActions'
+import type { MarkdownCommands } from '../markdownActions'
 import './MarkdownToolbar.css'
 
 interface Props {
-  view: EditorView
+  commands: MarkdownCommands
 }
 
 // ── Remix Icon (Apache 2.0) — SVG paths ──
@@ -124,7 +110,7 @@ function DropdownButton({ icon: iconEl, title, children }: {
 
 // ── Main component ──
 
-export function MarkdownToolbar({ view }: Props): JSX.Element {
+export function MarkdownToolbar({ commands }: Props): JSX.Element {
   const t = useTranslation().toolbar
 
   return (
@@ -136,7 +122,7 @@ export function MarkdownToolbar({ view }: Props): JSX.Element {
             key={level}
             className="md-toolbar__menu-item"
             onMouseDown={e => e.preventDefault()}
-            onClick={() => { setHeading(view, level); }}
+            onClick={() => { commands.setHeading(level); }}
           >
             <span className={`md-toolbar__h md-toolbar__h--${level}`}>H{level}</span>
             <span className="md-toolbar__h-label">
@@ -146,36 +132,36 @@ export function MarkdownToolbar({ view }: Props): JSX.Element {
         ))}
       </DropdownButton>
 
-      <button className="md-toolbar__btn" title={t.bold + shortcut('B')} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '**', '**')}>{icons.bold}</button>
-      <button className="md-toolbar__btn" title={t.italic + shortcut('I')} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '*', '*')}>{icons.italic}</button>
-      <button className="md-toolbar__btn" title={t.strikethrough + shortcut(isMac ? '\u21E7X' : 'Shift+X')} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '~~', '~~')}>{icons.strikethrough}</button>
-      <button className="md-toolbar__btn" title={t.inlineCode} onMouseDown={e => e.preventDefault()} onClick={() => wrapSelection(view, '`', '`')}>{icons.inlineCode}</button>
-      <button className="md-toolbar__btn" title={t.codeBlock} onMouseDown={e => e.preventDefault()} onClick={() => insertCodeBlock(view)}>{icons.codeBlock}</button>
+      <button className="md-toolbar__btn" title={t.bold + shortcut('B')} onMouseDown={e => e.preventDefault()} onClick={() => commands.bold()}>{icons.bold}</button>
+      <button className="md-toolbar__btn" title={t.italic + shortcut('I')} onMouseDown={e => e.preventDefault()} onClick={() => commands.italic()}>{icons.italic}</button>
+      <button className="md-toolbar__btn" title={t.strikethrough + shortcut(isMac ? '\u21E7X' : 'Shift+X')} onMouseDown={e => e.preventDefault()} onClick={() => commands.strikethrough()}>{icons.strikethrough}</button>
+      <button className="md-toolbar__btn" title={t.inlineCode} onMouseDown={e => e.preventDefault()} onClick={() => commands.inlineCode()}>{icons.inlineCode}</button>
+      <button className="md-toolbar__btn" title={t.codeBlock} onMouseDown={e => e.preventDefault()} onClick={() => commands.codeBlock()}>{icons.codeBlock}</button>
 
       <div className="md-toolbar__sep" />
 
-      <button className="md-toolbar__btn" title={t.blockquote} onMouseDown={e => e.preventDefault()} onClick={() => toggleLinePrefix(view, '> ')}>{icons.quote}</button>
-      <button className="md-toolbar__btn" title={t.unorderedList} onMouseDown={e => e.preventDefault()} onClick={() => toggleLinePrefix(view, '- ')}>{icons.listUl}</button>
-      <button className="md-toolbar__btn" title={t.orderedList} onMouseDown={e => e.preventDefault()} onClick={() => toggleLinePrefix(view, '1. ')}>{icons.listOl}</button>
-      <button className="md-toolbar__btn" title={t.taskList} onMouseDown={e => e.preventDefault()} onClick={() => toggleLinePrefix(view, '- [ ] ')}>{icons.taskList}</button>
+      <button className="md-toolbar__btn" title={t.blockquote} onMouseDown={e => e.preventDefault()} onClick={() => commands.blockquote()}>{icons.quote}</button>
+      <button className="md-toolbar__btn" title={t.unorderedList} onMouseDown={e => e.preventDefault()} onClick={() => commands.bulletList()}>{icons.listUl}</button>
+      <button className="md-toolbar__btn" title={t.orderedList} onMouseDown={e => e.preventDefault()} onClick={() => commands.orderedList()}>{icons.listOl}</button>
+      <button className="md-toolbar__btn" title={t.taskList} onMouseDown={e => e.preventDefault()} onClick={() => commands.taskList()}>{icons.taskList}</button>
 
       <div className="md-toolbar__sep" />
 
-      <button className="md-toolbar__btn" title={t.link + shortcut('K')} onMouseDown={e => e.preventDefault()} onClick={() => insertLink(view)}>{icons.link}</button>
-      <button className="md-toolbar__btn" title={t.image} onMouseDown={e => e.preventDefault()} onClick={() => insertImage(view)}>{icons.image}</button>
+      <button className="md-toolbar__btn" title={t.link + shortcut('K')} onMouseDown={e => e.preventDefault()} onClick={() => commands.link()}>{icons.link}</button>
+      <button className="md-toolbar__btn" title={t.image} onMouseDown={e => e.preventDefault()} onClick={() => commands.image()}>{icons.image}</button>
 
       {/* Table dropdown */}
       <DropdownButton icon={icons.table} title={t.table}>
         {[
-          { icon: icons.addTable, label: t.table, action: () => insertTable(view) },
+          { icon: icons.addTable, label: t.table, action: () => commands.insertTable() },
           null,
-          { icon: icons.insertRowTop, label: t.tableAddRowAbove, action: () => tableAddRow(view, 'above') },
-          { icon: icons.insertRowBot, label: t.tableAddRowBelow, action: () => tableAddRow(view, 'below') },
-          { icon: icons.insertColLeft, label: t.tableAddColLeft, action: () => tableAddCol(view, 'left') },
-          { icon: icons.insertColRight, label: t.tableAddColRight, action: () => tableAddCol(view, 'right') },
+          { icon: icons.insertRowTop, label: t.tableAddRowAbove, action: () => commands.tableAddRow('above') },
+          { icon: icons.insertRowBot, label: t.tableAddRowBelow, action: () => commands.tableAddRow('below') },
+          { icon: icons.insertColLeft, label: t.tableAddColLeft, action: () => commands.tableAddCol('left') },
+          { icon: icons.insertColRight, label: t.tableAddColRight, action: () => commands.tableAddCol('right') },
           null,
-          { icon: icons.deleteRow, label: t.tableDelRow, action: () => tableDelRow(view) },
-          { icon: icons.deleteCol, label: t.tableDelCol, action: () => tableDelCol(view) },
+          { icon: icons.deleteRow, label: t.tableDelRow, action: () => commands.tableDelRow() },
+          { icon: icons.deleteCol, label: t.tableDelCol, action: () => commands.tableDelCol() },
         ].map((item, i) =>
           item === null ? (
             <div key={i} className="md-toolbar__menu-sep" />
@@ -193,7 +179,7 @@ export function MarkdownToolbar({ view }: Props): JSX.Element {
         )}
       </DropdownButton>
 
-      <button className="md-toolbar__btn" title={t.horizontalRule} onMouseDown={e => e.preventDefault()} onClick={() => insertHr(view)}>{icons.hr}</button>
+      <button className="md-toolbar__btn" title={t.horizontalRule} onMouseDown={e => e.preventDefault()} onClick={() => commands.hr()}>{icons.hr}</button>
     </div>
   )
 }

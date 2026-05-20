@@ -7,7 +7,6 @@ import { selectNextOccurrence, selectSelectionMatches } from "@codemirror/search
 import {
   createCompartments,
   buildBaseExtensions,
-  buildLanguageExt,
   buildLineNumbersExt,
   buildTabExt,
   buildThemeExt,
@@ -15,7 +14,6 @@ import {
   type EditorCompartments,
 } from "./extensions";
 import { FindReplace } from "./FindReplace/FindReplace";
-import { MarkdownToolbar } from "./MarkdownToolbar/MarkdownToolbar";
 import { api } from "../../platform";
 import { csvTsvToMarkdownTable } from "./markdownActions";
 import { useTranslation } from "../../i18n";
@@ -30,7 +28,9 @@ interface Props {
   filePath: string | null;
   settings: Settings["editor"];
   onChange: (content: string) => void;
-  onTopLine?: (line: number) => void;
+  onLineClick?: (line: number) => void;
+  onViewReady?: (view: EditorView) => void;
+  onFocus?: () => void;
 }
 
 export function Editor({
@@ -40,7 +40,9 @@ export function Editor({
   filePath,
   settings,
   onChange,
-  onTopLine,
+  onLineClick,
+  onViewReady,
+  onFocus,
 }: Props): JSX.Element {
   const t = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,10 +51,14 @@ export function Editor({
   // onChange / onCursorAtBottom ref로 stale closure 방지
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const onTopLineRef = useRef(onTopLine);
+  const onLineClickRef = useRef(onLineClick);
+  onLineClickRef.current = onLineClick;
   const filePathRef = useRef(filePath);
   filePathRef.current = filePath;
-  onTopLineRef.current = onTopLine;
+  const onViewReadyRef = useRef(onViewReady);
+  onViewReadyRef.current = onViewReady;
+  const onFocusRef = useRef(onFocus);
+  onFocusRef.current = onFocus;
   // 마지막으로 에디터가 스스로 보고한 content — 외부 sync 스킵 판별용
   const lastEditorContentRef = useRef(content);
 
@@ -78,11 +84,16 @@ export function Editor({
     const extensions = [
       settings.theme === "dark" ? oneDark : [],
       ...buildBaseExtensions(stableOnChange, compartments, settings, language),
-      // 커서 이동 시 프리뷰에 커서 줄 번호 전달
-      EditorView.updateListener.of((update) => {
-        if (!update.selectionSet) return;
-        const line = update.state.doc.lineAt(update.state.selection.main.head).number;
-        onTopLineRef.current?.(line);
+      EditorView.domEventHandlers({
+        focus: () => { onFocusRef.current?.(); return false; },
+        click: (e, view) => {
+          const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+          if (pos != null) {
+            const line = view.state.doc.lineAt(pos).number;
+            onLineClickRef.current?.(line);
+          }
+          return false;
+        },
       }),
     ];
 
@@ -90,6 +101,7 @@ export function Editor({
     const view = new EditorView({ state, parent: containerRef.current });
     viewRef.current = view;
     setCmView(view);
+    onViewReadyRef.current?.(view);
 
     // 동적 언어 로딩 (마크다운은 빌드시 기본 포함됨)
     if (language !== "markdown" && language !== "plaintext") {
@@ -230,6 +242,23 @@ export function Editor({
     };
   }, []);
 
+  // WYSIWYG → CM: 해당 줄로 커서 이동 및 스크롤
+  useEffect(() => {
+    function handleScrollToLine(e: Event) {
+      const view = viewRef.current;
+      if (!view) return;
+      const lineNum = (e as CustomEvent<number>).detail;
+      if (lineNum < 1 || lineNum > view.state.doc.lines) return;
+      const line = view.state.doc.line(lineNum);
+      view.dispatch({
+        selection: { anchor: line.from },
+        effects: EditorView.scrollIntoView(line.from, { y: "center" }),
+      });
+    }
+    window.addEventListener("editor:scrollToLine", handleScrollToLine);
+    return () => window.removeEventListener("editor:scrollToLine", handleScrollToLine);
+  }, []);
+
   // 줄로 이동 이벤트 수신
   useEffect(() => {
     function handleGotoLine(e: Event) {
@@ -322,11 +351,8 @@ export function Editor({
     return () => container.removeEventListener("paste", handlePaste, { capture: true });
   }, [language]);
 
-  const isMarkdown = language === "markdown";
-
   return (
     <div className="editor">
-      {isMarkdown && cmView && <MarkdownToolbar view={cmView} />}
       <div className="editor__cm" ref={containerRef}>
         {findOpen && cmView && (
           <FindReplace

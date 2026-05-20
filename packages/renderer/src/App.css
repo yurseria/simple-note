@@ -117,7 +117,8 @@ body,
 }
 
 /* HUD 모드일 때 스크롤 영역 하단에 여백 확보 (floating bar가 가리지 않도록) */
-.app__body--hud .markdown-preview {
+.app__body--hud .markdown-preview,
+.app__body--hud .wysiwyg-editor .milkdown {
   padding-bottom: 80px;
 }
 
@@ -130,7 +131,8 @@ body,
   width: var(--split-left, 50%);
 }
 
-.app__editor-pane--split > .markdown-preview {
+.app__editor-pane--split > .markdown-preview,
+.app__editor-pane--split > .wysiwyg-editor {
   flex: 1;
   min-width: 0;
 }

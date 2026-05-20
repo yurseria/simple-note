@@ -1,5 +1,113 @@
 import { EditorView } from '@codemirror/view'
 import { EditorSelection } from '@codemirror/state'
+import type { Editor as MilkdownEditor } from '@milkdown/kit/core'
+import { commandsCtx } from '@milkdown/kit/core'
+import {
+  toggleStrongCommand,
+  toggleEmphasisCommand,
+  toggleInlineCodeCommand,
+  createCodeBlockCommand,
+  wrapInBlockquoteCommand,
+  wrapInBulletListCommand,
+  wrapInOrderedListCommand,
+  wrapInHeadingCommand,
+  insertHrCommand,
+  toggleLinkCommand,
+  insertImageCommand,
+} from '@milkdown/kit/preset/commonmark'
+import {
+  toggleStrikethroughCommand,
+  insertTableCommand,
+  addRowBeforeCommand,
+  addRowAfterCommand,
+  addColBeforeCommand,
+  addColAfterCommand,
+  deleteSelectedCellsCommand,
+} from '@milkdown/kit/preset/gfm'
+
+// ── Toolbar command interface ──
+
+export interface MarkdownCommands {
+  bold(): void
+  italic(): void
+  strikethrough(): void
+  inlineCode(): void
+  codeBlock(): void
+  blockquote(): void
+  bulletList(): void
+  orderedList(): void
+  taskList(): void
+  setHeading(level: 1 | 2 | 3 | 4 | 5): void
+  link(): void
+  image(): void
+  insertTable(): void
+  tableAddRow(pos: 'above' | 'below'): void
+  tableDelRow(): void
+  tableAddCol(pos: 'left' | 'right'): void
+  tableDelCol(): void
+  hr(): void
+}
+
+// ── CodeMirror implementation ──
+
+export function createCodeMirrorCommands(view: EditorView): MarkdownCommands {
+  return {
+    bold: () => wrapSelection(view, '**', '**'),
+    italic: () => wrapSelection(view, '*', '*'),
+    strikethrough: () => wrapSelection(view, '~~', '~~'),
+    inlineCode: () => wrapSelection(view, '`', '`'),
+    codeBlock: () => insertCodeBlock(view),
+    blockquote: () => toggleLinePrefix(view, '> '),
+    bulletList: () => toggleLinePrefix(view, '- '),
+    orderedList: () => toggleLinePrefix(view, '1. '),
+    taskList: () => toggleLinePrefix(view, '- [ ] '),
+    setHeading: (level) => setHeading(view, level),
+    link: () => insertLink(view),
+    image: () => insertImage(view),
+    insertTable: () => insertTable(view),
+    tableAddRow: (pos) => tableAddRow(view, pos),
+    tableDelRow: () => tableDelRow(view),
+    tableAddCol: (pos) => tableAddCol(view, pos),
+    tableDelCol: () => tableDelCol(view),
+    hr: () => insertHr(view),
+  }
+}
+
+// ── Milkdown implementation ──
+
+export function createMilkdownCommands(
+  getEditor: () => MilkdownEditor | undefined,
+): MarkdownCommands {
+  function act<T>(cmd: { key: import('@milkdown/kit/core').CmdKey<T> }, payload?: T): void {
+    const editor = getEditor()
+    if (!editor) return
+    editor.action((ctx) => {
+      ctx.get(commandsCtx).call(cmd.key, payload)
+    })
+  }
+
+  return {
+    bold: () => act(toggleStrongCommand),
+    italic: () => act(toggleEmphasisCommand),
+    strikethrough: () => act(toggleStrikethroughCommand),
+    inlineCode: () => act(toggleInlineCodeCommand),
+    codeBlock: () => act(createCodeBlockCommand),
+    blockquote: () => act(wrapInBlockquoteCommand),
+    bulletList: () => act(wrapInBulletListCommand),
+    orderedList: () => act(wrapInOrderedListCommand),
+    // Milkdown GFM has no direct task-list toggle; nearest is bullet list
+    taskList: () => act(wrapInBulletListCommand),
+    setHeading: (level) => act(wrapInHeadingCommand, level),
+    link: () => act(toggleLinkCommand, { href: '' }),
+    image: () => act(insertImageCommand, { src: '', alt: 'image' }),
+    insertTable: () => act(insertTableCommand, { row: 3, col: 3 }),
+    tableAddRow: (pos) => act(pos === 'above' ? addRowBeforeCommand : addRowAfterCommand),
+    tableDelRow: () => act(deleteSelectedCellsCommand),
+    tableAddCol: (pos) => act(pos === 'left' ? addColBeforeCommand : addColAfterCommand),
+    tableDelCol: () => act(deleteSelectedCellsCommand),
+    hr: () => act(insertHrCommand),
+  }
+}
 
 // ── Inline / wrap formatting ──
 
