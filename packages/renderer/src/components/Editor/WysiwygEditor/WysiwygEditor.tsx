@@ -30,9 +30,32 @@ interface Props {
   onEditorReady?: (editor: Editor) => void;
 }
 
+function annotateListItems(pmListEl: Element, items: Tokens.ListItem[], startOffset: number) {
+  const pmItems = Array.from(pmListEl.querySelectorAll<HTMLElement>(":scope > li"));
+  let offset = startOffset;
+  for (let i = 0; i < items.length && i < pmItems.length; i++) {
+    const item = items[i];
+    pmItems[i].dataset.sourceLine = String(offset + 1);
+    // Recurse into nested list if present
+    const nestedToken = item.tokens?.find((t): t is Tokens.List => t.type === "list");
+    if (nestedToken) {
+      const nestedEl = pmItems[i].querySelector<HTMLElement>(":scope > ul, :scope > ol");
+      if (nestedEl) {
+        // Nested list occupies the last N lines of this item's raw — derive its start offset
+        const nestedLineCount = nestedToken.items.reduce(
+          (sum, it) => sum + (it.raw.match(/\n/g) || []).length, 0,
+        );
+        const itemLineCount = (item.raw.match(/\n/g) || []).length;
+        annotateListItems(nestedEl, nestedToken.items, offset + (itemLineCount - nestedLineCount));
+      }
+    }
+    offset += (item.raw.match(/\n/g) || []).length;
+  }
+}
+
 /**
  * Stamps data-source-line on each direct child of the ProseMirror root.
- * For lists, also stamps each <li> so clicking individual items gives the exact line.
+ * For lists, recurses into nested <li>/<ol>/<ul> so clicking any item gives the exact line.
  */
 function annotateSourceLines(pmDom: Element, content: string) {
   const tokens = marked.lexer(content);
@@ -49,13 +72,7 @@ function annotateSourceLines(pmDom: Element, content: string) {
     if (child) {
       child.dataset.sourceLine = String(lineOffset + 1);
       if (token.type === "list") {
-        const listToken = token as Tokens.List;
-        const pmItems = Array.from(child.querySelectorAll<HTMLElement>(":scope > li"));
-        let itemOffset = lineOffset;
-        for (let i = 0; i < listToken.items.length && i < pmItems.length; i++) {
-          pmItems[i].dataset.sourceLine = String(itemOffset + 1);
-          itemOffset += (listToken.items[i].raw.match(/\n/g) || []).length;
-        }
+        annotateListItems(child, (token as Tokens.List).items, lineOffset);
       }
     }
     lineOffset += (token.raw.match(/\n/g) || []).length;
