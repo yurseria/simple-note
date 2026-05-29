@@ -1,7 +1,7 @@
 mod commands;
 mod menu;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_store::StoreExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -29,8 +29,12 @@ pub fn run() {
             commands::toggle_fullscreen,
             commands::confirm_close_dialog,
             commands::save_clipboard_image,
+            commands::get_launch_files,
         ])
         .setup(|app| {
+            // "다음으로 열기" 파일 경로 버퍼 초기화
+            app.manage(commands::PendingFilePaths(std::sync::Mutex::new(vec![])));
+
             // Initialize settings store
             let store = app.store("settings.json")?;
             if store.get("editor.fontFamily").is_none() {
@@ -98,6 +102,36 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS "다음으로 열기" / Finder에서 파일을 앱으로 드래그할 때 발생
+            if let tauri::RunEvent::Opened { urls } = event {
+                let paths: Vec<String> = urls
+                    .iter()
+                    .filter_map(|url| url.to_file_path().ok())
+                    .filter_map(|p| p.to_str().map(|s| s.to_string()))
+                    .collect();
+
+                if paths.is_empty() {
+                    return;
+                }
+
+                // 콜드 스타트: 프론트엔드가 아직 안 올라왔을 수 있으므로 버퍼에 저장
+                if let Some(state) = app_handle.try_state::<commands::PendingFilePaths>() {
+                    state
+                        .0
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .extend(paths.iter().cloned());
+                }
+
+                // 핫 스타트: 이미 실행 중이면 웹뷰에 이벤트 전송
+                if let Some(win) = app_handle.get_webview_window("main") {
+                    for path in &paths {
+                        let _ = win.emit("file-open", path);
+                    }
+                }
+            }
+        });
 }

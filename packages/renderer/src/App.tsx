@@ -158,7 +158,7 @@ export function App(): JSX.Element {
     }
   }, [dispatchMenuAction])
 
-  // 드래그 앤 드롭 파일 열기
+  // 드래그 앤 드롭 + "다음으로 열기" 핫 스타트 (앱 이미 실행 중) 파일 열기
   useEffect(() => {
     function handleDragOver(e: DragEvent) {
       e.preventDefault();
@@ -175,20 +175,31 @@ export function App(): JSX.Element {
         if (filePath) openFile(filePath);
       }
     }
-    // Tauri drag-drop 이벤트
-    function handleTauriDrop(e: Event) {
+    function handleTauriFilePath(e: Event) {
       const filePath = (e as CustomEvent<string>).detail;
       if (filePath) openFile(filePath);
     }
     document.addEventListener("dragover", handleDragOver);
     document.addEventListener("drop", handleDrop);
-    window.addEventListener("tauri:file-drop", handleTauriDrop);
+    window.addEventListener("tauri:file-drop", handleTauriFilePath);
+    window.addEventListener("tauri:file-open", handleTauriFilePath);
     return () => {
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("drop", handleDrop);
-      window.removeEventListener("tauri:file-drop", handleTauriDrop);
+      window.removeEventListener("tauri:file-drop", handleTauriFilePath);
+      window.removeEventListener("tauri:file-open", handleTauriFilePath);
     };
   }, [openFile]);
+
+  // "다음으로 열기" 콜드 스타트 (앱이 꺼진 상태에서 파일로 실행됐을 때)
+  const launchFilesHandled = useRef(false);
+  useEffect(() => {
+    if (!loaded || launchFilesHandled.current || !api.file.getLaunchFiles) return;
+    launchFilesHandled.current = true;
+    api.file.getLaunchFiles().then((paths) => {
+      for (const path of paths) openFile(path);
+    });
+  }, [loaded, openFile]);
 
   // Zen 모드에서 Escape로 해제
   useEffect(() => {

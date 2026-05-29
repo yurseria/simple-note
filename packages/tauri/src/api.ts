@@ -51,6 +51,8 @@ export const tauriApi: NoteAPI = {
       return await invoke<string | null>('save_clipboard_image', { dirPath })
     },
 
+    getLaunchFiles: async () => await invoke<string[]>('get_launch_files'),
+
     saveAs: async (content: string, encoding: string, defaultPath?: string) => {
       const selected = await save({
         defaultPath: defaultPath ?? 'Untitled.txt',
@@ -208,5 +210,10 @@ export async function initTauriPlatform(): Promise<void> {
         window.dispatchEvent(new CustomEvent('tauri:file-drop', { detail: path }))
       }
     }
+  })
+
+  // "다음으로 열기" 핫 스타트 (앱이 이미 실행 중일 때) → renderer로 전달
+  listen<string>('file-open', (event) => {
+    window.dispatchEvent(new CustomEvent('tauri:file-open', { detail: event.payload }))
   })
 }

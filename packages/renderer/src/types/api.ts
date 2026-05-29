@@ -15,6 +15,8 @@ export interface NoteAPI {
     saveAs(content: string, encoding: string, defaultPath?: string): Promise<string | null>
     /** 클립보드 이미지를 dirPath/images/ 에 저장하고 상대경로 반환. 이미지 없으면 null */
     saveClipboardImage(dirPath: string): Promise<string | null>
+    /** Tauri-only: "다음으로 열기" 콜드 스타트 시 전달된 파일 경로 소비 */
+    getLaunchFiles?(): Promise<string[]>
   }
 
   settings: {

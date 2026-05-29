@@ -6,6 +6,21 @@ use std::path::Path;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_store::StoreExt;
 
+/// "다음으로 열기"로 앱이 시작될 때 전달된 파일 경로 버퍼
+pub struct PendingFilePaths(pub std::sync::Mutex<Vec<String>>);
+
+/// 버퍼에 쌓인 파일 경로를 소비(drain)하여 반환. 프론트엔드 마운트 시 한 번 호출.
+#[tauri::command]
+pub fn get_launch_files(app: AppHandle) -> Vec<String> {
+    let Some(state) = app.try_state::<PendingFilePaths>() else {
+        return vec![];
+    };
+    let mut lock = state.0.lock().unwrap_or_else(|e| e.into_inner());
+    let paths = lock.clone();
+    lock.clear();
+    paths
+}
+
 #[cfg(target_os = "macos")]
 use crate::menu;
 
