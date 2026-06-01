@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { nanoid } from '../utils/nanoid'
-import type { TabState, LanguageMode } from '../types/tab'
+import type { TabState, LanguageMode, MarkdownView } from '../types/tab'
 
 import { LanguageDescription } from '@codemirror/language'
 import { languages } from '@codemirror/language-data'
@@ -46,6 +46,7 @@ function newTab(overrides?: Partial<TabState>, existingTabs?: TabState[]): TabSt
     language: 'plaintext',
     languageOverridden: false,
     showPreview: false,
+    previewOnly: false,
     tabNameOverridden: false,
     ...overrides
   }
@@ -69,7 +70,8 @@ interface TabStore {
   updateContent: (id: string, content: string) => void
   markSaved: (id: string, filePath: string) => void
   setLanguage: (id: string, language: LanguageMode, overridden?: boolean) => void
-  togglePreview: (id: string) => void
+  /** 마크다운 뷰를 소스 → 분할 → WYSIWYG → 소스 순으로 순환. 새 모드를 반환 */
+  cycleMarkdownView: (id: string) => MarkdownView
   renameTab: (id: string, name: string) => void
 }
 
@@ -167,12 +169,26 @@ export const useTabStore = create<TabStore>()(
     }))
   },
 
-  togglePreview: (id) => {
+  cycleMarkdownView: (id) => {
+    let nextMode: MarkdownView = 'source'
     set((s) => ({
-      tabs: s.tabs.map((t) =>
-        t.id === id ? { ...t, showPreview: !t.showPreview } : t
-      )
+      tabs: s.tabs.map((t) => {
+        if (t.id !== id) return t
+        const current: MarkdownView = !t.showPreview
+          ? 'source'
+          : t.previewOnly
+            ? 'wysiwyg'
+            : 'split'
+        nextMode =
+          current === 'source' ? 'split' : current === 'split' ? 'wysiwyg' : 'source'
+        return {
+          ...t,
+          showPreview: nextMode !== 'source',
+          previewOnly: nextMode === 'wysiwyg'
+        }
+      })
     }))
+    return nextMode
   },
 
   renameTab: (id, name) => {

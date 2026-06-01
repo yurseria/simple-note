@@ -48,6 +48,9 @@ export interface Translations {
     toggleFullScreen: string;
     zenMode: string;
     toggleMarkdownPreview: string;
+    mdViewSource: string;
+    mdViewSplit: string;
+    mdViewWysiwyg: string;
     commandPalette: string;
     uiLanguage: string;
     korean: string;
