@@ -157,6 +157,11 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app_handle, event| {
             // macOS "다음으로 열기" / Finder에서 파일을 앱으로 드래그할 때 발생
+            // RunEvent::Opened는 macOS/iOS 전용 variant이므로 cfg로 게이트한다
+            #[cfg(not(any(target_os = "macos", target_os = "ios")))]
+            let _ = (&app_handle, &event);
+
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
             if let tauri::RunEvent::Opened { urls } = event {
                 let paths: Vec<String> = urls
                     .iter()
