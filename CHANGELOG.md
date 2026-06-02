@@ -1,3 +1,25 @@
+# v0.12.0 (Tue Jun 02 2026)
+
+#### 🚀 Enhancement
+
+- feat: cycle markdown view between source, split, and WYSIWYG ([@yurseria](https://github.com/yurseria))
+
+#### 🐛 Bug Fix
+
+- fix: gate RunEvent::Opened behind macOS/iOS cfg to fix Linux/Windows build ([@yurseria](https://github.com/yurseria))
+- fix: open file via file association on Windows/Linux ([@yurseria](https://github.com/yurseria))
+- fix: open file when launching via Finder "Open With" ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- Merge branch 'main' into release ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.11.1 (Wed May 20 2026)
 
 #### 🐛 Bug Fix
