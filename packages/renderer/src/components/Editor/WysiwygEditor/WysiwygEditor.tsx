@@ -25,8 +25,6 @@ interface Props {
   onChange: (content: string) => void;
   theme: "dark" | "light";
   fontSize?: number;
-  basePath?: string | null;
-  convertFileSrc?: (filePath: string) => string;
   onCursorLine?: (line: number) => void;
   onFocus?: () => void;
   onBlur?: () => void;

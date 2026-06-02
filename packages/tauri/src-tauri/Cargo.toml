@@ -1,6 +1,6 @@
 [package]
 name = "simple-note-tauri"
-version = "0.11.0" # x-release-please-version
+version = "0.11.1" # x-release-please-version
 description = "A beautiful and simple plain text editor"
 authors = ["yurseria"]
 license = "MIT"
@@ -31,3 +31,8 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 chrono = "0.4"
 rfd = "0.15"
 base64 = "0.22"
+
+# Windows/Linux: "연결 프로그램으로 열기" 시 새 인스턴스 대신 기존 창으로 argv 전달
+# (macOS는 Apple Event로 단일 인스턴스가 보장되므로 불필요)
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+tauri-plugin-single-instance = "2"

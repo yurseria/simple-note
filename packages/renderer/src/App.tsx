@@ -28,7 +28,6 @@ export function App(): JSX.Element {
     addTab,
     updateContent,
     setLanguage,
-    togglePreview,
   } = useTabStore();
   const { settings, loaded, load } = useSettingsStore();
   const { openFile, saveFile, saveFileAs, maybeCloseTab } = useFile();
@@ -60,6 +59,26 @@ export function App(): JSX.Element {
 
   const handleNewTab = useCallback(() => addTab(), [addTab]);
 
+  // 마크다운 뷰 순환 (소스 → 분할 → WYSIWYG) + 토스트로 현재 모드 표시
+  const cycleMarkdownView = useCallback(() => {
+    const state = useTabStore.getState();
+    const active = state.activeTab();
+    if (!active || active.language !== "markdown") return;
+    const mode = state.cycleMarkdownView(state.activeId);
+    // WYSIWYG만 보기로 전환 시 CodeMirror가 언마운트되므로 툴바를 milkdown 명령으로 교체
+    if (mode === "wysiwyg") {
+      lastFocusRef.current = "wysiwyg";
+      setToolbarCommands(createMilkdownCommands(() => milkdownRef.current ?? undefined));
+    }
+    const label =
+      mode === "source"
+        ? t.view.mdViewSource
+        : mode === "split"
+          ? t.view.mdViewSplit
+          : t.view.mdViewWysiwyg;
+    window.dispatchEvent(new CustomEvent("editor:toast", { detail: label }));
+  }, [t]);
+
   const dispatchMenuAction = useCallback((action: string, payload?: string) => {
     switch (action) {
       case "menu:newTab": addTab(); break;
@@ -79,11 +98,9 @@ export function App(): JSX.Element {
         break;
       }
       case "menu:gotoLine": setGotoLineVisible(true); break;
-      case "menu:toggleMarkdownPreview": {
-        const id = useTabStore.getState().activeId;
-        useTabStore.getState().togglePreview(id);
+      case "menu:toggleMarkdownPreview":
+        cycleMarkdownView();
         break;
-      }
       case "menu:selectNextOccurrence":
         window.dispatchEvent(new CustomEvent("editor:selectNextOccurrence")); break;
       case "menu:selectAllOccurrences":
@@ -131,7 +148,7 @@ export function App(): JSX.Element {
       case "menu:checkForUpdates":
         api.menu.dispatch("checkForUpdates"); break;
     }
-  }, [addTab, openFile, saveFile, saveFileAs, maybeCloseTab]);
+  }, [addTab, openFile, saveFile, saveFileAs, maybeCloseTab, cycleMarkdownView]);
 
   useEffect(() => {
     return api.menu.subscribe(dispatchMenuAction)
@@ -158,7 +175,7 @@ export function App(): JSX.Element {
     }
   }, [dispatchMenuAction])
 
-  // 드래그 앤 드롭 파일 열기
+  // 드래그 앤 드롭 + "다음으로 열기" 핫 스타트 (앱 이미 실행 중) 파일 열기
   useEffect(() => {
     function handleDragOver(e: DragEvent) {
       e.preventDefault();
@@ -175,20 +192,31 @@ export function App(): JSX.Element {
         if (filePath) openFile(filePath);
       }
     }
-    // Tauri drag-drop 이벤트
-    function handleTauriDrop(e: Event) {
+    function handleTauriFilePath(e: Event) {
       const filePath = (e as CustomEvent<string>).detail;
       if (filePath) openFile(filePath);
     }
     document.addEventListener("dragover", handleDragOver);
     document.addEventListener("drop", handleDrop);
-    window.addEventListener("tauri:file-drop", handleTauriDrop);
+    window.addEventListener("tauri:file-drop", handleTauriFilePath);
+    window.addEventListener("tauri:file-open", handleTauriFilePath);
     return () => {
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("drop", handleDrop);
-      window.removeEventListener("tauri:file-drop", handleTauriDrop);
+      window.removeEventListener("tauri:file-drop", handleTauriFilePath);
+      window.removeEventListener("tauri:file-open", handleTauriFilePath);
     };
   }, [openFile]);
+
+  // "다음으로 열기" 콜드 스타트 (앱이 꺼진 상태에서 파일로 실행됐을 때)
+  const launchFilesHandled = useRef(false);
+  useEffect(() => {
+    if (!loaded || launchFilesHandled.current || !api.file.getLaunchFiles) return;
+    launchFilesHandled.current = true;
+    api.file.getLaunchFiles().then((paths) => {
+      for (const path of paths) openFile(path);
+    });
+  }, [loaded, openFile]);
 
   // Zen 모드에서 Escape로 해제
   useEffect(() => {
@@ -224,10 +252,7 @@ export function App(): JSX.Element {
       if (t) maybeCloseTab(t.id);
     },
     onGotoLine: () => setGotoLineVisible(true),
-    onToggleMarkdownPreview: () => {
-      const id = useTabStore.getState().activeId;
-      useTabStore.getState().togglePreview(id);
-    },
+    onToggleMarkdownPreview: cycleMarkdownView,
     onFind: () => window.dispatchEvent(new CustomEvent("editor:openFind")),
     onReplace: () => window.dispatchEvent(new CustomEvent("editor:openReplace")),
     onCommandPalette: () => setCommandPaletteOpen(true),
@@ -293,10 +318,14 @@ export function App(): JSX.Element {
 
   const isMarkdown = tab?.language === "markdown";
   const showPreview = tab?.showPreview ?? false;
+  const previewOnly = tab?.previewOnly ?? false;
+  const isWysiwygOnly = isMarkdown && showPreview && previewOnly;
+  const isSplit = isMarkdown && showPreview && !previewOnly;
+  const showWysiwyg = isMarkdown && showPreview;
+  const showSource = !isWysiwygOnly;
 
   void tabs;
   void activeId;
-  void togglePreview;
 
   return (
     <div className={`app${zenMode ? ' app--zen' : ''}`} data-theme={settings.editor.theme}>
@@ -327,70 +356,70 @@ export function App(): JSX.Element {
             )}
             <div
               ref={splitContainerRef}
-              className={`app__editor-pane ${showPreview && isMarkdown ? "app__editor-pane--split" : ""}`}
+              className={`app__editor-pane ${isSplit ? "app__editor-pane--split" : ""}`}
               style={
-                showPreview && isMarkdown
+                isSplit
                   ? ({
                       "--split-left": `${splitRatio * 100}%`,
                     } as React.CSSProperties)
                   : undefined
               }
             >
-              <Editor
-                tabId={tab.id}
-                content={tab.content}
-                language={tab.language}
-                filePath={tab.filePath}
-                settings={settings.editor}
-                onChange={(c) => updateContent(tab.id, c)}
-                onLineClick={
-                  isMarkdown && showPreview
-                    ? (line) => wysiwygRef.current?.scrollToSourceLine(line)
-                    : undefined
-                }
-                onViewReady={(view) => {
-                  cmViewRef.current = view;
-                  if (lastFocusRef.current === "codemirror") {
-                    setToolbarCommands(createCodeMirrorCommands(view));
+              {showSource && (
+                <Editor
+                  tabId={tab.id}
+                  content={tab.content}
+                  language={tab.language}
+                  filePath={tab.filePath}
+                  settings={settings.editor}
+                  onChange={(c) => updateContent(tab.id, c)}
+                  onLineClick={
+                    isSplit
+                      ? (line) => wysiwygRef.current?.scrollToSourceLine(line)
+                      : undefined
                   }
-                }}
-                onFocus={() => {
-                  lastFocusRef.current = "codemirror";
-                  const view = cmViewRef.current;
-                  if (view) setToolbarCommands(createCodeMirrorCommands(view));
-                }}
-              />
-              {isMarkdown && showPreview && (
-                <>
-                  <div
-                    className="split-divider"
-                    onMouseDown={handleDividerMouseDown}
-                  />
-                  <WysiwygEditor
-                    ref={wysiwygRef}
-                    content={tab.content}
-                    onChange={(c) => updateContent(tab.id, c)}
-                    theme={settings.editor.theme}
-                    basePath={tab.filePath}
-                    convertFileSrc={api.convertFileSrc}
-                    onCursorLine={(line) => {
-                      window.dispatchEvent(new CustomEvent("editor:scrollToLine", { detail: line }));
-                    }}
-                    onEditorReady={(editor) => {
-                      milkdownRef.current = editor;
-                      if (lastFocusRef.current === "wysiwyg") {
-                        setToolbarCommands(createMilkdownCommands(() => milkdownRef.current ?? undefined));
-                      }
-                    }}
-                    onFocus={() => {
-                      lastFocusRef.current = "wysiwyg";
+                  onViewReady={(view) => {
+                    cmViewRef.current = view;
+                    if (lastFocusRef.current === "codemirror") {
+                      setToolbarCommands(createCodeMirrorCommands(view));
+                    }
+                  }}
+                  onFocus={() => {
+                    lastFocusRef.current = "codemirror";
+                    const view = cmViewRef.current;
+                    if (view) setToolbarCommands(createCodeMirrorCommands(view));
+                  }}
+                />
+              )}
+              {isSplit && (
+                <div
+                  className="split-divider"
+                  onMouseDown={handleDividerMouseDown}
+                />
+              )}
+              {showWysiwyg && (
+                <WysiwygEditor
+                  ref={wysiwygRef}
+                  content={tab.content}
+                  onChange={(c) => updateContent(tab.id, c)}
+                  theme={settings.editor.theme}
+                  onCursorLine={(line) => {
+                    window.dispatchEvent(new CustomEvent("editor:scrollToLine", { detail: line }));
+                  }}
+                  onEditorReady={(editor) => {
+                    milkdownRef.current = editor;
+                    if (lastFocusRef.current === "wysiwyg") {
                       setToolbarCommands(createMilkdownCommands(() => milkdownRef.current ?? undefined));
-                    }}
-                    onBlur={() => {
-                      // keep wysiwyg commands active until CM is focused
-                    }}
-                  />
-                </>
+                    }
+                  }}
+                  onFocus={() => {
+                    lastFocusRef.current = "wysiwyg";
+                    setToolbarCommands(createMilkdownCommands(() => milkdownRef.current ?? undefined));
+                  }}
+                  onBlur={() => {
+                    // keep wysiwyg commands active until CM is focused
+                  }}
+                />
               )}
             </div>
             {!zenMode && settings.editor.infoBarMode !== "none" && (

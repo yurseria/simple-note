@@ -1,12 +1,42 @@
 mod commands;
 mod menu;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_store::StoreExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    #[allow(unused_mut)]
+    let mut builder = tauri::Builder::default();
+
+    // Windows/Linux: 두 번째 인스턴스(연결 프로그램으로 열기)의 argv를
+    // 기존 창으로 전달해 새 탭으로 열고, 두 번째 인스턴스는 종료시킨다.
+    // single-instance 플러그인은 반드시 첫 번째로 등록해야 한다.
+    #[cfg(not(target_os = "macos"))]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            use tauri::{Emitter, Manager};
+            let paths: Vec<String> = argv
+                .iter()
+                .skip(1)
+                .filter(|arg| !arg.starts_with('-'))
+                .filter(|arg| std::path::Path::new(arg).is_file())
+                .cloned()
+                .collect();
+            if paths.is_empty() {
+                return;
+            }
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.unminimize();
+                let _ = win.set_focus();
+                for path in &paths {
+                    let _ = win.emit("file-open", path);
+                }
+            }
+        }));
+    }
+
+    builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
@@ -29,8 +59,33 @@ pub fn run() {
             commands::toggle_fullscreen,
             commands::confirm_close_dialog,
             commands::save_clipboard_image,
+            commands::get_launch_files,
         ])
         .setup(|app| {
+            // "다음으로 열기" 파일 경로 버퍼 초기화
+            app.manage(commands::PendingFilePaths(std::sync::Mutex::new(vec![])));
+
+            // Windows/Linux "연결 프로그램으로 열기": 파일 경로가 CLI 인수로 전달됨
+            // (macOS는 argv가 아닌 Apple Event(RunEvent::Opened)로 전달되므로 제외)
+            #[cfg(not(target_os = "macos"))]
+            {
+                let launch_paths: Vec<String> = std::env::args()
+                    .skip(1)
+                    .filter(|arg| !arg.starts_with('-'))
+                    .filter(|arg| std::path::Path::new(arg).is_file())
+                    .collect();
+
+                if !launch_paths.is_empty() {
+                    if let Some(state) = app.try_state::<commands::PendingFilePaths>() {
+                        state
+                            .0
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner())
+                            .extend(launch_paths);
+                    }
+                }
+            }
+
             // Initialize settings store
             let store = app.store("settings.json")?;
             if store.get("editor.fontFamily").is_none() {
@@ -98,6 +153,41 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS "다음으로 열기" / Finder에서 파일을 앱으로 드래그할 때 발생
+            // RunEvent::Opened는 macOS/iOS 전용 variant이므로 cfg로 게이트한다
+            #[cfg(not(any(target_os = "macos", target_os = "ios")))]
+            let _ = (&app_handle, &event);
+
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
+            if let tauri::RunEvent::Opened { urls } = event {
+                let paths: Vec<String> = urls
+                    .iter()
+                    .filter_map(|url| url.to_file_path().ok())
+                    .filter_map(|p| p.to_str().map(|s| s.to_string()))
+                    .collect();
+
+                if paths.is_empty() {
+                    return;
+                }
+
+                // 콜드 스타트: 프론트엔드가 아직 안 올라왔을 수 있으므로 버퍼에 저장
+                if let Some(state) = app_handle.try_state::<commands::PendingFilePaths>() {
+                    state
+                        .0
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .extend(paths.iter().cloned());
+                }
+
+                // 핫 스타트: 이미 실행 중이면 웹뷰에 이벤트 전송
+                if let Some(win) = app_handle.get_webview_window("main") {
+                    for path in &paths {
+                        let _ = win.emit("file-open", path);
+                    }
+                }
+            }
+        });
 }
