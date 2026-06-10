@@ -1,3 +1,19 @@
+# v0.12.1 (Wed Jun 10 2026)
+
+#### 🐛 Bug Fix
+
+- fix: preserve editor scroll position when switching tabs ([@yurseria](https://github.com/yurseria))
+
+#### ⚠️ Pushed to `release`
+
+- Merge branch 'main' into release ([@yurseria](https://github.com/yurseria))
+
+#### Authors: 1
+
+- minsu ([@yurseria](https://github.com/yurseria))
+
+---
+
 # v0.12.0 (Tue Jun 02 2026)
 
 #### 🚀 Enhancement
