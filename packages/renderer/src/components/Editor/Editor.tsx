@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorView } from "@codemirror/view";
-import { EditorState, Transaction } from "@codemirror/state";
+import { EditorState, Transaction, StateEffect } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { selectAll, undo, redo } from "@codemirror/commands";
 import { selectNextOccurrence, selectSelectionMatches } from "@codemirror/search";
@@ -61,6 +61,8 @@ export function Editor({
   onFocusRef.current = onFocus;
   // 마지막으로 에디터가 스스로 보고한 content — 외부 sync 스킵 판별용
   const lastEditorContentRef = useRef(content);
+  // 탭별 스크롤 위치 — 탭 전환 후 돌아왔을 때 복원용
+  const scrollSnapshotsRef = useRef<Map<string, StateEffect<unknown>>>(new Map());
 
   // FindReplace 패널 상태
   const [cmView, setCmView] = useState<EditorView | null>(null);
@@ -98,7 +100,12 @@ export function Editor({
     ];
 
     const state = EditorState.create({ doc: content, extensions });
-    const view = new EditorView({ state, parent: containerRef.current });
+    const savedScroll = scrollSnapshotsRef.current.get(tabId);
+    const view = new EditorView({
+      state,
+      parent: containerRef.current,
+      scrollTo: savedScroll,
+    });
     viewRef.current = view;
     setCmView(view);
     onViewReadyRef.current?.(view);
@@ -119,6 +126,8 @@ export function Editor({
     }
 
     return () => {
+      // 탭 전환/재생성 직전 현재 스크롤 위치 저장 (돌아왔을 때 복원)
+      scrollSnapshotsRef.current.set(tabId, view.scrollSnapshot());
       view.destroy();
       viewRef.current = null;
       compartmentsRef.current = null;

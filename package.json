@@ -1,6 +1,6 @@
 {
   "name": "simple-note",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "A beautiful and simple plain text editor — Electron & Tauri",
   "author": "yurseria<yurseria@gmail.com>",
