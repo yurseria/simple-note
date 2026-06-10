@@ -1,6 +1,6 @@
 {
   "productName": "Note",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "identifier": "com.yurseria.simple-note",
   "build": {
     "beforeDevCommand": "npm run dev:vite",
